@@ -160,6 +160,15 @@ export default function DiscoverPage() {
                         <span className={styles.savedTitle}>{job.title}</span>
                         <span>{job.company} · {job.location}</span>
                         <span className={styles.savedDemo}>FICTIONAL DEMO · No application link</span>
+                        <details className={styles.savedDetails}>
+                          <summary>Review role details</summary>
+                          <p>{job.description}</p>
+                          <p>{job.whyShown}</p>
+                        </details>
+                        <button type="button" className={styles.removeSaved} onClick={() => {
+                          dispatch({ type: "removeSaved", id: job.id });
+                          setAnnouncement(`${job.title} removed from saved opportunities.`);
+                        }}>Remove from saved</button>
                       </li>
                     ) : null;
                   })}
