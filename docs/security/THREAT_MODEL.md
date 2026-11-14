@@ -79,6 +79,13 @@ Update this file whenever an agent changes:
 
 Capture the change in the same PR and add corresponding tests to [Review Checklist](REVIEW_CHECKLIST.md). A reviewer signs off on new high risks **before** public exposure.
 
+## Tracking high-priority security work
+
+- [#23 — Rate-limit and cost-protect Bedrock endpoints](https://github.com/charlierichards13/ScaleMe/issues/23)
+- [#24 — Adversarial AI/privacy review](https://github.com/charlierichards13/ScaleMe/issues/24)
+- [#4 — Safe resume PDF parsing](https://github.com/charlierichards13/ScaleMe/issues/4)
+- [#5 — Safe pasted job and URL ingestion](https://github.com/charlierichards13/ScaleMe/issues/5)
+
 ## Open decisions (human-owned)
 
 - How will abuse limits be enforced across deployment instances (shared store vs trusted gateway)?
