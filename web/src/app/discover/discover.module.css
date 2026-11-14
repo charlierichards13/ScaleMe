@@ -153,6 +153,11 @@
 .savedList li { display: flex; flex-direction: column; gap: 6px; padding: 16px; background: #f7f7fe; border: 1px solid #ebeaff; border-radius: 13px; color: #6c7589; font-size: 12px; }
 .savedTitle { font-weight: 800; color: #26294b; font-size: 15px; }
 .savedDemo { color: #9a671b; font-size: 10px; font-weight: 800; }
+.savedDetails { border-top: 1px solid #e5e6f3; padding-top: 10px; }
+.savedDetails summary { font-size: 12px; font-weight: 800; color: #5744f5; cursor: pointer; }
+.savedDetails p { margin: 9px 0 0; font-size: 12px; line-height: 1.55; }
+.removeSaved { align-self: flex-start; background: transparent; border: 0; padding: 5px 0; color: #b23e60; font-size: 12px; font-weight: 800; cursor: pointer; }
+.removeSaved:focus-visible, .savedDetails summary:focus-visible { outline: 3px solid #8675fc; outline-offset: 3px; }
 .emptyState > span { color: #5b4de4; display: block; font-size: 46px; margin-bottom: 24px; }
 .emptyActions { display: flex; gap: 10px; flex-wrap: wrap; }
 .primaryButton, .secondaryButton { cursor: pointer; border-radius: 12px; padding: 13px 17px; font-weight: 750; }
