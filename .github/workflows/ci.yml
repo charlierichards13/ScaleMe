@@ -35,6 +35,8 @@ jobs:
         run: npm ci
       - name: Lint
         run: npm run lint
+      - name: Generate Next.js route types
+        run: npm exec -- next typegen
       - name: Check TypeScript
         run: npm exec -- tsc --noEmit
       - name: Run tests (when a test script exists)
