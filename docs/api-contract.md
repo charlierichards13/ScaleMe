@@ -110,6 +110,64 @@ export type ApiError = {
 
 For MVP, `web/src/lib/contracts.ts` can export these types or equivalent runtime-validated Zod schemas. Avoid duplicated hand-written type definitions in separate agents' implementations.
 
+## Proposed additive evidence-discovery extension (v0.2; **not implemented**)
+
+The types above remain the **v0.1 integration baseline** while #3/#6/#7/#8 are developed on separate branches. Before adopting new wire fields, the team should agree on the following *additive* extension, update runtime validators and consumers together, and use real acceptance tests. Do not silently change a live response shape based on this planning text.
+
+```ts
+export type CandidateEvidenceRecord = {
+  id: string; // stable within a resume/interview session
+  source: "resume" | "interview"; // NEVER job: job text is a requirement, not candidate proof
+  quote: string; // exact span in candidate-provided text; verify on the server
+  sourceRef: string; // resume section/offset or stable interview turn ID
+  review: "candidate_reported" | "candidate_confirmed";
+};
+
+export type RequirementEvidenceLink = {
+  requirementId: string; // must exist in the same JobPosting.requirements
+  candidateEvidenceIds: string[]; // only IDs in CandidateEvidenceRecord[]
+};
+
+export type CoverageSnapshot = {
+  phase: "initial" | "after_interview";
+  requiredRequirementIds: string[]; // stable denominator for both phases
+  supportedRequirementIds: string[];
+  unclearRequirementIds: string[];
+  notEvidencedRequirementIds: string[];
+};
+
+export type DiscoveryExtension = {
+  evidenceRecords: CandidateEvidenceRecord[];
+  links: RequirementEvidenceLink[];
+  before: CoverageSnapshot;
+  after: CoverageSnapshot;
+};
+
+export type TargetedInterviewResponse = InterviewResponse & {
+  targetRequirementId?: string; // required once targeted questioning ships
+};
+
+export type GuardedImpactSuggestion = Omit<ImpactSuggestion, "improved"> & {
+  improved?: string; // absent when a proposed claim is blocked
+  candidateEvidenceIds: string[];
+  reviewStatus: "ready_for_candidate_review" | "needs_confirmation" | "blocked";
+  reviewReason?: string;
+};
+```
+
+**Rules for adoption:**
+
+- The client should display a clearly separated **candidate-reported** vs **candidate-confirmed** state. Confirmation is not independent employer/credential verification.
+- Job-description excerpts may justify the existence of a requirement but must **not** count as evidence that the candidate satisfies it.
+- Compute coverage counts **in application code** from validated requirement IDs and statuses; do not accept arbitrary totals output by the model. Only compare snapshots over the **same requirement ID set**.
+- A requirement may become supported after an interview only when a relevant exact candidate-supplied quote is linked. A rephrased bullet by itself must not change status.
+- The interview and impact routes should eventually support these records, but **keep the existing v0.1 requests and responses valid** until all consuming branches coordinate migration. Possible reassessment strategies: optional interview context on `/api/fit/analyze` or a dedicated `/api/fit/reassess`; choose one before implementation.
+- All references and quotes are sensitive candidate data. Avoid permanent storage/logging for the MVP; use synthetic fixtures and server-side validation.
+- The optional Rust claim guard may flag additions such as new percentages, counts, dates or tools, but it does **not** establish the independent truth of a candidate's report.
+
+**Synthetic integration acceptance:** with a testing requirement initially `not_evidenced`, an answer about testing the portal may change that requirement to `supported` with an exact interview reference; an unrelated or missing answer must leave it unresolved, and an invented “40% faster” metric must not pass as source-grounded. See [DIFFERENTIATION.md](DIFFERENTIATION.md).
+
+---
 ## Endpoints (proposed)
 
 ### `POST /api/resume/parse`
