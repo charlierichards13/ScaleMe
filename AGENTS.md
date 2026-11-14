@@ -9,6 +9,7 @@ ScaleMe is a SunHacks 2026 project that helps a candidate understand job fit, pr
 **Sources of truth:**
 - `README.md`: core vision; `README-expanded.md`: future job discovery and international-student concepts.
 - `docs/api-contract.md`: proposed request/response types. Coordinate changes before diverging from it.
+- `docs/DIFFERENTIATION.md`: planned evidence-discovery acceptance criteria and originality positioning; read before extending fit/interview/impact features.
 - `docs/ROADMAP.md` and GitHub Issues: priorities, dependencies and ownership.
 - `docs/aws-bedrock-plan.md`: cloud integration boundaries, when merged.
 - `web/AGENTS.md`: generated, Next.js-version-specific instructions. **Preserve it.** Next.js 16 differs from older versions; inspect `web/node_modules/next/dist/docs/` before assuming old API behavior.
@@ -42,6 +43,10 @@ ScaleMe is a SunHacks 2026 project that helps a candidate understand job fit, pr
 - Questions and suggested improvements should distinguish **observed facts**, **inferences**, and **missing information**.
 - Do not present a fit score as a probability of being hired or infer protected characteristics.
 - Label synthetic fixtures, mocked integrations and offline demo outputs as **DEMO**, not live AWS or live job data.
+- Evidence-provenance and before/after coverage are **planned** differentiators, not already implemented. A `job` quote establishes a requirement; it never proves the candidate has the skill.
+- Any proposed improvement must point to exact candidate resume/interview evidence. `candidate_reported` and `candidate_confirmed` do **not** imply external verification; absent facts/metrics stay questions or blocked suggestions.
+- Compute and compare supported requirement counts deterministically from the same validated requirement IDs; don't let an LLM invent progress or a hiring probability.
+- Coordinate additive contract changes in `docs/api-contract.md` **before** agents integrate them, preserving compatibility with existing v0.1 work until migration is agreed.
 
 ## Architecture and owned paths
 
