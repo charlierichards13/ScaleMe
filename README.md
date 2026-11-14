@@ -99,9 +99,28 @@ ScaleMe/
 
 ## Getting started
 
-The app scaffold has not been generated yet. Track setup in [GitHub Issues](../../issues); installation and `dev` commands will be added once the project layout is finalized.
+The **Next.js scaffold is now available** in `web/`. With Node.js 22 installed:
 
-For local development, anticipate Node.js for the web app, Rust/Cargo for matching, and AWS credentials for cloud-backed features. An `.env.example` should document required names **without secret values**.
+```bash
+git clone https://github.com/charlierichards13/ScaleMe.git
+cd ScaleMe/web
+npm ci
+npm run dev
+```
+
+Open http://localhost:3000. On Windows PowerShell, if execution policy blocks `npm.ps1`, use `npm.cmd ci` and `npm.cmd run dev` instead.
+
+**Current state:** the starter page is available; resume analysis and other product features are still under development. Rust/Cargo and AWS credentials will be needed for their respective modules once implemented. An `.env.example` should contain variable names only, without credentials.
+
+### Planning and collaboration
+
+- [Hackathon roadmap](docs/ROADMAP.md): priorities, milestones, owners and integration checkpoints
+- [API contracts](docs/api-contract.md): shared data shapes for web, AI and Rust
+- [Issues and tasks](../../issues): live source of truth for work
+- [Pull requests](../../pulls): review changes before merging
+- [Automated CI](.github/workflows/ci.yml): lint, type checks, build, and future Rust tests
+
+GitHub Actions runs automatically after its workflow is merged; enforcing passing checks before merges requires a separate repository ruleset/branch protection setting.
 
 ## Demo story
 

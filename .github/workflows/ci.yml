@@ -1,0 +1,66 @@
+name: ScaleMe CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Read-only checks: no deployment tokens or application secrets are needed.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Generate Next.js route types
+        run: npm exec -- next typegen
+      - name: Check TypeScript
+        run: npm exec -- tsc --noEmit
+      - name: Run tests (when a test script exists)
+        run: npm run test --if-present
+      - name: Build production app
+        run: npm run build
+
+  rust:
+    name: Rust quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up stable Rust
+        run: |
+          rustup default stable
+          rustup component add rustfmt clippy
+      - name: Format, lint, and test Rust (when crate exists)
+        shell: bash
+        run: |
+          if [[ -f services/matching-rust/Cargo.toml ]]; then
+            cargo fmt --manifest-path services/matching-rust/Cargo.toml --all -- --check
+            cargo clippy --manifest-path services/matching-rust/Cargo.toml --all-targets -- -D warnings
+            cargo test --manifest-path services/matching-rust/Cargo.toml
+          else
+            echo "Rust crate not yet scaffolded; skipping Rust-specific checks."
+          fi
