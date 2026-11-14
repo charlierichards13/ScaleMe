@@ -49,7 +49,7 @@ Before inviting users to upload real resumes or exposing an unauthenticated AWS 
 - [ ] Run and review CI and an authorized security test; log findings and remediation status.
 - [ ] Require a human security sign-off for any open high-impact risk.
 
-**Current status:** There is no assertion that the above controls are complete. The ongoing Claude fit-analysis branch reports mock tests passing, but no live Bedrock test and no rate limiting; it is not yet merged or independently audited.
+**Current status:** There is no assertion that the above controls are complete. The Issue #6 fit-analysis implementation (`POST /api/fit/analyze`, branch `feat/bedrock-fit`, in pull-request review and **not yet merged or independently audited**) has passing **mocked** unit tests only. **No live Bedrock call has been made** (AWS quota restriction, so real-model behavior, including prompt-injection resistance, is unverified), and it has **no rate limiting or spend controls** ([#23](https://github.com/charlierichards13/ScaleMe/issues/23)). Adversarial AI/privacy review against a real model is tracked in [#24](https://github.com/charlierichards13/ScaleMe/issues/24). Details: [Bedrock review notes](docs/security/BEDROCK_REVIEW_NOTES.md).
 
 ## References
 

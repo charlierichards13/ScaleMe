@@ -33,6 +33,33 @@ The app should use **environment variable names** (not embedded credentials):
 | `AWS_REGION` | Region selected after confirming available model access |
 | `BEDROCK_MODEL_ID` | Model identifier confirmed enabled in that region |
 | `AWS_PROFILE` | Optional local AWS CLI profile / SSO configuration; not a secret |
+| `BEDROCK_TIMEOUT_MS` | Optional; per-call timeout in milliseconds. Default `45000`; invalid values fall back to the default |
+| `BEDROCK_MAX_OUTPUT_TOKENS` | Optional; maximum model output tokens. Default `3000`; invalid values fall back to the default |
+
+`AWS_REGION` and `BEDROCK_MODEL_ID` are **both required** for live analysis. If either is missing, `POST /api/fit/analyze` returns `AI_UNAVAILABLE` (HTTP 503, `retryable: false`) without contacting AWS. Names are listed in `web/.env.example` (names only, no values). The code never reads access keys itself; the AWS SDK default provider chain supplies credentials server-side. Never create a `NEXT_PUBLIC_` variable for any of these.
+
+### Implementation status of Issue #6 (`feat/bedrock-fit`)
+
+| Item | Status |
+| --- | --- |
+| `POST /api/fit/analyze` using the Bedrock Runtime **Converse** API (`@aws-sdk/client-bedrock-runtime`) | Implemented |
+| Request/response validation, evidence-quote checking, safe errors, labeled `?demo=true` | Implemented, covered by **mocked** unit tests (29 tests; no network, no credentials) |
+| Real Bedrock invocation, real model JSON compliance, real prompt-injection resistance, evidence quality, latency and cost | **NOT VERIFIED.** No live call has been made. Mocked tests prove our code, not model behavior |
+| Chosen model, region, IAM policy | **Not decided or verified.** No model ID is hardcoded |
+| Rate limiting, concurrency cap, spend alarms | **Not implemented** (tracked in Issue #23). Run only locally/privately with synthetic data |
+
+### Local setup for a live test (human, synthetic data only)
+
+1. Confirm in the AWS console that your account can invoke your chosen model in your chosen region (some models need an inference-profile ID instead of a model ID; use whatever your account's Bedrock console shows). Set an AWS budget or alarm first.
+2. Sign in with short-lived credentials, for example `aws sso login --profile <your-profile>`.
+3. Copy `web/.env.example` to `web/.env.local` (git-ignored) and set `AWS_REGION`, `BEDROCK_MODEL_ID` and optionally `AWS_PROFILE`.
+4. From `web/`, run `npm run dev`.
+5. POST a **fictional** resume and job to `http://localhost:3000/api/fit/analyze` (header `content-type: application/json`, body `{ "resume": {...}, "job": {...} }`). A real result has the header `X-ScaleMe-Mode: live`.
+6. Check every `evidence.quote` against the input by eye, then try the negative cases in `docs/security/REVIEW_CHECKLIST.md` (injection text, false-accomplishment bait, bad model ID, missing region) and record results there. Until that is done, describe live behavior as untested.
+
+### IAM note
+
+The identity running the server needs permission to invoke only the chosen model, which for the Converse API is the `bedrock:InvokeModel` action on that model's (or inference profile's) ARN. This is **not yet verified** against a real account; confirm against current AWS documentation and do not use a wildcard resource.
 
 Do not commit a populated `.env.local`, access keys, long-lived credential strings or personal resumes. Prefer an AWS profile / SSO / role with short-lived credentials locally, and an attached execution role if hosted in AWS. The Node AWS SDK credential provider chain should obtain credentials server-side; never send them to the browser.
 
@@ -44,7 +71,7 @@ Confirm model access, region, invocation support and possible inference-profile 
 - [ ] Select a Bedrock-enabled region and a model that the account is authorized to invoke.
 - [ ] Configure limited permissions to invoke **only** the selected model/resources (subject to the Bedrock API and IAM rules for that model).
 - [ ] Configure local AWS credentials/profile securely.
-- [ ] Set `AWS_REGION` and `BEDROCK_MODEL_ID` in `web/.env.local` without committing the file.
+- [ ] Set `AWS_REGION` and `BEDROCK_MODEL_ID` in `web/.env.local` (copy of `web/.env.example`) without committing the file.
 - [ ] Run a single harmless synthetic prompt to verify connectivity and observe usage/cost.
 - [ ] Test the complete resume/job payload against the route and shared schema.
 - [ ] Demonstrate a truthful failure state if AWS is unavailable.
