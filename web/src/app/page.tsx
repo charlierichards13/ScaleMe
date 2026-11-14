@@ -36,7 +36,7 @@ function makeConversation(id: number): Conversation {
   return {
     id,
     title: "New conversation",
-    messages: [{ id: Date.now(), role: "assistant", content: welcome }],
+    messages: [{ id: 0, role: "assistant", content: welcome }],
     resume: "",
     job: "",
     interviewIndex: -1,
