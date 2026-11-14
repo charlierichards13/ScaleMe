@@ -1,0 +1,34 @@
+# ScaleMe monorepo: don't accidentally commit local secrets or generated data.
+# This is defense in depth, not a secret scanner; review staged files before commits.
+
+# Local credentials and environment configuration anywhere in the repository
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+.aws/
+**/.aws/
+
+# Sensitive local/demo data
+uploads/
+**/uploads/
+private-data/
+**/private-data/
+
+# Dependency/build output (child projects may also have their own .gitignore)
+**/node_modules/
+**/.next/
+**/target/
+**/coverage/
+**/*.tsbuildinfo
+
+# Local/private key material
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Misc
+.DS_Store
