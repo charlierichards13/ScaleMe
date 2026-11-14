@@ -14,6 +14,7 @@ export type SwipeState = {
 export type SwipeAction =
   | { type: "choose"; id: string; decision: Decision }
   | { type: "undo" }
+  | { type: "removeSaved"; id: string }
   | { type: "reset"; ids: string[] };
 
 export function createSwipeState(ids: readonly string[]): SwipeState {
@@ -31,6 +32,16 @@ export function swipeReducer(state: SwipeState, action: SwipeAction): SwipeState
       saved: action.decision === "saved" ? [...state.saved, action.id] : state.saved,
       passed: action.decision === "passed" ? [...state.passed, action.id] : state.passed,
       history: [...state.history, { id: action.id, decision: action.decision }],
+    };
+  }
+
+  if (action.type === "removeSaved") {
+    if (!state.saved.includes(action.id)) return state;
+    return {
+      ...state,
+      saved: state.saved.filter((id) => id !== action.id),
+      passed: [...state.passed, action.id],
+      history: state.history.filter((entry) => entry.id !== action.id),
     };
   }
 
