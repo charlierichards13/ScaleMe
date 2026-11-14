@@ -10,9 +10,9 @@
 
 | Issue | Owner | Done when |
 | --- | --- | --- |
-| [#1 Next.js foundation](../issues/1) | @charlierichards13 | Starter app is on `main`, builds in CI, setup documented |
-| [#2 API contracts](../issues/2) | @charlierichards13 | Team agrees on shared request/response shapes |
-| [#3 UI/dashboard](../issues/3) | @MisterProper667 | Synthetic sample user journey is navigable |
+| [#1 Next.js foundation](https://github.com/charlierichards13/ScaleMe/issues/1) | @charlierichards13 | Starter app is on `main`, builds in CI, setup documented |
+| [#2 API contracts](https://github.com/charlierichards13/ScaleMe/issues/2) | @charlierichards13 | Team agrees on shared request/response shapes |
+| [#3 UI/dashboard](https://github.com/charlierichards13/ScaleMe/issues/3) | @MisterProper667 | Synthetic sample user journey is navigable |
 | CI and project planning | Both | PR lint/type-check/build and a tracking board are active |
 
 **First integration gate:** both developers can clone, install, run the app and use the same data structures.
@@ -21,9 +21,9 @@
 
 | Issue | Owner | Done when |
 | --- | --- | --- |
-| [#4 Resume PDF ingestion](../issues/4) | @MisterProper667 | A text-based PDF extracts or returns a helpful error |
-| [#5 Job ingestion](../issues/5) | @MisterProper667 | Pasted job description works; URL ingestion is best-effort |
-| [#14 Mobile PWA](../issues/14) | @MisterProper667 | Responsive and installable if time permits |
+| [#4 Resume PDF ingestion](https://github.com/charlierichards13/ScaleMe/issues/4) | @MisterProper667 | A text-based PDF extracts or returns a helpful error |
+| [#5 Job ingestion](https://github.com/charlierichards13/ScaleMe/issues/5) | @MisterProper667 | Pasted job description works; URL ingestion is best-effort |
+| [#14 Mobile PWA](https://github.com/charlierichards13/ScaleMe/issues/14) | @MisterProper667 | Responsive and installable if time permits |
 
 **Second integration gate:** a synthetic resume and job posting appear correctly in the app and are ready for analysis.
 
@@ -31,11 +31,11 @@
 
 | Issue | Owner | Done when |
 | --- | --- | --- |
-| [#6 Bedrock fit analysis](../issues/6) | @charlierichards13 | One real AWS-backed structured, evidence-based assessment |
-| [#9 AWS infrastructure](../issues/9) | @charlierichards13 | Backend is configured with server-side credentials and least privilege |
-| [#12 Rust matching](../issues/12) | @charlierichards13 | Real match signal influences analysis; tests pass |
-| [#7 Mock interview](../issues/7) | @MisterProper667 | Coach asks coherent answer-aware follow-ups |
-| [#8 Impact report](../issues/8) | @charlierichards13 | Factual before/after bullets grounded in resume/interview evidence |
+| [#6 Bedrock fit analysis](https://github.com/charlierichards13/ScaleMe/issues/6) | @charlierichards13 | One real AWS-backed structured, evidence-based assessment |
+| [#9 AWS infrastructure](https://github.com/charlierichards13/ScaleMe/issues/9) | @charlierichards13 | Backend is configured with server-side credentials and least privilege |
+| [#12 Rust matching](https://github.com/charlierichards13/ScaleMe/issues/12) | @charlierichards13 | Real match signal influences analysis; tests pass |
+| [#7 Mock interview](https://github.com/charlierichards13/ScaleMe/issues/7) | @MisterProper667 | Coach asks coherent answer-aware follow-ups |
+| [#8 Impact report](https://github.com/charlierichards13/ScaleMe/issues/8) | @charlierichards13 | Factual before/after bullets grounded in resume/interview evidence |
 
 **Third integration gate:** full upload → analysis → interview → revised bullets flow works, including a documented synthetic demo fallback when an external integration is unavailable.
 
@@ -43,8 +43,8 @@
 
 | Issue | Owner | Done when |
 | --- | --- | --- |
-| [#10 Test and privacy pass](../issues/10) | Both | Smoke tests, failure states and secret checks complete |
-| [#11 Demo/submission](../issues/11) | Both | Three-minute live demo rehearsed, backup prepared, submission requirements reviewed |
+| [#10 Test and privacy pass](https://github.com/charlierichards13/ScaleMe/issues/10) | Both | Smoke tests, failure states and secret checks complete |
+| [#11 Demo/submission](https://github.com/charlierichards13/ScaleMe/issues/11) | Both | Three-minute live demo rehearsed, backup prepared, submission requirements reviewed |
 
 **Final gate:** an unfamiliar judge can understand the problem and witness a meaningful improvement in an applicant's story in under three minutes.
 
