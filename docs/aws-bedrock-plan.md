@@ -35,24 +35,37 @@ The app should use **environment variable names** (not embedded credentials):
 | `AWS_PROFILE` | Optional local AWS CLI profile / SSO configuration; not a secret |
 | `BEDROCK_TIMEOUT_MS` | Optional; per-call timeout in milliseconds. Default `45000`; invalid values fall back to the default |
 | `BEDROCK_MAX_OUTPUT_TOKENS` | Optional; maximum model output tokens. Default `3000`; invalid values fall back to the default |
+| `BEDROCK_MAX_ATTEMPTS` | Optional; AWS SDK attempts per request, `1` to `2`. Default `1` (no automatic retry, so one request is at most one paid call) |
+| `FIT_LIVE_AI_ENABLED` | **Required for live calls.** Real Bedrock calls happen only when this is `true` (case-insensitive). Default: off |
+| `FIT_RATE_LIMIT_GLOBAL_PER_MIN` | Optional; live calls per sliding minute, shared by all callers, `1` to `600`. Default `10` |
+| `FIT_DAILY_CALL_LIMIT` | Optional; live calls per sliding 24 hours, `1` to `10000`. Default `50` |
+| `FIT_MAX_CONCURRENT` | Optional; model calls running at once, `1` to `20`. Default `2` |
 
-`AWS_REGION` and `BEDROCK_MODEL_ID` are **both required** for live analysis. If either is missing, `POST /api/fit/analyze` returns `AI_UNAVAILABLE` (HTTP 503, `retryable: false`) without contacting AWS. Names are listed in `web/.env.example` (names only, no values). The code never reads access keys itself; the AWS SDK default provider chain supplies credentials server-side. Never create a `NEXT_PUBLIC_` variable for any of these.
+The four cost-guard variables (`BEDROCK_MAX_ATTEMPTS` and the `FIT_*` limits) **fail closed**: if one is set to an invalid or out-of-range value, live requests return 503 instead of running without a limit. The limits are held in the memory of one server process; see the cost-guard section of `docs/security/THREAT_MODEL.md` for why that keeps the endpoint private-only.
 
-### Implementation status of Issue #6 (`feat/bedrock-fit`)
+`FIT_LIVE_AI_ENABLED=true`, `AWS_REGION` and `BEDROCK_MODEL_ID` are **all required** for live analysis. If the switch is off, the route returns `AI_UNAVAILABLE` (503, `retryable: false`) and never contacts AWS. Setting `AWS_REGION` and `BEDROCK_MODEL_ID` alone does not enable paid calls. If either AWS setting is missing, `POST /api/fit/analyze` returns `AI_UNAVAILABLE` (HTTP 503, `retryable: false`) without contacting AWS. Names are listed in `web/.env.example` (names only, no values). The code never reads access keys itself; the AWS SDK default provider chain supplies credentials server-side. Never create a `NEXT_PUBLIC_` variable for any of these.
+
+### AWS account status
+
+**AWS status (reported by the project owner on 2026-11-14; not independently verified by the coding agent):** the AWS account has approved Amazon Bedrock access in `us-east-2`, and Amazon Nova Lite generated a response in the AWS console playground. **The ScaleMe API itself has NOT been tested against live Bedrock**: every ScaleMe test so far uses mocked AWS, so the route's real-model behavior (JSON compliance, evidence quality, prompt-injection resistance, latency, cost) is still unverified.
+
+**AWS spend controls (reported by the project owner; current AWS configuration not independently verified):** an AWS budget notification at **$5** has been configured and a **$20** project spending limit has been selected. Neither is a guaranteed account-wide hard cap: a budget notification is an alert, not a stop, billing data can lag actual usage, and other usage in the account is not blocked. Treat them as early warnings on top of the app-side cost guard, not as a replacement for it.
+
+### Implementation status of Issue #6 (merged to `main` in PR #33)
 
 | Item | Status |
 | --- | --- |
 | `POST /api/fit/analyze` using the Bedrock Runtime **Converse** API (`@aws-sdk/client-bedrock-runtime`) | Implemented |
 | Request/response validation, evidence-quote checking, safe errors, labeled `?demo=true` | Implemented, covered by **mocked** unit tests (29 tests; no network, no credentials) |
-| Real Bedrock invocation, real model JSON compliance, real prompt-injection resistance, evidence quality, latency and cost | **NOT VERIFIED.** No live call has been made. Mocked tests prove our code, not model behavior |
-| Chosen model, region, IAM policy | **Not decided or verified.** No model ID is hardcoded |
-| Rate limiting, concurrency cap, spend alarms | **Not implemented** (tracked in Issue #23). Run only locally/privately with synthetic data |
+| Real Bedrock invocation, real model JSON compliance, real prompt-injection resistance, evidence quality, latency and cost | **NOT VERIFIED.** The ScaleMe API has not called live Bedrock (the owner's console-playground test of Nova Lite does not exercise ScaleMe code). Mocked tests prove our code, not model behavior |
+| Chosen model, region, IAM policy | Owner reports Bedrock access in `us-east-2` with Amazon Nova Lite working in the playground (unverified by the agent). The ScaleMe model ID and least-privilege IAM policy are **not decided or verified**. No model ID is hardcoded |
+| Rate limiting, concurrency cap, spend alarms | **Partly implemented** (Issue #23, mock-tested): off-by-default live switch, per-process shared limits, concurrency cap, `429` before AWS, no SDK retries. **No** distributed limit or per-user fairness. Owner-reported $5 budget notification and $20 spending limit are unverified and not a hard cap. Run only locally/privately with synthetic data |
 
 ### Local setup for a live test (human, synthetic data only)
 
 1. Confirm in the AWS console that your account can invoke your chosen model in your chosen region (some models need an inference-profile ID instead of a model ID; use whatever your account's Bedrock console shows). Set an AWS budget or alarm first.
 2. Sign in with short-lived credentials, for example `aws sso login --profile <your-profile>`.
-3. Copy `web/.env.example` to `web/.env.local` (git-ignored) and set `AWS_REGION`, `BEDROCK_MODEL_ID` and optionally `AWS_PROFILE`.
+3. Copy `web/.env.example` to `web/.env.local` (git-ignored) and set `AWS_REGION`, `BEDROCK_MODEL_ID`, `FIT_LIVE_AI_ENABLED=true` and optionally `AWS_PROFILE`. Keep the default cost-guard limits (or lower them) for a first test.
 4. From `web/`, run `npm run dev`.
 5. POST a **fictional** resume and job to `http://localhost:3000/api/fit/analyze` (header `content-type: application/json`, body `{ "resume": {...}, "job": {...} }`). A real result has the header `X-ScaleMe-Mode: live`.
 6. Check every `evidence.quote` against the input by eye, then try the negative cases in `docs/security/REVIEW_CHECKLIST.md` (injection text, false-accomplishment bait, bad model ID, missing region) and record results there. Until that is done, describe live behavior as untested.
@@ -96,7 +109,7 @@ Tests should mock AWS client calls where possible. CI must be able to lint, type
 
 ## Integration sequence
 
-1. Merge the issue #6 route as a reviewed PR after CI passes.
+1. ~~Merge the issue #6 route as a reviewed PR after CI passes.~~ Done: PR #33.
 2. Teammate connects the dashboard's "Analyze" action to the route's documented JSON response.
 3. Review evidence correctness on a **synthetic** resume/job example.
 4. Integrate [Rust matcher #12](https://github.com/charlierichards13/ScaleMe/issues/12) as a separate service or deployment-compatible module once its JSON boundary is tested. Do not assume a native executable can run on every serverless host.

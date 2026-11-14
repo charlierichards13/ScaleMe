@@ -1,7 +1,7 @@
 # Bedrock fit-analysis review notes — Issue #6
 
 **Date:** 2026-11-14 · **Source:** Claude Code's execution transcript, updated after the implementing agent reread its own source against the merged PR #25 standards.
-**Verification status:** **Self-review by the implementing agent, not independent.** All test evidence is from **mocked** AWS. **No live Bedrock call has been made.** Not a passing security audit; a human review of the real diff is still required.
+**Verification status:** **Self-review by the implementing agent, not independent.** All test evidence is from **mocked** AWS. **The ScaleMe API has not been tested against live Bedrock.** (Update 2026-11-14, owner-reported and not verified by the agent: the account has Bedrock access in `us-east-2` and Amazon Nova Lite responded in the AWS console playground. That is not a ScaleMe test.) The Issue #6 code was merged to `main` in PR #33. Not a passing security audit; a human review of the real diff is still required.
 
 ## Update 2026-11-14 (after PR #25)
 
@@ -26,7 +26,7 @@
 | Output markup / unexpected keys | Non-JSON and schema failures rejected; extra keys stripped. Frontend must still escape text |
 | Oversized / malformed / empty request | 4xx, no AWS call, no echo: tested (including an unbounded chunked body) |
 | Model unavailable | Missing config, timeout, throttle, access denied, bad model, empty reply mapped to safe errors: tested |
-| Cost abuse | **Not mitigated** (no rate limit). Issue #23 |
+| Cost abuse | **Partly mitigated, local only** (Issue #23, `feat/bedrock-rate-limits`): live calls off by default, shared per-process budget (10/min, 50/day, 2 concurrent), `429` before AWS, SDK `maxAttempts` 1. Mock-tested. Not distributed, no per-user fairness. Owner-reported $5 budget notification and $20 spending limit are unverified and not a hard cap |
 | Privacy canary | A synthetic name is absent from responses and `console.error` output in tests. No live log review, no real-AWS check |
 | Demo integrity | Labeled by text and headers; no automatic fallback: tested |
 
@@ -44,8 +44,8 @@
 
 | Finding | Importance | Action |
 | --- | --- | --- |
-| No rate limiting on a cost-bearing Bedrock endpoint | High before any public deployment | Add per-client and global limits, concurrency caps, budget/alarms, and safe throttle responses |
-| No live Bedrock invocation | High before claiming AI behavior verified | Perform one safe synthetic real-model test; inspect structured result and evidence quotes |
+| Rate limiting on the cost-bearing Bedrock endpoint is per-process only | High before any public deployment | Issue #23 added an off-by-default live switch, global per-process limits, a concurrency cap and safe 429s. Still needed: a limit shared by all instances (gateway/WAF or shared store), trusted per-client identity, and verification of the owner-reported AWS budget notification (an alert, not a hard cap) |
+| No live Bedrock invocation **through the ScaleMe API** (console playground access only) | High before claiming AI behavior verified | Perform one safe synthetic real-model test through `POST /api/fit/analyze` with `FIT_LIVE_AI_ENABLED=true`; inspect structured result and evidence quotes |
 | Prompt-injection tests do not prove actual model resistance | High | Run controlled adversarial synthetic cases with no tools/secrets; verify schema and source evidence |
 | SDK/model access/IAM not verified | High for cloud readiness | Verify approved region/model, least-privilege IAM and error path; no broad wildcard secrets |
 | Rust matcher not integrated | Functional gap | Verify standalone Rust signals and a deployment-compatible integration boundary later |
@@ -53,7 +53,7 @@
 | ~~Contract lists no `INVALID_REQUEST` error~~ | Resolved in docs | Frontend still needs to handle it |
 | Schemas in `web/src/lib/ai/schemas.ts` rather than shared `web/src/lib/contracts.ts` | Medium | Agree a single export source before frontend consumes it |
 | Demo mode uses headers and string label, no contract-level mode field | Medium | Agree a stable `mode` discriminator if UI needs one; preserve explicit DEMO labeling |
-| npm audit advisories | Low to medium | 0 high; 7 moderate `minimatch` advisories in the ESLint dev toolchain (`eslint-config-next`), 0 in production deps. Not changed here; update deliberately, no forced fixes |
+| npm audit advisories | Low to medium | Rechecked 2026-11-14 (Issue #23): 0 in production deps; 9 moderate, 0 high/critical, all `minimatch` in the ESLint/`typescript-eslint` dev toolchain. Not changed here; update deliberately, no forced fixes |
 
 The detailed claimed test coverage includes oversized/malformed input, fabricated evidence/requirement IDs, invalid model output, prompt structure, AWS throttle/timeout/error masking and no raw applicant content in logs. **Source code and test results still require independent review once a PR exists.**
 
