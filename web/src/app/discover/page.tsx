@@ -1,6 +1,7 @@
 "use client";
 
 import { useReducer, useRef, useState, type PointerEvent } from "react";
+import Link from "next/link";
 import { DEMO_OPENINGS, type DemoOpening } from "@/lib/jobs/demo-openings";
 import { createSwipeState, swipeReducer, type Decision } from "@/lib/jobs/swipe-state";
 import styles from "./discover.module.css";
@@ -108,12 +109,12 @@ export default function DiscoverPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <a href="/" className={styles.brand} aria-label="ScaleMe dashboard">
+        <Link href="/" className={styles.brand} aria-label="ScaleMe dashboard">
           <span className={styles.brandIcon} aria-hidden="true">S</span>
           <span>ScaleMe</span>
-        </a>
+        </Link>
         <nav aria-label="Discover navigation" className={styles.headerNav}>
-          <a href="/" className={styles.navLink}>Dashboard</a>
+          <Link href="/" className={styles.navLink}>Dashboard</Link>
           <span className={styles.activeNav} aria-current="page">Discover</span>
         </nav>
         <span className={styles.demoBadge}>FICTIONAL DEMO · NO LIVE JOBS</span>
@@ -211,7 +212,7 @@ export default function DiscoverPage() {
           ) : (
             <div className={styles.emptyState}>
               <span aria-hidden="true">✓</span>
-              <h2>You've seen every demo card!</h2>
+              <h2>You&apos;ve seen every demo card!</h2>
               <p>Saved {deck.saved.length} and passed {deck.passed.length}. You can review saved roles or restart the fictional demo.</p>
               <div className={styles.emptyActions}>
                 <button className={styles.primaryButton} type="button" onClick={() => setShowSaved(true)}>View saved</button>
