@@ -41,4 +41,15 @@ describe("swipe state machine", () => {
     state = swipeReducer(state, { type: "reset", ids: ["a", "a", "b"] });
     expect(state).toEqual(createSwipeState(["a", "b"]));
   });
+  it("removes a saved role without reintroducing it to the deck", () => {
+    let state = createSwipeState(["a", "b"]);
+    state = swipeReducer(state, { type: "choose", id: "a", decision: "saved" });
+    state = swipeReducer(state, { type: "removeSaved", id: "a" });
+    expect(state.remaining).toEqual(["b"]);
+    expect(state.saved).toEqual([]);
+    expect(state.passed).toEqual(["a"]);
+    expect(state.history).toHaveLength(0);
+    expect(swipeReducer(state, { type: "undo" })).toBe(state);
+  });
+
 });
