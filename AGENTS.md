@@ -74,6 +74,19 @@ cargo test --manifest-path services/matching-rust/Cargo.toml
 
 Also test: empty and malformed inputs, privacy/PII leakage, prompt injection in uploaded text, failure of external AI services, failed/blocked URL retrieval, and cross-session isolation when applicable. **Do not claim tests passed unless you actually ran them.** If a test cannot be run, say exactly why.
 
+## Required documentation and security maintenance (definition of done)
+
+**Documentation is part of each implementation PR**, not a separate optional follow-up. Before editing, read `CONTRIBUTING.md`, `SECURITY.md`, `docs/security/THREAT_MODEL.md`, and `docs/security/REVIEW_CHECKLIST.md`.
+
+- If you change an API or input validation: update `docs/api-contract.md`, samples and relevant tests.
+- If you change AI prompts, model/provider, data sent to an LLM, tools/permissions, or storage/network access: update the threat model and adversarial tests.
+- If you change environment variables, AWS IAM, deployment, or a dependency: update setup/security documentation and track risk.
+- If you change product behavior: update README/demo notes as appropriate.
+- If none apply, say **why no docs changes were required** in the PR description.
+- Include actual commands/results, unverified assumptions, security limitations and any follow-up issue in your handoff. Never claim a mocked test verified live model behavior.
+
+Do not weaken security validation or change repository rules merely to make CI pass. Never silently introduce persistent storage of applicant data or a public unauthenticated cost-bearing AI endpoint; flag these for human review first.
+
 ## Delivery and agent handoff
 
 - Make the smallest scoped change that satisfies the issue. Document any contract changes or new environment variable **names**.

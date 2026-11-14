@@ -65,6 +65,19 @@ flowchart TD
 
 **Fallbacks matter:** if job pages prohibit automated retrieval, ask the user to paste the description. If a cloud service is not configured locally, show a clearly labeled demo state instead of pretending an AI result is live.
 
+## Security and contributing
+
+ScaleMe is a **hackathon prototype**, not a production-audited application. For now, use **synthetic resumes** in demos and tests; do not expose paid model endpoints publicly before abuse controls and privacy reviews are complete.
+
+- [Security policy and disclosure](SECURITY.md)
+- [Contributor handbook — documentation is part of done](CONTRIBUTING.md)
+- [Living threat model](docs/security/THREAT_MODEL.md)
+- [Security review and adversarial testing checklist](docs/security/REVIEW_CHECKLIST.md)
+- [Unverified Bedrock implementation review notes](docs/security/BEDROCK_REVIEW_NOTES.md)
+- [Root agent instructions](AGENTS.md) and [Claude Code instructions](CLAUDE.md)
+
+All coding agents must update affected documentation **in the same PR** and report actual test results, not assumptions. CI includes a high/critical npm advisory gate; it does not replace a human security review.
+
 ## Workstreams and collaboration
 
 GitHub Issues are our source of truth. Each issue contains a scope, acceptance criteria, and dependencies; claim an issue before implementing it. Suggested parallel lanes:
