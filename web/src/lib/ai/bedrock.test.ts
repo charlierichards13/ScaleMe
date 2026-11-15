@@ -84,6 +84,57 @@ describe("invokeBedrock", () => {
   });
 });
 
+describe("usage metrics logging", () => {
+  const CANARY = "CANARY-Jordan-Sample-resume-text";
+
+  it("logs numeric token counts and latency only, never prompts or model output", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    send.mockResolvedValue({
+      output: { message: { content: [{ text: `{"echo":"${CANARY}"}` }] } },
+      usage: { inputTokens: 812, outputTokens: 256, totalTokens: 1068 },
+      metrics: { latencyMs: 2345.6 },
+      stopReason: "end_turn",
+    });
+    await invokeBedrock(`system ${CANARY}`, `user ${CANARY}`);
+    expect(info).toHaveBeenCalledTimes(1);
+    const line = String(info.mock.calls[0][0]);
+    expect(line).toMatch(
+      /^\[fit\/analyze\] Bedrock usage: inputTokens=812 outputTokens=256 totalTokens=1068 modelLatencyMs=2346 wallMs=\d+ truncated=0$/,
+    );
+    expect(line).not.toContain(CANARY);
+    expect(line).not.toContain("test-model-id");
+    info.mockRestore();
+  });
+
+  it("flags truncated output and tolerates missing or non-numeric metrics", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    send.mockResolvedValue({
+      output: { message: { content: [{ text: "{}" }] } },
+      usage: { inputTokens: "lots", outputTokens: Number.NaN },
+      stopReason: "max_tokens",
+    });
+    await invokeBedrock("s", "u");
+    expect(String(info.mock.calls[0][0])).toMatch(
+      /inputTokens=n\/a outputTokens=n\/a totalTokens=n\/a modelLatencyMs=n\/a wallMs=\d+ truncated=1$/,
+    );
+    info.mockRestore();
+  });
+
+  it("logs usage even when the reply is empty, and only elapsed time on AWS errors", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    send.mockResolvedValueOnce({ output: { message: { content: [] } }, usage: { inputTokens: 5, outputTokens: 0, totalTokens: 5 } });
+    await invokeBedrock("s", "u").catch(() => {});
+    expect(String(info.mock.calls[0][0])).toContain("inputTokens=5");
+
+    send.mockRejectedValueOnce(awsError("ThrottlingException"));
+    await invokeBedrock("s", "u").catch(() => {});
+    const errLine = String(vi.mocked(console.error).mock.calls.at(-1)?.[0]);
+    expect(errLine).toMatch(/^\[fit\/analyze\] Bedrock call failed: ThrottlingException wallMs=\d+$/);
+    expect(errLine).not.toContain("arn:aws");
+    info.mockRestore();
+  });
+});
+
 describe("getBedrockConfig", () => {
   it("applies defaults and ignores invalid numeric overrides", () => {
     const cfg = getBedrockConfig({ AWS_REGION: "r", BEDROCK_MODEL_ID: "m", BEDROCK_TIMEOUT_MS: "abc" });

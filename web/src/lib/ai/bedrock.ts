@@ -30,6 +30,7 @@ export const invokeBedrock: ModelInvoker = async (system, userPrompt) => {
   const client = getClient(config.region, config.maxAttempts);
 
   let output: ConverseCommandOutput;
+  const startedAt = performance.now();
   try {
     output = await client.send(
       new ConverseCommand({
@@ -41,8 +42,10 @@ export const invokeBedrock: ModelInvoker = async (system, userPrompt) => {
       { abortSignal: AbortSignal.timeout(config.timeoutMs) },
     );
   } catch (err) {
-    throw toApiError(err);
+    throw toApiError(err, performance.now() - startedAt);
   }
+
+  logUsage(output, performance.now() - startedAt);
 
   const text = output.output?.message?.content
     ?.map((block) => ("text" in block ? block.text : ""))
@@ -55,12 +58,30 @@ export const invokeBedrock: ModelInvoker = async (system, userPrompt) => {
   return text;
 };
 
+// Usage metrics for cost tracking: NUMBERS ONLY. Never log prompts, resume/job text,
+// model output, model or account identifiers, or anything about the caller.
+function logUsage(output: ConverseCommandOutput, wallMs: number): void {
+  const truncated = output.stopReason === "max_tokens" ? 1 : 0;
+  console.info(
+    `[fit/analyze] Bedrock usage: inputTokens=${metric(output.usage?.inputTokens)} ` +
+      `outputTokens=${metric(output.usage?.outputTokens)} totalTokens=${metric(output.usage?.totalTokens)} ` +
+      `modelLatencyMs=${metric(output.metrics?.latencyMs)} wallMs=${metric(wallMs)} truncated=${truncated}`,
+  );
+}
+
+/** A non-negative finite number, rounded; anything else (missing, string, NaN) becomes "n/a". */
+export function metric(value: unknown): number | "n/a" {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.round(value) : "n/a";
+}
+
 // Map AWS errors to stable, safe messages. We never forward the raw AWS message
 // (it can contain account details) and never log request content.
-function toApiError(err: unknown): FitApiError {
+function toApiError(err: unknown, wallMs: number): FitApiError {
   const name = err instanceof Error ? err.name : "UnknownError";
   const status = (err as { $metadata?: { httpStatusCode?: number } })?.$metadata?.httpStatusCode;
-  console.error(`[fit/analyze] Bedrock call failed: ${name}${status ? ` (HTTP ${status})` : ""}`);
+  console.error(
+    `[fit/analyze] Bedrock call failed: ${name}${status ? ` (HTTP ${status})` : ""} wallMs=${metric(wallMs)}`,
+  );
 
   if (name === "TimeoutError" || name === "AbortError") {
     return new FitApiError("AI_UNAVAILABLE", "The AI took too long to respond. Please retry.", true, 504);

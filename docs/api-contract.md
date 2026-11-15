@@ -187,7 +187,7 @@ export type GuardedImpactSuggestion = Omit<ImpactSuggestion, "improved"> & {
 **Request:** `{ "resume": Resume, "job": JobPosting }`.  
 **Response:** `{ "analysis": FitAnalysis }`.  
 **Failures:** `INVALID_REQUEST`, `INVALID_RESUME`, `INVALID_JOB`, `AI_UNAVAILABLE`, `INVALID_AI_RESPONSE`, `RATE_LIMITED`.
-**Implementation:** use the Rust matcher for explainable requirement signals and Bedrock for qualitative reasoning, constrained by evidence. *Current state (Issue #6, merged in PR #33): Bedrock only; the Rust matcher is not integrated.*
+**Implementation:** use the Rust matcher for explainable requirement signals and Bedrock for qualitative reasoning, constrained by evidence. *Current state (Issue #6, merged in PR #33): Bedrock only; the Rust matcher is not integrated. Verified once against live Amazon Nova Lite (`amazon.nova-lite-v1:0`, `us-east-2`) on 2026-11-15 with synthetic data. See `docs/aws-bedrock-plan.md`.*
 
 **Request limits (server-enforced; the request is rejected before any AWS call):**
 
@@ -251,7 +251,23 @@ Clients should wait at least `Retry-After` seconds before retrying, retry at mos
 - A `supported` assessment with no verified resume quote is downgraded to `unclear` and its explanation says so.
 - `disclaimer` is always replaced with a fixed server-side string; the model's version is ignored.
 - Quote matching is a substring check: it shows the quote exists in the input, not that it proves the requirement. A very short quote can match by chance, so reviewers should read the evidence.
-- `explanation`, `strengths`, `clarificationQuestions` and `growthSuggestions` are model-written text. They are schema- and length-checked but **not** fact-checked. Prompt rules forbid invented facts and hiring probabilities, but the code does not detect them.
+- **Advice grounding.** Items in `strengths`, `clarificationQuestions` and `growthSuggestions` are **dropped**, never rewritten, when:
+  - they contain a number that does not appear in the inputs. For `strengths` the number must appear in the resume. For questions and suggestions it may come from the resume, the job text or the supplied requirements. Requirement IDs such as `r1` don't count as numbers.
+  - a growth suggestion tells the candidate to add, list, include, mention, highlight, claim or showcase experience, skills, achievements, metrics or results, with no condition such as "if" or "whether". "If you have X, add an example" is kept; "Add X experience to your resume" is dropped.
+- These lists can therefore be shorter than the model produced, or empty. Their types and limits are unchanged, so this is not a contract change.
+- `explanation`, `summary` and the remaining advice are still model-written text. They are schema- and length-checked but **not** fact-checked. The grounding rule is a keyword heuristic, so it can miss invented claims written without numbers or those verbs. It can also drop an honest item. The prompt additionally asks for one clarification question per `not_evidenced` or `unclear` requirement and for conditional or future-learning suggestions only; the code does not enforce that.
+
+**Usage metrics (server log only, never in the response):** each completed Bedrock call logs one line of numbers:
+
+```text
+[fit/analyze] Bedrock usage: inputTokens=812 outputTokens=256 totalTokens=1068 modelLatencyMs=2346 wallMs=2410 truncated=0
+```
+
+- `modelLatencyMs` is Bedrock's own reported latency. `wallMs` is the time measured by the server.
+- `truncated=1` means the model stopped at `BEDROCK_MAX_OUTPUT_TOKENS`.
+- A value that is missing or not a number is logged as `n/a`.
+- A failed call logs the AWS error type and `wallMs` only.
+- The line never contains prompts, resume or job text, model output, model or account IDs, credentials or caller details. To estimate cost, multiply the token counts by the model's current on-demand prices.
 
 **Demo mode:** `POST /api/fit/analyze?demo=true` returns a fixed, hand-written synthetic `FitAnalysis`. The request body is ignored (it is not even parsed), and AWS is not called. Demo mode works with live AI switched off and no AWS settings, and it is exempt from the cost guard (it never returns 429 and does not use up the live budget). The response has header `X-ScaleMe-Mode: demo` and `X-ScaleMe-Demo-Label`, and the `summary` begins with `DEMO:` and the `disclaimer` with `DEMO (synthetic sample, not a live AWS Bedrock result)`. A normal response has `X-ScaleMe-Mode: live`. The route never switches to demo on its own when AWS fails; the client must ask for it. There is no `mode` field in the JSON body (open decision: see Decisions below).
 

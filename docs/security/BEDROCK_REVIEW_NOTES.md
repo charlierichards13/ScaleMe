@@ -1,7 +1,30 @@
 # Bedrock fit-analysis review notes — Issue #6
 
 **Date:** 2026-11-14 · **Source:** Claude Code's execution transcript, updated after the implementing agent reread its own source against the merged PR #25 standards.
-**Verification status:** **Self-review by the implementing agent, not independent.** All test evidence is from **mocked** AWS. **The ScaleMe API has not been tested against live Bedrock.** (Update 2026-11-14, owner-reported and not verified by the agent: the account has Bedrock access in `us-east-2` and Amazon Nova Lite responded in the AWS console playground. That is not a ScaleMe test.) The Issue #6 code was merged to `main` in PR #33. Not a passing security audit; a human review of the real diff is still required.
+**Verification status:** **Self-review by the implementing agent, not independent.** Unit-test evidence is from **mocked** AWS. On 2026-11-15, **one** synthetic request went through the ScaleMe API to live Amazon Nova Lite and succeeded; see the update below. The Issue #6 code was merged to `main` in PR #33. Not a passing security audit; a human review of the real diff is still required.
+
+## Update 2026-11-15 (Issue #23 branch, `feat/bedrock-rate-limits`)
+
+| Area | Status |
+| --- | --- |
+| AWS account | Project-based account (Builder ID, AWS-managed SCPs). IAM console passwords are blocked by SCP, so the backend uses a role instead of an IAM user |
+| Backend identity | Restricted role `ScaleMeDevBedrockInvoke`. It is assumed from the human's `aws login` session and has no access keys. Trust is limited to the project's `AccountFullAccessRole`. Its permissions and permissions boundary are the same policy: Nova Lite in `us-east-2` only. **Verified** with allow and deny probes from the CLI and from the Node SDK default chain |
+| Model | `amazon.nova-lite-v1:0`, in-region on-demand in `us-east-2`. No cross-region profile, because the project-account docs say cross-Region features are unsupported |
+| Live test | **One** request, HTTP 200, about 4.5 s. Loopback-only production server, all limits 1, no SDK retry, live switch disabled again immediately. Valid schema, supplied requirement IDs only, all three resume quotes verbatim, absent skills `not_evidenced`. No request or response text in the server log |
+| Quality findings from that run | One growth suggestion implied adding AWS experience the resume did not show, and several clarification questions were generic. **Fixed:** the prompt now has explicit strengths, questions and suggestions rules, and a server check drops advice with invented numbers or unconditional "add experience" phrasing. **Mock-tested only**; not re-run live |
+| Usage tracking | A numeric-only log line per Bedrock call: input, output and total tokens, model latency, wall time, truncation flag. A canary test confirms no prompt, model output or model ID is logged |
+| Tests | 95 mocked unit tests pass, plus lint, typegen, `tsc` and production build (see the PR description for exact runs) |
+| Not verified | Live prompt-injection resistance, false-accomplishment bait against the live model, behavior across varied inputs, CloudTrail audit of the call, billed cost (billing lags) |
+
+### Model evaluation notes (read-only checks, no paid calls)
+
+| Model in `us-east-2` | In-region on-demand | Billing | Converse with current code |
+| --- | --- | --- | --- |
+| Amazon Nova Lite `amazon.nova-lite-v1:0` | **Yes** | First-party Bedrock | Works unchanged (verified live once) |
+| Claude Haiku 4.5 | No (geo/global inference profile only) | AWS Marketplace; Anthropic first-time-use form required | Model ID change only; the model card shows an end-of-life date that has already passed |
+| Claude Haiku 5.5 | No (geo/global inference profile only) | AWS Marketplace; one-time subscription | Needs request changes: the current `temperature: 0.2` is expected to be rejected, and default adaptive thinking uses part of the output-token budget |
+
+Nova Lite stays the baseline. A Claude comparison needs owner approval for the subscription, the cross-region IAM policy and a small benchmark budget.
 
 ## Update 2026-11-14 (after PR #25)
 
@@ -21,13 +44,13 @@
 | Checklist case | Result |
 | --- | --- |
 | Direct and indirect injection | Prompt placement and random tags tested; **model resistance not verified live** |
-| False accomplishments / invented numbers | Prompt rule only; the code **does not detect** invented numbers in model prose. Evidence fields are checked. **Gap** |
+| False accomplishments / invented numbers | **Partly closed (2026-11-15):** `strengths`, `clarificationQuestions` and `growthSuggestions` items with numbers not found in the inputs are dropped, and so are unconditional "add/highlight experience" suggestions. Keyword heuristic, mock-tested. `summary` and `explanation` are still not checked, and claims without numbers or those verbs can slip through |
 | Unsupported skill, fabricated quotes, invalid IDs | Downgraded, dropped, rejected: tested |
 | Output markup / unexpected keys | Non-JSON and schema failures rejected; extra keys stripped. Frontend must still escape text |
 | Oversized / malformed / empty request | 4xx, no AWS call, no echo: tested (including an unbounded chunked body) |
 | Model unavailable | Missing config, timeout, throttle, access denied, bad model, empty reply mapped to safe errors: tested |
 | Cost abuse | **Partly mitigated, local only** (Issue #23, `feat/bedrock-rate-limits`): live calls off by default, shared per-process budget (10/min, 50/day, 2 concurrent), `429` before AWS, SDK `maxAttempts` 1. Mock-tested. Not distributed, no per-user fairness. Owner-reported $5 budget notification and $20 spending limit are unverified and not a hard cap |
-| Privacy canary | A synthetic name is absent from responses and `console.error` output in tests. No live log review, no real-AWS check |
+| Privacy canary | A synthetic name is absent from responses and `console.error` output in tests, and from the new usage log line (`console.info`). One live run's server log was reviewed by the agent: no request or response text |
 | Demo integrity | Labeled by text and headers; no automatic fallback: tested |
 
 ## Reported implementation
@@ -45,9 +68,9 @@
 | Finding | Importance | Action |
 | --- | --- | --- |
 | Rate limiting on the cost-bearing Bedrock endpoint is per-process only | High before any public deployment | Issue #23 added an off-by-default live switch, global per-process limits, a concurrency cap and safe 429s. Still needed: a limit shared by all instances (gateway/WAF or shared store), trusted per-client identity, and verification of the owner-reported AWS budget notification (an alert, not a hard cap) |
-| No live Bedrock invocation **through the ScaleMe API** (console playground access only) | High before claiming AI behavior verified | Perform one safe synthetic real-model test through `POST /api/fit/analyze` with `FIT_LIVE_AI_ENABLED=true`; inspect structured result and evidence quotes |
-| Prompt-injection tests do not prove actual model resistance | High | Run controlled adversarial synthetic cases with no tools/secrets; verify schema and source evidence |
-| SDK/model access/IAM not verified | High for cloud readiness | Verify approved region/model, least-privilege IAM and error path; no broad wildcard secrets |
+| ~~No live Bedrock invocation through the ScaleMe API~~ | Resolved 2026-11-15 | One synthetic request succeeded with verbatim evidence (see update above). A single sample is not a benchmark |
+| Prompt-injection tests do not prove actual model resistance | High | Run controlled adversarial synthetic cases with no tools/secrets; verify schema and source evidence. Each live run needs owner approval |
+| ~~SDK/model access/IAM not verified~~ | Resolved for local development 2026-11-15 | Restricted role verified with allow/deny probes. A hosted deployment needs its own equally scoped execution role. Pending owner cleanup: the unused IAM user and its login policy |
 | Rust matcher not integrated | Functional gap | Verify standalone Rust signals and a deployment-compatible integration boundary later |
 | No persistent user model or session isolation tests | High if session storage is added | Design consent, isolation, authorization, retention and deletion before accounts |
 | ~~Contract lists no `INVALID_REQUEST` error~~ | Resolved in docs | Frontend still needs to handle it |
