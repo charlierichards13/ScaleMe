@@ -15,7 +15,7 @@ Issue #34 described the dashboard as the opening route. The product direction ha
 | Sidebar (desktop) / drawer (mobile) | `components/layout/AppShell.tsx`, `Sidebar.tsx`, `nav-items.ts` | Static nav. Each item shows a status: *Demo* or *Soon* |
 | Header, demo switch, profile link | `components/dashboard/DashboardView.tsx` | Client state only |
 | Hero + "how ScaleMe digs deeper" ladder | `HeroPanel.tsx` | CTA changes depending on whether a resume exists |
-| Four tool cards | `FeatureCards.tsx` | Links to `/discover`, `/fit`, `/impact-lab`, `/interview` |
+| Four tool cards | `FeatureCards.tsx` | Links to `/discover-preview` (temporary), `/fit`, `/impact-lab`, `/interview` |
 | Recommended roles | `RecommendedJobs.tsx`, `JobPreviewCard.tsx` | Empty, or 3 fictional listings in demo mode |
 | Evidence insights | `EvidenceInsights.tsx` | Empty, or 3 sample assessments in demo mode |
 | Profile & goals | `ProfileSummary.tsx` | Empty, or the sample profile in demo mode |
@@ -40,7 +40,8 @@ Demo mode is a toggle held in client state. It makes no network requests (no Bed
 | `/coach` | The previous chat-first demo, moved here unchanged except for a "Back to dashboard" link. It is still scripted, not live AI |
 | `/impact-lab` | Not part of this branch: the fictional Resume Impact Lab from main (PR #39). The sidebar's *Resume Lab* item, the *Grill My Resume* card and the "Explain a project" next step link to it |
 | `/resume-lab`, `/fit`, `/interview`, `/saved`, `/settings` | Clearly labeled "Not available yet" placeholders, built from `FeaturePlaceholder`, that link to the Coach demo. `/resume-lab` is where resume upload will live, and the hero's *Upload your resume* button points there |
-| `/discover` | **Not created here.** It belongs to PR #37 (`feat/job-swipe-discovery`). Until that merges, the link shows the branded `not-found` page, and Next.js prefetches of `/discover` log 404s in the console |
+| `/discover-preview` | **Temporary** labeled placeholder. The real `/discover` belongs to PR #37 (`feat/job-swipe-discovery`) and isn't created here. Once #37 merges, set `routes.discover` in `web/src/lib/routes.ts` back to `"/discover"` and delete `app/(workspace)/discover-preview/`. A separate path avoids two pages resolving to `/discover` |
+| `/fit` | Placeholder. Connect it to the Fit Evidence Explorer at `/fit-insights` once PR #41 merges |
 
 ## Integrity and international-student rules applied
 
@@ -52,8 +53,15 @@ Demo mode is a toggle held in client state. It makes no network requests (no Bed
 ## Security notes
 
 - Every user, demo and model text is rendered as escaped React text. There is no `dangerouslySetInnerHTML`, `eval`, or dynamic URL from data.
-- No browser storage. Saved roles live in component memory for the current tab only.
+- No browser storage. Saved roles live only in component memory and reset whenever the dashboard re-renders fresh (switching demo mode, reloading, or navigating away once Next.js evicts the page from its route cache).
 - No secrets and no `NEXT_PUBLIC_` variables. No new network calls or API routes. The threat model is unchanged for that reason.
+
+## Automated tests (Vitest)
+
+- `web/src/lib/dashboard/snapshot.test.ts`: empty vs demo snapshots, deterministic output, next-step ordering, and honest fixtures (every job fictional, no `not_evidenced` evidence quotes, no percentages or probability wording).
+- `web/src/lib/routes.test.ts`: every route constant resolves to a real `page.tsx` (route groups included), so a 404 link fails CI. Also checks that nav items and next steps use known routes, and covers `isActive` matching.
+
+These test logic only. Component interaction tests would need a DOM test environment, which isn't set up yet; the manual checks below cover interactions.
 
 ## Manual verification done (production build, `next start`)
 

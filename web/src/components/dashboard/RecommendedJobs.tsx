@@ -9,7 +9,9 @@ import { routes } from "@/lib/routes";
 import { JobPreviewCard } from "./JobPreviewCard";
 
 export function RecommendedJobs({ jobs, showAuthorization }: { jobs: JobPreview[]; showAuthorization: boolean }) {
-  // Saved state lives only in memory for this tab; there is no persistence yet.
+  // Saved state lives only in this component's memory; it resets when the
+  // dashboard is re-rendered fresh (demo toggle, reload, or navigation).
+  // There is no persistence yet.
   const [saved, setSaved] = useState<ReadonlySet<string>>(() => new Set());
 
   const toggle = (id: string) =>
@@ -27,7 +29,7 @@ export function RecommendedJobs({ jobs, showAuthorization }: { jobs: JobPreview[
         title="Recommended roles"
         description={
           jobs.length > 0
-            ? "Fictional sample listings. Saves last only for this tab."
+            ? "Fictional sample listings. Saves are temporary and may reset when you leave this page."
             : undefined
         }
         action={

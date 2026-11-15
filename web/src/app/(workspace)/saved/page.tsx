@@ -15,7 +15,7 @@ export default function SavedPage() {
         "Run a fit analysis or mock interview for any saved role.",
         "Track where each application stands.",
       ]}
-      dependsOn="Saving across visits needs accounts and a reviewed storage and privacy design, which don't exist yet. Saves on the dashboard last only for the current tab."
+      dependsOn="Saving across visits needs accounts and a reviewed storage and privacy design, which don't exist yet. Saves on the dashboard are temporary and may reset when you leave that page."
     />
   );
 }
