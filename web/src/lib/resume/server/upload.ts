@@ -1,4 +1,3 @@
-import { createHash, timingSafeEqual } from "node:crypto";
 import { resolve } from "node:path";
 import { runParser } from "./process";
 import { aborted, invalid, tooLarge, unavailable, UploadError } from "./errors";
@@ -13,16 +12,13 @@ export function displayFilename(raw: string): string | undefined {
   return base && base !== "." && base !== ".." && base.length <= 255 ? base : undefined;
 }
 
+/** Public demo gate: owner-enabled, time-bounded, and still origin restricted. */
 function authorize(request: Request) {
   if (process.env.RESUME_UPLOAD_ENABLED !== "true") throw unavailable();
-  const expected = process.env.RESUME_UPLOAD_TOKEN;
-  if (!expected || expected.length < 32 || expected.length > 4096) throw unavailable();
-  const authorization = request.headers.get("authorization");
-  const actual = authorization?.startsWith("Bearer ") ? authorization.slice(7) : "";
-  const digest = (text: string) => createHash("sha256").update(text).digest();
-  if (actual.length > 4096 || !timingSafeEqual(digest(actual), digest(expected))) {
-    throw new UploadError(401, "PARSING_FAILED", "Private upload access is required.");
-  }
+  const expiration = process.env.RESUME_UPLOAD_EXPIRES_AT ?? "";
+  // Require an explicit timezone so deployments cannot silently change the cutoff.
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})$/.test(expiration) ||
+      !Number.isFinite(Date.parse(expiration)) || Date.now() >= Date.parse(expiration)) throw unavailable();
   const origin = request.headers.get("origin");
   const allowed = process.env.RESUME_UPLOAD_ORIGIN || "http://localhost:3000";
   if ((origin && origin !== allowed) || request.headers.get("sec-fetch-site") === "cross-site") {
@@ -79,7 +75,7 @@ async function readFile(request: Request): Promise<File> {
   return file;
 }
 
-/** Numeric process-local budgets only; no applicant data, tokens, IPs or results retained. */
+/** Numeric process-local budgets only; no applicant data, IPs or results retained. */
 export function createUploadHandler(parser = runParser, now = Date.now) {
   let active = false;
   let admissions: number[] = [];
@@ -89,7 +85,7 @@ export function createUploadHandler(parser = runParser, now = Date.now) {
     try {
       authorize(request);
       admissions = admissions.filter((time) => time > now() - 60_000);
-      if (active || admissions.length >= 6) throw new UploadError(429, "PARSING_FAILED", "Private upload capacity is busy. Try again later.");
+      if (active || admissions.length >= 6) throw new UploadError(429, "PARSING_FAILED", "Upload capacity is busy. Try again later.");
       active = true;
       admissions.push(now());
       let released = false;
