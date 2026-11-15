@@ -1,0 +1,29 @@
+{
+  "resume": {
+    "id": "resume-demo-001",
+    "filename": "synthetic-resume.pdf",
+    "text": "Jordan Example\njordan.example@example.com | (555) 010-0199 | Example City, EX\nEDUCATION\nExample State University, B.S. Computer Science, May 2026\nRelevant coursework: Data Structures, Databases, Operating Systems\nEXPERIENCE\nSoftware Engineering Intern, Synthetic Systems Co. Jun 2025 – Aug 2025\n• Built an internal scheduling dashboard with Python and SQL.\n• Wrote unit tests for the reporting service.\nPROJECTS\nCampus Events Finder\n• Developed a web app that lists student club events.\nSKILLS\nPython, SQL, Git, TypeScript\nCERTIFICATIONS\nExample Cloud Practitioner (fictional), 2025",
+    "sections": [
+      {
+        "heading": "Education",
+        "text": "Example State University, B.S. Computer Science, May 2026\nRelevant coursework: Data Structures, Databases, Operating Systems"
+      },
+      {
+        "heading": "Experience",
+        "text": "Software Engineering Intern, Synthetic Systems Co. Jun 2025 – Aug 2025\n• Built an internal scheduling dashboard with Python and SQL.\n• Wrote unit tests for the reporting service."
+      },
+      {
+        "heading": "Projects",
+        "text": "Campus Events Finder\n• Developed a web app that lists student club events."
+      },
+      {
+        "heading": "Skills",
+        "text": "Python, SQL, Git, TypeScript"
+      },
+      {
+        "heading": "Certifications",
+        "text": "Example Cloud Practitioner (fictional), 2025"
+      }
+    ]
+  }
+}

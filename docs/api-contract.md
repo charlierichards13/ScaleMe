@@ -175,6 +175,7 @@ export type GuardedImpactSuggestion = Omit<ImpactSuggestion, "improved"> & {
 **Request:** `multipart/form-data` with `file` (text-based PDF); optionally `demo=true` for a clearly labeled sample.  
 **Response:** `{ "resume": Resume }`.  
 **Failures:** `INVALID_FILE_TYPE`, `FILE_TOO_LARGE`, `NO_EXTRACTABLE_TEXT`, `PARSING_FAILED`.
+*Current state (Issue #4): this route is **not implemented**. The parsing itself exists as a standalone Rust program, `services/resume-parser/`, which reads a PDF on standard input and writes `{ "resume": Resume }` or an `ApiError` on standard output using only the four codes above. Limits it enforces: 5 MiB, 20 pages, `resume.text` up to 30,000 characters (rejected, never truncated), up to 50 sections. The request, response and error shapes in this contract are unchanged. See [RESUME_INGESTION.md](RESUME_INGESTION.md) for the code-to-cause table, suggested HTTP statuses for a future route, and the open question about more specific error codes.*
 
 ### `POST /api/job/ingest`
 
@@ -374,6 +375,6 @@ These are deterministic keyword/alias signals, not final judgments of candidate 
 
 - Data persistence: default to **no user accounts** and no permanent resume storage in the hackathon demo.
 - AWS region/model and backend hosting: choose based on actual access and permissions, not guessed defaults.
-- PDF size limit: define and enforce before public upload.
+- PDF size limit: the Rust parser enforces 5 MiB (Issue #4). The upload route must enforce the same limit on the request stream before public upload.
 - Optional job-URL ingestion: secure and best-effort only; text input is guaranteed.
 - Mobile: prioritize responsive PWA; Expo is a separate stretch project sharing API contracts.

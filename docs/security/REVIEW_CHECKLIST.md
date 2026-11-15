@@ -51,9 +51,46 @@ Unit tests with mocked Bedrock verify **our code**, not that Bedrock resists pro
 - [ ] A file name or text answer containing markup renders as plain text.
 - [ ] If answers become persisted or auth-gated: server-side schema validation, authorization and retention are reviewed first (client checks are UX only).
 
+## Resume PDF parser (`services/resume-parser/`, Issue #4)
+
+Run with `cargo test --manifest-path services/resume-parser/Cargo.toml --locked`. All inputs are synthetic PDFs generated in memory by the tests; no PDF file is committed. Passing these shows the parser's own behaviour on these inputs. It does not cover an upload route (none exists) or real-world PDFs.
+
+| Case | Expected safe behavior | Test |
+| --- | --- | --- |
+| Empty input | `INVALID_FILE_TYPE` | `invalid_inputs.rs::missing_or_empty_file` |
+| Text, PNG, JPEG, ZIP/DOCX, HTML, RTF, header not at byte 0 | `INVALID_FILE_TYPE` | `incorrect_file_types` |
+| Non-PDF presented as `resume.pdf` | Rejected on content; the name is ignored | `renamed_non_pdf_is_rejected_whatever_the_filename_claims` |
+| Truncated, noise after the header, missing page tree | `PARSING_FAILED` | `corrupted_pdfs` |
+| Image-only (scanned) PDF | `NO_EXTRACTABLE_TEXT` | `image_only_pdf_has_no_extractable_text` |
+| Password needed to open (real RC4) | `PARSING_FAILED`, message mentions the password | `password_protected_pdf` |
+| 5 MiB + 1 byte | `FILE_TOO_LARGE`, before the PDF library runs | `oversized_file`, `cli.rs::oversized_stdin_is_rejected_without_reading_it_all` |
+| 21 pages / 400 pages | `FILE_TOO_LARGE` | `excessive_page_count` |
+| More than 30,000 characters of text | `FILE_TOO_LARGE`; never a shortened resume | `excessive_extracted_text_is_rejected_never_truncated` |
+| Accents, CJK, Greek, symbols, emoji | Extracted unchanged, valid JSON | `valid_resumes.rs::unusual_unicode_is_extracted_unchanged` |
+| Section keywords inside sentences and bullets | No section started | `section_keywords_inside_sentences_do_not_start_sections` |
+| Extreme finite font sizes | Heading comparison does not overflow | `sections.rs::extreme_font_sizes_do_not_overflow_heading_detection` |
+| PDF with `/OpenAction` JavaScript, `/Launch`, a base URI and an instruction-like title | None of it in the output | `invalid_inputs.rs::active_content_and_metadata_are_ignored` |
+| Resume line addressed to an AI | Returned unchanged as text, in its section | `instruction_like_resume_text_is_returned_as_plain_data` |
+| Error text for rejected documents | No document content, in any form | `errors_never_contain_document_content`, `cli.rs::output_never_leaks_content_of_a_rejected_document` |
+| Path-like `--filename` | Base name only; nothing created | `cli.rs::filename_flag_is_reduced_to_a_base_name` |
+| Normal and rejected runs | Working and temp directories stay empty | `cli.rs::nothing_is_written_to_disk_unless_an_output_path_is_given` |
+| `--output` to an existing file | Refused, file unchanged | `cli.rs::explicit_input_and_output_paths` |
+| Bad flags | Exit 2, the bad value is not echoed | `cli.rs::usage_errors_exit_2_and_never_echo_the_bad_value` |
+| Time budget exceeded | Exit 3, `PARSING_FAILED` | `cli.rs::time_budget_ends_the_process_with_status_3` |
+| Heap budget exceeded while reading or while parsing | Process aborts, no partial JSON | `cli.rs::heap_budget_aborts_the_process_instead_of_growing`, `heap_budget_also_stops_the_pdf_library_mid_parse` |
+| 4,000 randomly damaged PDFs (fixed seed) | No crash, no hang, every accepted result within the contract limits | `robustness.rs::mutated_pdfs_never_crash_hang_or_break_the_contract` |
+| Dependency tree | No networking, TLS, cloud, AI, OCR, rendering or second PDF crate | `robustness.rs::dependency_tree_has_no_network_ai_or_second_pdf_library` |
+| Output shape | Only contract fields; accepted by the real Zod `ResumeSchema` | `contract.rs`, `web/src/lib/resume/parser-contract.test.ts` |
+
+**Not covered (do not mark as verified):** real-world PDFs from Word, Google Docs, LaTeX or design tools; compressed streams and decompression bombs; embedded fonts; deeply nested objects; AES encryption; right-to-left text; sandboxing; any HTTP upload path.
+
+- [ ] Before a route is added: streamed 5 MiB body limit, fixed argument list (no shell), upload piped to standard input (never written to disk), kill timer on the child process, cap on concurrent parser processes, rate limiting, and no logging of the body, file name or parser output.
+- [ ] Before real resumes: test with representative real-world PDFs supplied with consent, and review the open decisions in the threat model.
+- [ ] Before private data: disable Linux core dumps / Windows Error Reporting memory dumps, enforce host memory limits, and ensure the parent kill timer also covers blocked input/output.
+
 ## PDF / job-URL integrations (when they exist)
 
-- [ ] PDF: valid text PDF, non-PDF with `.pdf` suffix, oversized file, corrupt PDF, image-only document, unexpected metadata, parser timeout.
+- [ ] PDF: valid text PDF, non-PDF with `.pdf` suffix, oversized file, corrupt PDF, image-only document, unexpected metadata, parser timeout. *(Parser-level cases are in the table above; repeat them end to end through the upload route once it exists.)*
 - [ ] URL: `http://127.0.0.1`, `http://localhost`, cloud metadata/link-local addresses, private IP ranges, DNS aliases, redirect-to-private targets, credential-bearing URLs, unsupported protocols.
 - [ ] No unrestricted redirects, unconstrained response streaming, unlimited retries, arbitrary file writes or unreviewed shell invocation.
 - [ ] Pasted-text fallback works when URL access is blocked.
