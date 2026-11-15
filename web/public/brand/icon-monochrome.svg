@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 -1 188 188" role="img" aria-label="ScaleMe S single-color symbol">
+<title>ScaleMe S single-color symbol</title><defs>
+ <linearGradient id="ribbon" x1="0%" y1="0%" x2="95%" y2="98%"><stop offset="0%" stop-color="#AC86FF"/><stop offset="48%" stop-color="#7858F8"/><stop offset="100%" stop-color="#4736CF"/></linearGradient>
+ <linearGradient id="ribbonDark" x1="0%" y1="0%" x2="90%" y2="90%"><stop offset="0%" stop-color="#A98AFF"/><stop offset="100%" stop-color="#6755F1"/></linearGradient>
+ <linearGradient id="me" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#794EFA"/><stop offset="100%" stop-color="#594BF4"/></linearGradient>
+ <linearGradient id="tile" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#845DF8"/><stop offset="55%" stop-color="#5840D9"/><stop offset="100%" stop-color="#282078"/></linearGradient>
+ <linearGradient id="whiteRibbon" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#E7DDFF"/></linearGradient>
+ </defs><path d="M 39 77 C 37 62 43 47 60 41 L 140 11 L 137 4 C 136 1 139 -1 142 1 L 178 19 C 182 21 182 25 180 28 L 157 56 C 155 59 150 57 150 53 L 150 43 L 73 71 C 64 75 61 80 64 86 L 69 91 L 51 105 C 44 102 40 93 39 77 Z" fill="#11143E"/><path d="M 141 85 C 153 82 164 91 167 102 C 172 117 161 130 146 136 L 57 170 C 51 173 46 171 42 165 L 35 157 C 33 153 36 150 40 148 L 140 113 C 148 110 152 105 146 101 L 131 93 Z" fill="#11143E"/></svg>
