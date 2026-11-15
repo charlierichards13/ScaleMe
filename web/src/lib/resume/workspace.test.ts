@@ -12,10 +12,10 @@ describe("Resume Lab product destinations and honest review", () => {
     const html = renderToStaticMarkup(createElement(FeatureCards));
     expect(html).toMatch(/href="\/resume-lab"/); expect(html).toContain("Resume Lab");
   });
-  it("keeps working evidence and interview destinations, with private disclosure", () => {
+  it("keeps working evidence and interview destinations, with time-limited public upload disclosure", () => {
     const html = renderToStaticMarkup(createElement(ResumeUpload));
     expect(html).toContain('href="/impact-lab"'); expect(html).toContain('href="/interview"');
-    expect(html).toContain("disabled by default"); expect(html).toContain("not an account password");
+    expect(html).toContain("PDF extraction demo"); expect(html).toContain("No access code is needed");
     expect(html).not.toContain('href="/fit-insights"');
   });
   it("renders sections and full text escaped, with JSON secondary and collapsed", () => {
