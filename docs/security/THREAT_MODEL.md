@@ -88,6 +88,19 @@ Frontend only: no API handler, model call, network request, authentication or pe
 
 ## Review triggers
 
+### Fit Evidence Explorer prototype (Issue #40)
+
+`/fit-insights` uses bundled **FICTIONAL DEMO** resume/job/interview fixtures and local
+React state. It adds no applicant input, API call, model call, storage, telemetry, or
+external data flow. Exact source text and manually approved requirement/source/quote
+links gate support; job text, unknown IDs, mutated quotes, missing answers, vague answers,
+and irrelevant answers cannot add coverage. The fixed four-required-ID inventory is
+validated before counting. A sample answer must be revealed before it can support the
+after snapshot. These fixed-fixture checks do not implement general semantic validation,
+a live evidence ledger, or the proposed v0.2 API contract. Future integration needs
+server-side provenance/relevance validation and existing privacy/cost reviews.
+See [scope and verification](../FIT_INSIGHTS_DEMO.md).
+
 ### Resume Impact Lab prototype (Issue #8)
 
 `/impact-lab` is an isolated browser UI using bundled **FICTIONAL DEMO** fixtures.
