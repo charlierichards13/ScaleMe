@@ -78,7 +78,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <Menu aria-hidden="true" className="h-5 w-5" />
           </button>
-          <Logo />
+          <Logo compact />
         </div>
         <main id="main" tabIndex={-1} className="outline-none">
           {children}
