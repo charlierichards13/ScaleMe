@@ -40,7 +40,7 @@
 }
 
 .headerNav { display: flex; align-items: center; gap: 26px; font-weight: 700; font-size: 14px; }
-.navLink { color: #717994; text-decoration: none; }
+.navLink { color: #5b657c; text-decoration: none; }
 .navLink:hover { color: #5141db; }
 .activeNav { color: #5744f5; border-bottom: 2px solid #5744f5; padding: 6px 0; }
 .demoBadge {
@@ -66,7 +66,7 @@
 }
 
 .intro { padding-top: 88px; }
-.eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .15em; color: #6657e9; }
+.eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .15em; color: #5d4dd9; }
 .intro h1 { font-size: clamp(36px, 4.3vw, 60px); line-height: 1.08; letter-spacing: -.055em; margin: 18px 0 22px; font-weight: 850; }
 .intro h1 span { color: #5948f6; }
 .introText { color: #626b83; font-size: 17px; line-height: 1.8; max-width: 410px; }
@@ -86,14 +86,14 @@
 }
 .tabActive { color: #5744f5; background: #f0eeff; border-color: #c7bfff; }
 .tab span, .tabActive span { border-radius: 50px; background: #e2e4ee; color: #4d5872; padding: 3px 8px; font-size: 12px; }
-.tabActive span { color: #5948f6; background: #ded9ff; }
+.tabActive span { color: #5141db; background: #ded9ff; }
 .hintBox { margin-top: 44px; border-left: 3px solid #5948f6; padding: 4px 0 4px 20px; }
 .hintBox strong { font-size: 14px; }
-.hintBox p { font-size: 13px; color: #667086; line-height: 1.75; margin-top: 8px; }
-.privacyNote { font-size: 12px; color: #81899f; margin-top: 36px; line-height: 1.65; }
+.hintBox p { font-size: 13px; color: #5b657c; line-height: 1.75; margin-top: 8px; }
+.privacyNote { font-size: 12px; color: #5b657c; margin-top: 36px; line-height: 1.65; }
 
 .deckSection { max-width: 540px; width: 100%; }
-.deckHeader { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; letter-spacing: .12em; color: #929ab2; margin: 0 2px 19px; }
+.deckHeader { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; letter-spacing: .12em; color: #5b657c; margin: 0 2px 19px; }
 .cardStage { position: relative; }
 .cardBehind {
   position: absolute; inset: 13px 22px -13px;
@@ -115,15 +115,15 @@
   transition: box-shadow .2s ease;
   cursor: grab;
 }
-.card:focus-visible { outline: 3px solid #8675fc; outline-offset: 4px; }
+.deckSection:focus-visible, .deckSection h2[tabindex="-1"]:focus-visible, .card:focus-visible { outline: 3px solid #8675fc; outline-offset: 4px; }
 .card:active { cursor: grabbing; }
 .card:hover { box-shadow: 0 28px 90px #414a7a2e, 0 3px 15px #414a7a0a; }
 .cardTopline { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
 .focusPill { border-radius: 50px; background: #f1efff; color: #5d4dd9; padding: 8px 12px; font-size: 12px; font-weight: 800; }
-.cardMark { font-size: 10px; letter-spacing: .1em; font-weight: 800; color: #a46a1c; background: #fff4df; padding: 8px 11px; border-radius: 50px; }
+.cardMark { font-size: 10px; letter-spacing: .1em; font-weight: 800; color: #895512; background: #fff4df; padding: 8px 11px; border-radius: 50px; }
 .cardIdentity { margin-top: 26px; }
 .companyIcon { width: 58px; height: 58px; border-radius: 18px; background: linear-gradient(140deg, #5d4bf6, #8474ff); display: grid; place-items: center; color: white; font-weight: 800; font-size: 25px; }
-.companyName { font-size: 13px; color: #818ba0; margin: 19px 0 5px; font-weight: 700; }
+.companyName { font-size: 13px; color: #65718a; margin: 19px 0 5px; font-weight: 700; }
 .role { font-size: clamp(23px, 2.7vw, 31px); line-height: 1.2; letter-spacing: -.03em; font-weight: 800; margin: 0; }
 .location { margin-top: 13px; font-size: 13px; color: #68748b; }
 .skillGroup { display: flex; gap: 8px; flex-wrap: wrap; margin: 27px 0; }
@@ -139,18 +139,18 @@
 .saveOverlay { right: 36px; color: #27a77a; transform: rotate(10deg); }
 .controls { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 34px; }
 .passButton, .saveButton, .undoButton { cursor: pointer; border-radius: 100px; padding: 15px 21px; font-weight: 800; font-size: 14px; border: 1px solid transparent; min-height: 50px; }
-.passButton { background: #fff0f3; color: #be4862; border-color: #ffd8df; }
+.passButton { background: #fff0f3; color: #b03c57; border-color: #ffd8df; }
 .saveButton { background: #5744f5; color: #fff; box-shadow: 0 8px 22px #5744f53b; }
 .undoButton { background: white; color: #69738b; border-color: #dce0ea; }
 .undoButton:disabled { cursor: not-allowed; opacity: .45; }
 .passButton span, .saveButton span { padding: 0 8px; }
-.keyboardHint { text-align: center; color: #929aae; font-size: 12px; margin-top: 17px; }
+.keyboardHint { text-align: center; color: #5b657c; font-size: 12px; margin-top: 17px; }
 .announcement { color: #5d4dd9; font-size: 12px; min-height: 18px; margin-top: 17px; text-align: center; }
 .savedPanel, .emptyState { background: #fff; min-height: 330px; padding: 34px; border: 1px solid #e6e7f0; border-radius: 27px; box-shadow: 0 24px 75px #414a7a18; }
 .savedPanel h2, .emptyState h2 { font-size: 26px; font-weight: 800; margin: 0 0 14px; }
-.savedPanel > p, .emptyState p { color: #6e7890; line-height: 1.7; margin-bottom: 28px; font-size: 14px; }
+.savedPanel > p, .emptyState p { color: #65718a; line-height: 1.7; margin-bottom: 28px; font-size: 14px; }
 .savedList { list-style: none; padding: 0; margin: 20px 0 25px; display: grid; gap: 12px; }
-.savedList li { display: flex; flex-direction: column; gap: 6px; padding: 16px; background: #f7f7fe; border: 1px solid #ebeaff; border-radius: 13px; color: #6c7589; font-size: 12px; }
+.savedList li { display: flex; flex-direction: column; gap: 6px; padding: 16px; background: #f7f7fe; border: 1px solid #ebeaff; border-radius: 13px; color: #626c80; font-size: 12px; }
 .savedTitle { font-weight: 800; color: #26294b; font-size: 15px; }
 .savedDemo { color: #9a671b; font-size: 10px; font-weight: 800; }
 .savedDetails { border-top: 1px solid #e5e6f3; padding-top: 10px; }

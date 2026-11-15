@@ -1,11 +1,13 @@
 "use client";
 
-import { useReducer, useRef, useState, type PointerEvent } from "react";
+import { useLayoutEffect, useReducer, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import Link from "next/link";
 import { DEMO_OPENINGS, type DemoOpening } from "@/lib/jobs/demo-openings";
 import { createSwipeState, swipeReducer, type Decision } from "@/lib/jobs/swipe-state";
 import styles from "./discover.module.css";
 
+// PR #37 predates shared routes; replace this with the shared import when integrated with main.
+const routes = { dashboard: "/dashboard" } as const;
 const openingIds = DEMO_OPENINGS.map((job) => job.id);
 const byId = new Map(DEMO_OPENINGS.map((job) => [job.id, job]));
 const SWIPE_THRESHOLD = 88;
@@ -31,7 +33,7 @@ function OpeningCard({
         <h2 className={styles.role}>{job.title}</h2>
         <p className={styles.location}>{job.location} · {job.arrangement} · {job.type}</p>
       </div>
-      <div className={styles.skillGroup} aria-label="Role requirements illustrated">
+      <div className={styles.skillGroup} role="group" aria-label="Role requirements illustrated">
         {job.skills.map((skill) => <span className={styles.skill} key={skill}>{skill}</span>)}
       </div>
       <div className={styles.reason}>
@@ -60,13 +62,57 @@ export default function DiscoverPage() {
   const [showSaved, setShowSaved] = useState(false);
   const [announcement, setAnnouncement] = useState("");
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
+  const cardRef = useRef<HTMLElement>(null);
+  const completionRef = useRef<HTMLHeadingElement>(null);
+  const savedHeadingRef = useRef<HTMLHeadingElement>(null);
+  const exploreTabRef = useRef<HTMLButtonElement>(null);
+  const savedTabRef = useRef<HTMLButtonElement>(null);
+  const removeButtonRefs = useRef(new Map<string, HTMLButtonElement>());
+  const pendingFocus = useRef<(() => void) | null>(null);
+
+  // Only move focus in response to an action, after replacement DOM is committed.
+  useLayoutEffect(() => {
+    const focus = pendingFocus.current;
+    pendingFocus.current = null;
+    focus?.();
+  }, [deck, showSaved]);
 
   const activeId = deck.remaining[0];
   const activeJob = byId.get(activeId);
   const nextJob = byId.get(deck.remaining[1]);
 
+  function focusCardsAfterUpdate() {
+    pendingFocus.current = () => (cardRef.current ?? completionRef.current)?.focus({ preventScroll: true });
+  }
+
+  function changePanel(saved: boolean) {
+    if (saved) pendingFocus.current = () => savedHeadingRef.current?.focus({ preventScroll: true });
+    else focusCardsAfterUpdate();
+    setShowSaved(saved);
+  }
+
+  function onTabKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    let saved: boolean;
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") saved = event.target === exploreTabRef.current;
+    else if (event.key === "Home") saved = false;
+    else if (event.key === "End") saved = true;
+    else return;
+    event.preventDefault();
+    setShowSaved(saved);
+    (saved ? savedTabRef : exploreTabRef).current?.focus();
+  }
+
+  function removeSaved(id: string) {
+    const index = deck.saved.indexOf(id);
+    const nextId = deck.saved[index + 1] ?? deck.saved[index - 1];
+    pendingFocus.current = () => (removeButtonRefs.current.get(nextId) ?? savedHeadingRef.current)?.focus({ preventScroll: true });
+    dispatch({ type: "removeSaved", id });
+    setAnnouncement(`${byId.get(id)?.title} removed from saved opportunities.`);
+  }
+
   function choose(decision: Decision) {
     if (!activeJob) return;
+    focusCardsAfterUpdate();
     dispatch({ type: "choose", id: activeJob.id, decision });
     setDragX(0);
     setDetailsOpen(false);
@@ -75,6 +121,7 @@ export default function DiscoverPage() {
 
   function undo() {
     if (!deck.history.length) return;
+    focusCardsAfterUpdate();
     dispatch({ type: "undo" });
     setDragX(0);
     setDetailsOpen(false);
@@ -109,12 +156,12 @@ export default function DiscoverPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <Link href="/" className={styles.brand} aria-label="ScaleMe dashboard">
+        <Link href={routes.dashboard} prefetch={false} className={styles.brand} aria-label="ScaleMe dashboard">
           <span className={styles.brandIcon} aria-hidden="true">S</span>
           <span>ScaleMe</span>
         </Link>
         <nav aria-label="Discover navigation" className={styles.headerNav}>
-          <Link href="/" className={styles.navLink}>Dashboard</Link>
+          <Link href={routes.dashboard} prefetch={false} className={styles.navLink}>Dashboard</Link>
           <span className={styles.activeNav} aria-current="page">Discover</span>
         </nav>
         <span className={styles.demoBadge}>FICTIONAL DEMO · NO LIVE JOBS</span>
@@ -127,11 +174,31 @@ export default function DiscoverPage() {
           <p className={styles.introText}>
             Explore roles one card at a time. Swipe right to save, left to pass, and open details to understand the role.
           </p>
-          <div className={styles.introActions}>
-            <button type="button" className={!showSaved ? styles.tabActive : styles.tab} onClick={() => setShowSaved(false)}>
+          <div className={styles.introActions} role="tablist" aria-label="Opportunity views" onKeyDown={onTabKeyDown}>
+            <button
+              ref={exploreTabRef}
+              id="explore-tab"
+              role="tab"
+              aria-selected={!showSaved}
+              aria-controls="discovery-panel"
+              tabIndex={showSaved ? -1 : 0}
+              type="button"
+              className={!showSaved ? styles.tabActive : styles.tab}
+              onClick={() => setShowSaved(false)}
+            >
               Explore <span>{deck.remaining.length}</span>
             </button>
-            <button type="button" className={showSaved ? styles.tabActive : styles.tab} onClick={() => setShowSaved(true)}>
+            <button
+              ref={savedTabRef}
+              id="saved-tab"
+              role="tab"
+              aria-selected={showSaved}
+              aria-controls="discovery-panel"
+              tabIndex={showSaved ? 0 : -1}
+              type="button"
+              className={showSaved ? styles.tabActive : styles.tab}
+              onClick={() => setShowSaved(true)}
+            >
               Saved <span>{deck.saved.length}</span>
             </button>
           </div>
@@ -139,17 +206,17 @@ export default function DiscoverPage() {
             <strong>What makes ScaleMe different?</strong>
             <p>Saving a role is the first step. The next step is discovering the evidence behind your fit and practicing the missing stories—never a fabricated hiring probability.</p>
           </div>
-          <p className={styles.privacyNote}>These six roles are entirely fictional. Choices live only in this browser tab and reset on refresh. No external job API, resume data, or paid AI call is used.</p>
+          <p className={styles.privacyNote}>These six roles are entirely fictional. Choices stay in page memory, may survive Back navigation, and reset on refresh or Restart demo. No external job API, resume data, or paid AI call is used.</p>
         </section>
 
-        <section className={styles.deckSection} aria-label={showSaved ? "Saved opportunities" : "Swipeable opportunity cards"}>
+        <section id="discovery-panel" role="tabpanel" aria-labelledby={showSaved ? "saved-tab" : "explore-tab"} tabIndex={0} className={styles.deckSection}>
           <div className={styles.deckHeader}>
             <span>{showSaved ? "YOUR SHORTLIST" : "CURATED DEMO DECK"}</span>
             <span>{showSaved ? `${deck.saved.length} saved` : `${deck.remaining.length} remaining`}</span>
           </div>
           {showSaved ? (
             <div className={styles.savedPanel}>
-              <h2>Saved opportunities</h2>
+              <h2 ref={savedHeadingRef} tabIndex={-1}>Saved opportunities</h2>
               {deck.saved.length === 0 ? (
                 <p>No cards saved yet. Return to Explore and swipe right or tap Save.</p>
               ) : (
@@ -166,16 +233,16 @@ export default function DiscoverPage() {
                           <p>{job.description}</p>
                           <p>{job.whyShown}</p>
                         </details>
-                        <button type="button" className={styles.removeSaved} onClick={() => {
-                          dispatch({ type: "removeSaved", id: job.id });
-                          setAnnouncement(`${job.title} removed from saved opportunities.`);
-                        }}>Remove from saved</button>
+                        <button ref={(node) => {
+                          if (node) removeButtonRefs.current.set(job.id, node);
+                          else removeButtonRefs.current.delete(job.id);
+                        }} type="button" className={styles.removeSaved} onClick={() => removeSaved(job.id)}>Remove from saved</button>
                       </li>
                     ) : null;
                   })}
                 </ul>
               )}
-              <button className={styles.primaryButton} type="button" onClick={() => setShowSaved(false)}>Back to cards</button>
+              <button className={styles.primaryButton} type="button" onClick={() => changePanel(false)}>Back to cards</button>
             </div>
           ) : activeJob ? (
             <>
@@ -183,6 +250,7 @@ export default function DiscoverPage() {
                 {nextJob && <div className={styles.cardBehind} aria-hidden="true" />}
                 <article
                   key={activeJob.id}
+                  ref={cardRef}
                   className={styles.card}
                   style={{ transform: `translateX(${dragX}px) rotate(${dragX / 24}deg)` }}
                   tabIndex={0}
@@ -212,12 +280,13 @@ export default function DiscoverPage() {
           ) : (
             <div className={styles.emptyState}>
               <span aria-hidden="true">✓</span>
-              <h2>You&apos;ve seen every demo card!</h2>
+              <h2 ref={completionRef} tabIndex={-1}>You&apos;ve seen every demo card!</h2>
               <p>Saved {deck.saved.length} and passed {deck.passed.length}. You can review saved roles or restart the fictional demo.</p>
               <div className={styles.emptyActions}>
-                <button className={styles.primaryButton} type="button" onClick={() => setShowSaved(true)}>View saved</button>
+                <button className={styles.undoButton} type="button" onClick={undo} disabled={deck.history.length === 0}>Undo</button>
+                <button className={styles.primaryButton} type="button" onClick={() => changePanel(true)}>View saved</button>
                 <button className={styles.secondaryButton} type="button" onClick={() => {
-                  dispatch({ type: "reset", ids: openingIds }); setDetailsOpen(false); setDragX(0); setAnnouncement("Demo deck reset.");
+                  focusCardsAfterUpdate(); dispatch({ type: "reset", ids: openingIds }); setDetailsOpen(false); setDragX(0); setAnnouncement("Demo deck reset.");
                 }}>Restart demo</button>
               </div>
             </div>
