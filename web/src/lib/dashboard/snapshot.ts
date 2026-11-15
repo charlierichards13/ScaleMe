@@ -57,7 +57,7 @@ export function getNextSteps(profile: CandidateProfile, hasInsights: boolean): N
       id: "explain-project",
       title: "Explain a project more clearly",
       description: "Answer follow-up questions about problem, decisions and impact.",
-      href: routes.resumeLab,
+      href: routes.impactLab,
       cta: "Start",
     });
   }

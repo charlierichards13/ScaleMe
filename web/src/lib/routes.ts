@@ -7,7 +7,10 @@
 export const routes = {
   dashboard: "/",
   discover: "/discover",
+  /** Resume upload placeholder (PDF parsing not built yet). */
   resumeLab: "/resume-lab",
+  /** Fictional Resume Impact Lab prototype from main (Issue #8, PR #39). */
+  impactLab: "/impact-lab",
   fit: "/fit",
   interview: "/interview",
   coach: "/coach",

@@ -33,10 +33,10 @@ const features: Feature[] = [
   {
     title: "Grill My Resume",
     description: "Discover the real impact behind your projects through challenging AI-guided questions.",
-    href: routes.resumeLab,
+    href: routes.impactLab,
     icon: MessageCircleQuestion,
     tint: "bg-brand-soft text-brand",
-    status: "Coming soon",
+    status: "Demo preview",
   },
   {
     title: "Mock Interview",

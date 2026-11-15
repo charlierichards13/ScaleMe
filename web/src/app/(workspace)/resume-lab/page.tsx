@@ -15,7 +15,7 @@ export default function ResumeLabPage() {
         "Pick a project and answer follow-ups: problem, your contribution, technical decisions, trade-offs, evidence, impact.",
         "Review suggested bullets grounded in your answers. Unknown metrics stay as questions, never guesses.",
       ]}
-      dependsOn="Needs secure PDF parsing (Issue #4) and the Bedrock impact coach (Issue #8). Until then, you can paste resume text into the Career Coach demo."
+      dependsOn="Uploading needs secure PDF parsing (Issue #4). To see how grilling works today, open the fictional Resume Impact Lab at /impact-lab, or paste resume text into the Career Coach demo."
     />
   );
 }

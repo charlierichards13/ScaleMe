@@ -15,7 +15,7 @@ Issue #34 described the dashboard as the opening route. The product direction ha
 | Sidebar (desktop) / drawer (mobile) | `components/layout/AppShell.tsx`, `Sidebar.tsx`, `nav-items.ts` | Static nav. Each item shows a status: *Demo* or *Soon* |
 | Header, demo switch, profile link | `components/dashboard/DashboardView.tsx` | Client state only |
 | Hero + "how ScaleMe digs deeper" ladder | `HeroPanel.tsx` | CTA changes depending on whether a resume exists |
-| Four tool cards | `FeatureCards.tsx` | Links to `/discover`, `/fit`, `/resume-lab`, `/interview` |
+| Four tool cards | `FeatureCards.tsx` | Links to `/discover`, `/fit`, `/impact-lab`, `/interview` |
 | Recommended roles | `RecommendedJobs.tsx`, `JobPreviewCard.tsx` | Empty, or 3 fictional listings in demo mode |
 | Evidence insights | `EvidenceInsights.tsx` | Empty, or 3 sample assessments in demo mode |
 | Profile & goals | `ProfileSummary.tsx` | Empty, or the sample profile in demo mode |
@@ -38,7 +38,8 @@ Demo mode is a toggle held in client state. It makes no network requests (no Bed
 | --- | --- |
 | `/` | Dashboard |
 | `/coach` | The previous chat-first demo, moved here unchanged except for a "Back to dashboard" link. It is still scripted, not live AI |
-| `/resume-lab`, `/fit`, `/interview`, `/saved`, `/settings` | Clearly labeled "Not available yet" placeholders, built from `FeaturePlaceholder`, that link to the Coach demo |
+| `/impact-lab` | Not part of this branch: the fictional Resume Impact Lab from main (PR #39). The sidebar's *Resume Lab* item, the *Grill My Resume* card and the "Explain a project" next step link to it |
+| `/resume-lab`, `/fit`, `/interview`, `/saved`, `/settings` | Clearly labeled "Not available yet" placeholders, built from `FeaturePlaceholder`, that link to the Coach demo. `/resume-lab` is where resume upload will live, and the hero's *Upload your resume* button points there |
 | `/discover` | **Not created here.** It belongs to PR #37 (`feat/job-swipe-discovery`). Until that merges, the link shows the branded `not-found` page, and Next.js prefetches of `/discover` log 404s in the console |
 
 ## Integrity and international-student rules applied
