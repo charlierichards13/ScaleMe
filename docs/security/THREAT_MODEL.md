@@ -8,6 +8,17 @@ This document is a required reference for any change that introduces a service, 
 
 ## Contextual interview private-preview update (2026-11-15)
 
+Railway preparation pins `SCALEME_PRIVATE_AI_ORIGIN` to the exact public HTTPS
+origin, required when `RAILWAY_ENVIRONMENT_ID` exists. Invalid origins fail closed;
+Host/Forwarded headers never choose the allowlist. This addresses TLS-termination
+origin mismatch without trusting caller headers. Token/timeout overrides now have
+strict fail-closed bounds; expired session errors require rotation. The existing
+SDK credential chain is preserved. No renewable Railway workload trust was
+established and no IAM change is authorized. See the [private-demo runbook](../RAILWAY_PRIVATE_DEMO.md)
+for session expiration/rotation, single-process quota limitations, local production
+tests, and the explicitly opt-in, three-request synthetic live test. Mocked tests
+and a simulated reverse proxy do not establish actual Railway/AWS readiness.
+
 This branch supersedes the historical "unauthenticated paid route" descriptions below at the **Next.js HTTP boundary**: `src/proxy.ts` guards both paid endpoints with a high-entropy owner-provided bearer access code and the existing default-off live switch. No shared UI, existing API handler or model prompt is replaced. Exact `demo=true` remains the free body-ignoring route. `/api/practice/access` checks authorization without AWS or quota use. Configuration is server-only; the browser receives no environment access code or AWS credential. A tester's manually entered app code lives in React memory, travels only in Authorization, and is cleared on finish/reset. Wrong/missing code and wrong-origin requests fail before paid handlers; errors are generic, uncached and contain no applicant text. No cookies are added.
 
 The new `/interview/contextual` client explicitly sends resume/job/requirements, then full previous interview questions/answers and fit statuses to the existing APIs after disclosure and consent. React renders text, runtime schemas validate responses, every structured requirement must appear once, and unsupported/unknown provenance is rejected. Browser requests and responses are bounded, redirects prohibited, timeout/cancellation handled, and retries require an explicit click. Already admitted model calls may complete/be billed after cancellation. No persistence, logging of user text, telemetry, tools or external job/PDF ingestion is introduced. The local evidence handoff retains exact candidate-reported answers and question targets without asserting relevance or changing support statuses.

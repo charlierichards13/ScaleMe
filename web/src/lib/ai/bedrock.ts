@@ -99,7 +99,8 @@ function toApiError(err: unknown, wallMs: number, tag: string): FitApiError {
   if (name === "ThrottlingException" || name === "ServiceQuotaExceededException") {
     return new FitApiError("AI_UNAVAILABLE", "The AI service is busy. Please retry in a moment.", true, 503);
   }
-  if (name === "AccessDeniedException" || name === "CredentialsProviderError" || name === "UnrecognizedClientException") {
+  if (["AccessDeniedException", "CredentialsProviderError", "UnrecognizedClientException",
+    "ExpiredToken", "ExpiredTokenException", "InvalidClientTokenId", "TokenRefreshRequired"].includes(name)) {
     // Generic to the client; the AWS error name is already in the server log above.
     return new FitApiError("AI_UNAVAILABLE", LIVE_AI_UNAVAILABLE_MESSAGE, false, 503,
       "not authorized: check the server's AWS credentials and Bedrock model access");

@@ -12,8 +12,15 @@ export function requirePrivateAi(request: Request, env: Record<string, string | 
       !expected || !/^[A-Za-z0-9_-]{32,256}$/.test(expected)) {
     return deny("AI_UNAVAILABLE", "Private live AI is not enabled on this server.", 503);
   }
+  // Pin the browser-facing origin behind TLS-terminating proxies. Never derive an
+  // authorization allowlist from caller-controlled Host/Forwarded headers.
+  const configuredOrigin = env.SCALEME_PRIVATE_AI_ORIGIN;
+  if ((env.RAILWAY_ENVIRONMENT_ID && !configuredOrigin) ||
+      (configuredOrigin !== undefined && !validOrigin(configuredOrigin))) {
+    return deny("AI_UNAVAILABLE", "Private live AI is not enabled on this server.", 503);
+  }
   const origin = request.headers.get("Origin");
-  if ((origin && origin !== new URL(request.url).origin) ||
+  if ((origin && origin !== (configuredOrigin ?? new URL(request.url).origin)) ||
       request.headers.get("Sec-Fetch-Site") === "cross-site") {
     return deny("PRIVATE_ACCESS_REQUIRED", "Open the private workspace on its own origin.", 403);
   }
@@ -23,4 +30,13 @@ export function requirePrivateAi(request: Request, env: Record<string, string | 
     return deny("PRIVATE_ACCESS_REQUIRED", "A valid private access code is required.", 401);
   }
   return null;
+}
+
+function validOrigin(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.origin === value;
+  } catch {
+    return false;
+  }
 }
