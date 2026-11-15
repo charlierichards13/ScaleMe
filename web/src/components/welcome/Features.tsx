@@ -7,23 +7,23 @@ type Feature = { title: string; description: string; icon: LucideIcon; signature
 const features: Feature[] = [
   {
     title: "Discover Opportunities",
-    description: "Find relevant jobs and internships based on your interests, experience, and career goals.",
+    description: "Role browsing is planned. The workspace explains what the deck will include.",
     icon: Compass,
   },
   {
     title: "Understand Your Fit",
-    description: "Explore evidence-backed strengths, missing resume evidence, and opportunities to improve your application.",
+    description: "Prepare a resume and job on this device, or open a labeled fictional sample. Live analysis is off.",
     icon: ScanSearch,
   },
   {
     title: "Grill My Resume",
-    description: "Go beyond surface-level resume feedback and uncover the real impact behind your experience.",
+    description: "Review a fictional bullet and the quotes behind it. You can copy a bullet only after confirming those quotes.",
     icon: Flame,
     signature: true,
   },
   {
     title: "Practice Interviews",
-    description: "Prepare for interviews with realistic questions, targeted follow-ups, and career coaching.",
+    description: "Answer a fixed set of questions and reread what you wrote. The next question does not depend on your answer.",
     icon: Mic,
   },
 ];
@@ -38,7 +38,7 @@ export function Features() {
             Everything you need to move forward.
           </h2>
           <p className="mt-5 text-lg leading-8 text-slate-600">
-            Four connected tools that start from what you have actually done.
+            Four tools in one workspace. Sample stories and the practice script are labeled.
           </p>
         </div>
 

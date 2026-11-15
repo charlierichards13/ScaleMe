@@ -32,7 +32,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           />
           <span className="min-w-0 flex-1 truncate">{item.label}</span>
           {item.status && (
-            <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
               {item.status}
             </span>
           )}
@@ -61,7 +61,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           Guest session
         </div>
         <p className="mt-1 text-xs leading-5 text-muted">
-          No account yet, so nothing you enter is saved after you close this tab.
+          No account yet. What you enter stays on that page until you leave or refresh, and it is not uploaded.
         </p>
       </div>
     </div>

@@ -31,13 +31,13 @@ export function DashboardView() {
           <h1 className="text-2xl font-bold tracking-tight text-ink">Dashboard</h1>
           <p className="mt-1 text-sm text-muted">
             {isDemo
-              ? "Previewing ScaleMe with a fictional sample profile."
-              : "Welcome to ScaleMe. Start with your resume to unlock personalized guidance."}
+              ? "Fictional sample profile on this page."
+              : "Practice an interview, or turn on sample data for fictional roles."}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <DemoSwitch checked={isDemo} onChange={(on) => setSource(on ? "demo" : "empty")} />
-          <Link href={routes.settings} aria-label="Profile and settings" className={cx(buttonStyles.icon, "border border-line bg-surface")}>
+          <Link href={routes.onboarding} aria-label="Guest setup" className={cx(buttonStyles.icon, "border border-line bg-surface")}>
             <UserRound aria-hidden="true" className="h-5 w-5" />
           </Link>
         </div>

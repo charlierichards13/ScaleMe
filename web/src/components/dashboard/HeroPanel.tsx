@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles, Upload } from "lucide-react";
+import { ArrowRight, Mic, Sparkles } from "lucide-react";
 import { buttonStyles } from "@/components/ui/primitives";
 import { routes } from "@/lib/routes";
 
@@ -31,21 +31,21 @@ export function HeroPanel({
             Your career workspace
           </p>
           <h2 id="hero-heading" className="mt-4 max-w-xl text-2xl font-bold leading-tight tracking-tight text-ink sm:text-[28px]">
-            Find your fit. Prove your impact. Get interview-ready.
+            Practice interviews. Review labeled samples.
           </h2>
           <p className="mt-3 max-w-xl text-[15px] leading-7 text-muted">
-            ScaleMe turns your real experience into clear, evidence-backed stories for every role you apply to.
+            Sample data on this page is fictional. Interview practice uses a fixed script.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             {hasResume ? (
-              <Link href={routes.discover} className={buttonStyles.primary}>
-                Discover opportunities
+              <Link href={routes.impactLab} className={buttonStyles.primary}>
+                Review the sample story
                 <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </Link>
             ) : (
-              <Link href={routes.resumeLab} className={buttonStyles.primary}>
-                <Upload aria-hidden="true" className="h-4 w-4" />
-                Upload your resume
+              <Link href={routes.interview} className={buttonStyles.primary}>
+                <Mic aria-hidden="true" className="h-4 w-4" />
+                Practice an interview
               </Link>
             )}
             {showDemoButton ? (
@@ -53,8 +53,8 @@ export function HeroPanel({
                 Explore with sample data
               </button>
             ) : (
-              <Link href={routes.fit} className={buttonStyles.secondary}>
-                Analyze a job
+              <Link href={routes.fitInsights} className={buttonStyles.secondary}>
+                Open fit explorer
               </Link>
             )}
           </div>
@@ -62,7 +62,7 @@ export function HeroPanel({
 
         {/* Hidden on phones so the four tools stay near the top of the page. */}
         <div className="hidden rounded-xl border border-line bg-canvas/80 p-4 sm:block">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">How ScaleMe digs deeper</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">What a clear story covers</p>
           <ol className="mt-3 space-y-2">
             {impactLadder.map((step, index) => (
               <li key={step} className="flex items-center gap-3 text-sm text-ink">

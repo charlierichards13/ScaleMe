@@ -27,18 +27,26 @@ describe("getDashboardSnapshot", () => {
 });
 
 describe("getNextSteps", () => {
-  it("asks a new user to add a resume first, then set goals", () => {
+  it("points a new visitor at sample stories, guest setup, and interview practice", () => {
     const steps = getNextSteps({ hasResume: false, authorizationGuidance: null }, false);
-    expect(steps.map((step) => step.id)).toEqual(["add-resume", "set-goal", "analyze-role", "mock-interview"]);
-    expect(steps[0].href).toBe(routes.resumeLab);
+    expect(steps.map((step) => step.id)).toEqual([
+      "review-sample-resume",
+      "preview-goals",
+      "open-sample-fit",
+      "mock-interview",
+    ]);
+    expect(steps.map((step) => step.href)).toEqual([
+      routes.impactLab,
+      routes.onboarding,
+      routes.fitInsights,
+      routes.interview,
+    ]);
   });
 
-  it("skips steps the user has already completed", () => {
+  it("keeps a sample profile on labeled sample pages", () => {
     const steps = getNextSteps(demoProfile, true);
-    const ids = steps.map((step) => step.id);
-    expect(ids).not.toContain("add-resume");
-    expect(ids).not.toContain("set-goal");
-    expect(ids).toEqual(["explain-project", "review-gaps", "mock-interview"]);
+    expect(steps.map((step) => step.id)).toEqual(["explain-project", "review-gaps", "mock-interview"]);
+    expect(steps.map((step) => step.href)).toEqual([routes.impactLab, routes.fitInsights, routes.interview]);
   });
 
   it("never suggests more than four steps", () => {

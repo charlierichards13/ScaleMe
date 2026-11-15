@@ -6,7 +6,11 @@ import type { NextStep } from "@/lib/dashboard/types";
 export function NextSteps({ steps }: { steps: NextStep[] }) {
   return (
     <Card aria-labelledby="next-heading">
-      <SectionHeading id="next-heading" title="Continue your progress" description="Suggested from what you've added so far." />
+      <SectionHeading
+        id="next-heading"
+        title="Open a working page"
+        description="These pages do not share answers with each other."
+      />
       <ol className="space-y-2">
         {steps.map((step, index) => (
           <li key={step.id}>
