@@ -36,9 +36,8 @@ export function createUploadTask(
         return false;
       }
     },
-    async extract(token: string) {
+    async extract() {
       if (!state.file || state.phase === "processing") return;
-      if (!token.trim()) { update({ ...state, phase: "error", message: "Ask the project owner for a private preview access code. It is not an account password." }); return; }
       stop(); publish(null);
       const current = version;
       const signal = (controller = new AbortController()).signal;
@@ -48,7 +47,7 @@ export function createUploadTask(
         update({ ...state, phase: "error", message: "The upload took too long. Try a simpler PDF." });
       }, 30_000);
       try {
-        const resume = await upload(state.file!, token, signal);
+        const resume = await upload(state.file!, signal);
         if (current !== version || signal.aborted) return;
         publish(resume);
         update({ file: null, phase: "success", message: "Resume extracted. Review the text before continuing." });
