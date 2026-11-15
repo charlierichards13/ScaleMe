@@ -18,7 +18,7 @@ export const routes = {
   discover: "/discover-preview",
   /** Resume upload placeholder (PDF parsing not built yet). */
   resumeLab: "/resume-lab",
-  /** Fictional Resume Impact Lab prototype from main (Issue #8, PR #39). */
+  /** Local resume/job/answer evidence workflow (Issue #8). */
   impactLab: "/impact-lab",
   /** Placeholder; connect to `/fit-insights` once PR #41 merges. */
   fit: "/fit",

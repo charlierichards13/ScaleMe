@@ -203,17 +203,29 @@ a live evidence ledger, or the proposed v0.2 API contract. Future integration ne
 server-side provenance/relevance validation and existing privacy/cost reviews.
 See [scope and verification](../FIT_INSIGHTS_DEMO.md).
 
-### Resume Impact Lab prototype (Issue #8)
+### Resume Impact Lab and evidence ledger (Issue #8)
 
-`/impact-lab` is an isolated browser UI using bundled **FICTIONAL DEMO** fixtures.
-It introduces no API handler, applicant input, model call, authentication, or persistence.
-Review state is component-local; the only outgoing content action is an explicit user
-copy to the browser clipboard after all linked sample statements are candidate-confirmed.
-Rejection locks copying again. React renders all quotes as text. Missing metrics are
-excluded and cannot be confirmed. Candidate confirmation is not external verification.
-The fixed-fixture guard is not suitable for arbitrary model output: live integration
-still requires server-side provenance/claim validation and the existing AI/privacy/cost
-reviews. See [demo scope and verification](../IMPACT_LAB_DEMO.md).
+`/impact-lab` now accepts resume/job text and targeted candidate answers in browser
+memory. It adds no API handler, upload, network/model call, authentication or storage.
+Strict internal schemas validate types/lengths, exact source spans, full answer turns,
+requirement IDs and fixed before/after inventories. A conservative English lexical
+reviewer gates support; it is **not** semantic entailment or independent verification.
+Known instruction/negative/hypothetical patterns block support; unknown wording can
+remain unresolved, and complex attribution or mixed polarity may be misclassified.
+There is no claim that these heuristic checks resist every prompt injection.
+
+React renders all quotes as text. Proposals join exact supported candidate sentences;
+arbitrary added metrics, employers, skills or outcomes cannot pass the extractive
+wording guard. Candidate confirmation gates explicit clipboard copying, but does not
+verify truth or increase coverage. Undo locks copying; a recorded contradiction blocks
+the former proposal. All records explicitly carry `independentlyVerified: false`.
+No raw text is logged. Immutable transitions and copied views avoid shared session
+state; reset/reload clears inputs and reviews. Unit and production-browser tests use
+synthetic data, including multiple distinct inputs, invalid provenance, changed IDs,
+malicious answers and unsupported metrics. Existing API/privacy/cost launch gates still
+apply to any future server/model integration. The implemented v0.1 fit/turn adapters
+are not adoption of v0.2 or automatic wiring to #7/#46. See
+[implementation, limits and proposed handoff](../EVIDENCE_LEDGER.md).
 
 Update this file whenever an agent changes:
 - External service/model provider, prompt contents, tool permissions, inference settings, pricing or rate limits.

@@ -3,7 +3,7 @@ import ImpactLab from "./impact-lab";
 
 export const metadata: Metadata = {
   title: "Resume Impact Lab | ScaleMe",
-  description: "Explore a fictional, evidence-grounded resume coaching demo. No live AI or uploads.",
+  description: "Assess your resume, discover requirement evidence, and review grounded wording locally. No model calls or saved data.",
 };
 
 export default function ImpactLabPage() {
