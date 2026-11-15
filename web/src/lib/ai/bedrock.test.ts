@@ -133,6 +133,32 @@ describe("usage metrics logging", () => {
     expect(errLine).not.toContain("arn:aws");
     info.mockRestore();
   });
+
+  it("uses the caller's fixed log tag for usage and failure lines", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    send.mockResolvedValueOnce({ output: { message: { content: [{ text: "{}" }] } } });
+    await invokeBedrock("s", "u", { logTag: "interview/next" });
+    expect(String(info.mock.calls[0][0])).toMatch(/^\[interview\/next\] Bedrock usage:/);
+
+    send.mockRejectedValueOnce(awsError("ThrottlingException"));
+    await invokeBedrock("s", "u", { logTag: "interview/next" }).catch(() => {});
+    expect(String(vi.mocked(console.error).mock.calls.at(-1)?.[0])).toMatch(/^\[interview\/next\] Bedrock call failed:/);
+    info.mockRestore();
+  });
+});
+
+describe("per-call output-token cap", () => {
+  it("lowers maxTokens for the call but never raises it above BEDROCK_MAX_OUTPUT_TOKENS", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    send.mockResolvedValue({ output: { message: { content: [{ text: "{}" }] } } });
+    await invokeBedrock("s", "u");
+    expect(send.mock.lastCall?.[0].input.inferenceConfig.maxTokens).toBe(3000);
+    await invokeBedrock("s", "u", { maxOutputTokens: 400 });
+    expect(send.mock.lastCall?.[0].input.inferenceConfig.maxTokens).toBe(400);
+    vi.stubEnv("BEDROCK_MAX_OUTPUT_TOKENS", "300");
+    await invokeBedrock("s", "u", { maxOutputTokens: 400 });
+    expect(send.mock.lastCall?.[0].input.inferenceConfig.maxTokens).toBe(300);
+  });
 });
 
 describe("getBedrockConfig", () => {

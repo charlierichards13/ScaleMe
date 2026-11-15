@@ -73,7 +73,7 @@ export function validateModelOutput(raw: string, request: FitRequest): FitAnalys
 }
 
 // Digit sequences such as 40, 3.5 or 2027 (a trailing % or $ prefix does not matter).
-function numbersIn(text: string): Set<string> {
+export function numbersIn(text: string): Set<string> {
   return new Set(text.match(/\d+(?:[.,]\d+)*/g) ?? []);
 }
 
@@ -98,7 +98,7 @@ function suggestsUnconditionalClaim(suggestion: string): boolean {
   return CLAIM_OBJECT.test(suggestion.slice(verb));
 }
 
-function parseJson(raw: string): unknown {
+export function parseJson(raw: string): unknown {
   // Models sometimes wrap JSON in ```json fences or add a sentence; take the outermost braces.
   const start = raw.indexOf("{");
   const end = raw.lastIndexOf("}");
@@ -111,7 +111,7 @@ function parseJson(raw: string): unknown {
 }
 
 // Ignore case and whitespace differences (PDF text often has odd line breaks).
-function normalize(s: string): string {
+export function normalize(s: string): string {
   return s.replace(/\s+/g, " ").trim().toLowerCase();
 }
 
