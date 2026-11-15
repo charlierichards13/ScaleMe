@@ -1,7 +1,7 @@
 # ScaleMe threat model (living document)
 
 **Version:** draft 0.1 · **Status:** design review, not certification.  
-**Scope:** Next.js web/PWA, server-side AI API, AWS Bedrock, future Rust matcher, PDF uploads and job URL ingestion.  
+**Scope:** Next.js web/PWA, server-side AI API, AWS Bedrock, Rust resume parser (standalone, not yet wired to a route), future Rust matcher, PDF uploads and job URL ingestion.
 **Frameworks:** [OWASP ASVS 5.0](https://asvs.owasp.org/); [OWASP GenAI LLM Top 10 (current)](https://genai.owasp.org/llm-top-10/).
 
 This document is a required reference for any change that introduces a service, data field, input source, privileged tool, persistence, or external call. **Statuses below mean proposed controls until verified in code and tests.**
@@ -22,7 +22,7 @@ flowchart TB
   api -->|Validated JSON, bounded requests| ai[AI orchestration]
   ai -->|Server-side signed request| bedrock[Amazon Bedrock]
   ai -->|Validated JSON signals| rust[Rust matcher - future component]
-  user -->|PDF upload - planned| parser[PDF extraction - planned]
+  user -->|PDF upload - route planned| parser[Rust resume-parser process - built, not wired]
   user -->|Job URL - optional| fetcher[Job page fetcher - planned]
   parser -->|Untrusted extracted text| api
   fetcher -->|Untrusted fetched text| api
@@ -55,10 +55,10 @@ The diagram is **architectural intent**. A direct Bedrock integration and mocked
 | **Sensitive information disclosure** via logs, model response, history or cross-user access | High | Data minimization; no raw request logging; private-by-default sessions; no secrets in prompts; retention policy | Code inspection, seeded PII canaries, negative tests, session boundary tests | The fit route (PR #33) logs only error type names, HTTP status and fixed configuration hints, never request, resume or model text. The usage line added for cost tracking contains numbers only (token counts, latency, truncation flag), checked with a canary in mocked tests. These checks rely on mocked tests and self-review and are **not independently reviewed**. One live run's server log was checked and contained no request content. Full resume/job text is sent to Bedrock (see data flow below). Storage not designed; none exists |
 | **Unbounded inference/cost** (public API abuse, large loops) | High | Per-client limits, concurrency caps, body/turn caps, timeouts, output-token caps, AWS budgets/alarms | Burst/concurrency and huge-input tests; AWS cost monitoring | Body/field caps (200 KB streamed, per-field limits), 45 s timeout and 3000 output-token cap (Issue #6). Issue #23: live calls **off by default** (`FIT_LIVE_AI_ENABLED`), one shared in-process budget of 10/min, 50/day and 2 concurrent calls, `429` before any AWS call, AWS SDK `maxAttempts` 1. Mock-tested; exercised once live with every limit set to 1. Per-call token usage is now logged as numbers for cost tracking. **Per-process, not distributed, no per-user fairness**. The owner-reported $20 project spend limit is a lagging backstop, so the route is still **not safe to expose publicly** (see "Cost guard" below) |
 | **SSRF** through user-provided job URLs | High | HTTPS/allowed host policy, strict DNS/IP validation at each fetch/redirect, deny private/loopback/link-local/metadata targets, response byte/time caps | Safe blocked-URL unit tests including 127.0.0.1, link-local, redirects, DNS rebinding edge cases | Job ingestion is planned/assigned; not verified |
-| **Malicious PDF / parser denial of service** | High | MIME+magic inspection, maximum size/pages, parser time/memory limits, no executable conversions, isolated parsing where viable | Invalid, corrupt, image-only, oversized and complex PDF tests | Resume parser assigned, not verified |
+| **Malicious PDF / parser denial of service** | High | MIME+magic inspection, maximum size/pages, parser time/memory limits, no executable conversions, isolated parsing where viable | Invalid, corrupt, image-only, oversized and complex PDF tests | Issue #4: standalone Rust parser (`services/resume-parser/`) with a 5 MiB limit, `%PDF-` signature check, 20-page and 30,000-character limits, a process-level time budget and heap budget, and content-free errors. Tested with **synthetic PDFs only**; not independently reviewed; no real-world PDFs, compressed streams, decompression bombs or embedded fonts tested. **No upload route exists yet**, so the server-side upload controls (streamed body limit, rate limiting, process cap) are still to do. See "Issue #4 resume parser" below |
 | **Model output injection / unsafe rendering** | High | Runtime response schemas, escape text, no direct HTML injection or executing output | HTML/script payload test, oversized/malformed JSON, no `dangerouslySetInnerHTML` | Zod validation, JSON extraction and evidence checks implemented (PR #33) and mock-tested; unknown extra keys are stripped. Model-written prose fields are length-checked, not fact-checked. UI integration unknown (frontend must render as escaped text) |
 | **Cloud key leak / overprivileged role** | High | SDK default credential chain server-only; least-privilege IAM, secrets rotation, no client-accessible credentials | Inspect env usage, bundle, IAM role and logs, secret scanning | **Verified 2026-11-15 for local development.** The server uses the restricted role `ScaleMeDevBedrockInvoke`, which allows only Nova Lite in `us-east-2` and has the same policy as its permissions boundary. Allow and deny probes confirmed it. No access keys exist, and the env values were not found in the client bundle. Residual risk: the human's project login cache (renewable for up to 90 days) sits on the same machine as the source profile. Log it out after testing. See "Restricted Bedrock role" below |
-| **Dependency or CI supply-chain compromise** | Medium | Lockfiles, Dependabot, npm audit, human review, read-only workflow tokens | CI logs, dependency changes, action review | CI exists. 2026-11-14 on `main` after the ESLint 10 bump (#29), rechecked for Issue #23: `npm audit --omit=dev` reports **0** (production); full `npm audit` reports **9 moderate**, 0 high/critical, all from `minimatch` in the ESLint/`typescript-eslint` dev toolchain (`npm audit --audit-level=high` exits 0). Not changed here; update deliberately, no forced fixes. Issue #23 adds no dependencies. New runtime deps: `@aws-sdk/client-bedrock-runtime`, `zod`; new dev dep: `vitest@4` |
+| **Dependency or CI supply-chain compromise** | Medium | Lockfiles, Dependabot, npm audit, human review, read-only workflow tokens | CI logs, dependency changes, action review | CI exists. 2026-11-14 on `main` after the ESLint 10 bump (#29), rechecked for Issue #23: `npm audit --omit=dev` reports **0** (production); full `npm audit` reports **9 moderate**, 0 high/critical, all from `minimatch` in the ESLint/`typescript-eslint` dev toolchain (`npm audit --audit-level=high` exits 0). Not changed here; update deliberately, no forced fixes. Issue #23 adds no dependencies. New runtime deps: `@aws-sdk/client-bedrock-runtime`, `zod`; new dev dep: `vitest@4`. Issue #4 adds a **Rust** dependency tree for the parser only (nothing in `web/package.json`): `pdf-inspector` pinned to `=1.25.2` with default features, `serde`, `serde_json`, `getrandom`; 126 packages in the committed `Cargo.lock`, of which only `pdf-inspector`, `lopdf` and `ttf-parser` were looked at individually. OSV lookup of the lockfile on 2026-11-15: one informational advisory, `ttf-parser` 0.25.1 **unmaintained** (`RUSTSEC-2026-0192`). `cargo audit` is not part of CI yet |
 | **Fabricated claims / false eligibility guidance** | Medium | Quote-grounded evidence, unknown != ineligible, human-verifiable outputs, clear disclaimer | Test ungrounded metrics and visa/sponsorship statements | Evidence quotes are checked as substrings of the input; `supported` without a verified resume quote is downgraded. Advice items are dropped if they contain numbers not in the inputs, or if a growth suggestion says to add or claim experience without a condition (keyword heuristic, mock-tested). Substring matching does not prove the quote supports the claim, and model explanations and summaries are not fact-checked. Employer guidance is future scope |
 | **False provenance / inflated documented coverage** | Medium | Candidate-only source IDs, exact quote validation, stable requirement ID denominator, deterministic counting and human review states | Missing/irrelevant answers, spoofed evidence links, job text masquerading as candidate evidence, invented numeric claims | Evidence ledger and before/after coverage are proposed; not implemented or verified |
 | **CSRF/CORS/auth errors** after accounts or cross-origin API clients | High once applicable | Explicit identity/authorization design, session binding, origin/CSRF checks, access control | Cross-user, wrong-origin, privilege escalation tests | No accounts planned in first MVP; revisit with auth or Expo client |
@@ -82,6 +82,34 @@ Status: merged to `main` in PR #33 after self-review by the implementing agent; 
 - Dependence on one model whose JSON compliance is unverified; invalid output returns `INVALID_AI_RESPONSE` (502).
 
 **Important:** A random delimiter/tag in the prompt is not a security boundary. A model can still follow adversarial instructions. Defense-in-depth should rely on **no privileged model tools**, strict outputs, evidence verification and application-side authorization.
+
+## Issue #4 resume parser (`feat/resume-ingestion`, 2026-11-15)
+
+Status: implemented as a standalone program and library in `services/resume-parser/`; **not connected** to any route, upload screen or other feature. Verified by automated tests on **synthetic, generated PDFs only**. Not independently reviewed. Details, limits and the library comparison: [RESUME_INGESTION.md](../RESUME_INGESTION.md).
+
+**Data flow introduced:** none in the running application. When a caller runs the program, PDF bytes go in on standard input and `Resume` JSON (the full extracted text) comes out on standard output. Nothing is written to disk by default, nothing is sent over the network, nothing is logged, and no AI or cloud service is called. Parsed text is personal data once real resumes are used; the caller owns what happens to it next.
+
+**Trust boundaries touched:** PDF → parser (untrusted bytes handled by third-party Rust crates); Server → Rust (a future route would start the program with a fixed argument list and pipe the upload to it).
+
+**Controls in code (tested with synthetic input):**
+- Size (5 MiB) and signature (`%PDF-x.y` at byte 0) are checked before the PDF library sees the file. File name and MIME type are never trusted.
+- Page limit (20), text limit (30,000 UTF-16 units, rejected rather than truncated) and section limits mirror `ResumeSchema`.
+- One document per process. The program exits when its time budget (default 10 s) passes and aborts when its heap budget (default 256 MiB) would be exceeded. An in-process timeout alone cannot stop a running thread, which is why the guarantee comes from the process ending.
+- Panics inside the PDF library are caught and reported as `PARSING_FAILED`.
+- Errors are fixed strings. Library error text is discarded because it can quote document bytes. Standard error carries only a reason word.
+- Only page text is read. JavaScript actions, launch actions, URIs and document metadata are ignored (tested with a PDF that carries all of them). No networking, TLS, async-runtime, cloud, AI, OCR or rendering crate is in the lockfile (tested).
+- The file name is only echoed as a display name after being cut to its base name. No path, command or shell string is built from the name or the content.
+- Password-protected PDFs are rejected.
+
+**Known residual risks:**
+- **Third-party parsing code.** `pdf-inspector` is five months old and built on `lopdf`; `ttf-parser`, which reads embedded fonts from the untrusted file, is flagged unmaintained. A logic or denial-of-service bug there is contained only by the process limits.
+- **Limits not exercised by tests:** compressed streams and decompression bombs, embedded font programs, deeply nested objects (a stack overflow would abort the process, which is not caught), AES encryption, and any real-world PDF. The heap budget does not count thread stacks or memory mapped outside the allocator.
+- **Owner-restricted PDFs are parsed.** A PDF encrypted with an empty user password opens without a prompt and is treated like any other. Only PDFs that need a password to open are rejected.
+- **Hidden text passes through.** Invisible or white-on-white text is extracted like visible text, so keyword stuffing and instruction-like text reach the output unchanged. The parser neither obeys nor removes such text; every consumer must keep treating resume text as untrusted data.
+- **No sandbox.** The program is not confined by seccomp, a container or a read-only filesystem. It needs none of network, credentials or write access, so a deployment should remove them.
+- **Process lifetime and crash dumps.** The internal deadline covers parsing after input is buffered; blocked input/output requires the caller's independent child-process kill timer. The heap budget excludes stacks and OS mappings on both Windows and Linux. Host crash reporting can persist process memory after an abort: disable Linux core dumps and Windows Error Reporting dumps before handling private data. These host policies are not set by the parser.
+- **No route-level controls yet.** There is no upload endpoint, so no streamed body limit, authentication, rate limit or concurrency cap exists for uploads. These must be designed and reviewed with the route.
+- **Hosting.** Where a compiled program runs in a hosted Next.js environment is still an open decision (below).
 
 ## Welcome page and guest onboarding (Issue #43, `feat/welcome-onboarding`)
 
@@ -180,7 +208,9 @@ Capture the change in the same PR and add corresponding tests to [Review Checkli
 - ~~Which Bedrock model, region and least-privilege resource ARN?~~ **Decided 2026-11-15 (owner):** in-region `amazon.nova-lite-v1:0` in `us-east-2` via the restricted `ScaleMeDevBedrockInvoke` role. Still open: Bedrock retention/logging settings, and whether to evaluate a Claude model. That would mean cross-region inference, an AWS Marketplace subscription and probably no promotional-credit coverage, so it needs its own approval.
 - Is the prototype available to the public, or kept local/private using only synthetic data?
 - Are interview histories persisted? If so, how are records encrypted, authorized and deleted?
-- Where does the Rust matcher execute in hosted environments without arbitrary executable support?
+- Where do the Rust matcher and the Rust resume parser (Issue #4) execute in hosted environments without arbitrary executable support?
+- Should PDFs that open without a password but carry owner restrictions be parsed (today: yes) or rejected?
+- Should "too many pages", "text too long" and "password-protected" get their own API error codes? Today they reuse `FILE_TOO_LARGE` and `PARSING_FAILED`.
 - Will job URL retrieval be restricted to a documented allowlist or delegated to a trusted provider?
 
 Record answers as dated decisions in this file. No agents should silently make these policy decisions.

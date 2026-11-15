@@ -56,7 +56,17 @@ jobs:
         run: |
           rustup default stable
           rustup component add rustfmt clippy
-      - name: Format, lint, and test Rust (when crate exists)
+      # Issue #4. Not conditional: if the crate or its lockfile goes missing, this job fails
+      # instead of silently skipping. `--locked` keeps the reviewed, pinned dependency versions.
+      - name: Resume parser - format, lint, test and release build
+        shell: bash
+        run: |
+          manifest=services/resume-parser/Cargo.toml
+          cargo fmt --manifest-path "$manifest" --all -- --check
+          cargo clippy --manifest-path "$manifest" --locked --all-targets -- -D warnings
+          cargo test --manifest-path "$manifest" --locked
+          cargo build --manifest-path "$manifest" --locked --release
+      - name: Requirement matcher - format, lint and test (when crate exists)
         shell: bash
         run: |
           if [[ -f services/matching-rust/Cargo.toml ]]; then
@@ -64,5 +74,5 @@ jobs:
             cargo clippy --manifest-path services/matching-rust/Cargo.toml --all-targets -- -D warnings
             cargo test --manifest-path services/matching-rust/Cargo.toml
           else
-            echo "Rust crate not yet scaffolded; skipping Rust-specific checks."
+            echo "Requirement matcher crate not yet scaffolded; skipping its checks."
           fi

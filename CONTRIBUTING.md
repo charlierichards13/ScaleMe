@@ -58,6 +58,15 @@ npm audit --audit-level=high
 
 On Windows PowerShell, use `npm.cmd` if `npm.ps1` is blocked. Do not run `npm audit fix --force` without reviewing potential breaking updates.
 
+For `services/resume-parser/` (Rust 1.89 or newer; details and a Windows note in [docs/RESUME_INGESTION.md](docs/RESUME_INGESTION.md)):
+
+```bash
+cargo fmt --manifest-path services/resume-parser/Cargo.toml --all -- --check
+cargo clippy --manifest-path services/resume-parser/Cargo.toml --locked --all-targets -- -D warnings
+cargo test --manifest-path services/resume-parser/Cargo.toml --locked
+cargo build --manifest-path services/resume-parser/Cargo.toml --locked --release
+```
+
 For `services/matching-rust/`, when present:
 
 ```bash
