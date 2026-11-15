@@ -82,6 +82,10 @@ Status: source exists in the author's worktree and was self-reviewed by the impl
 
 **Important:** A random delimiter/tag in the prompt is not a security boundary. A model can still follow adversarial instructions. Defense-in-depth should rely on **no privileged model tools**, strict outputs, evidence verification and application-side authorization.
 
+## Welcome page and guest onboarding (Issue #43, `feat/welcome-onboarding`)
+
+Frontend only: no API handler, model call, network request, authentication or persistence. `/` became the public welcome page and the dashboard moved to `/dashboard`. Neither is access-controlled, which is unchanged from before because no accounts exist. `/onboarding` keeps answers in React state only. Its optional resume picker reads just the first five bytes locally to confirm a `%PDF-` signature and keeps only the file name and size. These client checks are **not** a security control, and any future upload must re-validate on the server (Issue #4). File names and free text are rendered as escaped React text and capped at 100 characters. The *Sign in* button explains that accounts don't exist yet instead of simulating a session. `web/src/lib/auth-status.ts` separates the sign-in/sign-up screens (Issue #42, UI only) from `accountsEnabled`, which must stay `false` until server-side authentication actually works, so a UI-only sign-up page never becomes the welcome page's entry point. **Before** onboarding answers are saved or `/onboarding` is gated by sign-up (Issue #42), review: server-side validation, an authorization check on the stored profile, retention and deletion, and that onboarding completion is decided on the server. Details: [WELCOME_ONBOARDING.md](../WELCOME_ONBOARDING.md).
+
 ## Review triggers
 
 ### Fit Evidence Explorer prototype (Issue #40)

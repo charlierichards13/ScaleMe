@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { routes } from "@/lib/routes";
 import { copyableBullet, evidence, initialReviews, reviewEvidence, sources, suggestions, suggestionStatus, type Review, type Suggestion } from "./demo";
 
 const button = "inline-flex min-h-11 items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-purple-700 disabled:cursor-not-allowed disabled:opacity-50";
@@ -43,7 +44,7 @@ export default function ImpactLab() {
       <a href="#lab-main" className="sr-only z-50 rounded-lg bg-white p-4 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to Impact Lab</a>
       <header className="border-b border-purple-100 bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
-          <Link href="/" className="rounded text-2xl font-extrabold tracking-tight text-purple-800 focus-visible:outline-2 focus-visible:outline-purple-700">ScaleMe<span className="text-purple-400">.</span></Link>
+          <Link href={routes.dashboard} aria-label="ScaleMe dashboard" className="rounded text-2xl font-extrabold tracking-tight text-purple-800 focus-visible:outline-2 focus-visible:outline-purple-700">ScaleMe<span className="text-purple-400">.</span></Link>
           <span className="rounded-full border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-bold tracking-wider text-purple-800">FICTIONAL DEMO</span>
         </div>
       </header>

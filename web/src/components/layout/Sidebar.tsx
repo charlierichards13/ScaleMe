@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 import { buttonStyles, cx } from "@/components/ui/primitives";
+import { routes } from "@/lib/routes";
 import { isActive, primaryNav, secondaryNav, type NavItem } from "./nav-items";
 import { Logo } from "./Logo";
 
@@ -43,7 +44,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="px-5 pb-6 pt-6">
-        <Link href="/" onClick={onNavigate} className={cx("inline-flex rounded-lg", buttonStyles.focusRing)} aria-label="ScaleMe dashboard">
+        <Link href={routes.dashboard} onClick={onNavigate} className={cx("inline-flex rounded-lg", buttonStyles.focusRing)} aria-label="ScaleMe dashboard">
           <Logo />
         </Link>
       </div>

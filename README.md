@@ -149,7 +149,7 @@ npm run dev
 
 Open http://localhost:3000. On Windows PowerShell, if execution policy blocks `npm.ps1`, use `npm.cmd ci` and `npm.cmd run dev` instead.
 
-**Current state:** `/` is the career dashboard (see [docs/DASHBOARD.md](docs/DASHBOARD.md)). Use its *Sample data* switch for a clearly labeled fictional walkthrough. The earlier scripted chat demo lives at `/coach`. Resume analysis, live AI and job listings are still under development. Rust/Cargo and AWS credentials will be needed for their respective modules once implemented. An `.env.example` should contain variable names only, without credentials.
+**Current state:** `/` is the public welcome page and `/onboarding` is a short guest setup that saves nothing (see [docs/WELCOME_ONBOARDING.md](docs/WELCOME_ONBOARDING.md)). The career dashboard is at `/dashboard` (see [docs/DASHBOARD.md](docs/DASHBOARD.md)). Use its *Sample data* switch for a clearly labeled fictional walkthrough. The earlier scripted chat demo lives at `/coach`. Resume analysis, live AI and job listings are still under development. Rust/Cargo and AWS credentials will be needed for their respective modules once implemented. An `.env.example` should contain variable names only, without credentials.
 
 ### Planning and collaboration
 

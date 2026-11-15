@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { routes } from "@/lib/routes";
 import {
   answers,
   assessment,
@@ -83,7 +84,7 @@ export default function FitExplorer() {
       </a>
       <header className={css("header")}>
         <div className={css("headerInner")}>
-          <Link className={css("logo")} href="/">
+          <Link className={css("logo")} href={routes.dashboard} aria-label="ScaleMe dashboard">
             ScaleMe<span>.</span>
           </Link>
           <div className={css("headerRight")}>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { routes } from "@/lib/routes";
 
 type Message = { id: number; role: "assistant" | "user"; content: string };
 type Mode = "chat" | "resume" | "job";
@@ -212,7 +213,7 @@ export default function Home() {
           <button type="button" onClick={() => setSidebarOpen(false)} className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-200 md:hidden" aria-label="Close sidebar">✕</button>
         </div>
         <div className="space-y-2 px-3">
-          <Link href="/"
+          <Link href={routes.dashboard}
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900">
             <span aria-hidden="true">←</span> Back to dashboard
           </Link>
