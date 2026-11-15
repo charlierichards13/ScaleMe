@@ -4,6 +4,26 @@
 **Clients:** Next.js responsive web/PWA first; an optional Expo native client later uses the same HTTP endpoints.  
 **Design rules:** JSON over HTTPS, TypeScript-friendly types, stable error shapes, evidence-backed claims, no fabricated skills or outcomes.
 
+## Private conversational Career Coach (Issue #64)
+
+Implemented separately from fit/interview: `POST /api/coach/message`. No demo or query flags. See [setup, security limits and verification](PRIVATE_CAREER_COACH.md). Existing contracts remain compatible.
+
+Request (strict JSON, no extra keys):
+
+```json
+{"consent":true,"messages":[{"role":"user","content":"I built a fictional booking tool. How can I explain my contribution?"}],"context":{"resume":"Optional explicitly provided resume excerpt","job":"Optional explicitly provided job context"}}
+```
+
+`messages` must alternate user/assistant, start and end with user, contain 1–11 turns (at most six sends), each 1–2,000 trimmed UTF-16 units. Optional resume ≤12,000; job ≤8,000; messages plus context ≤24,000 units. Body ≤96 KiB streamed, whole-body deadline 10 s. Blank present context is invalid; omit it instead. `consent:true` is mandatory. Client history is untrusted, not authenticated evidence.
+
+Success: `{"message":{"role":"assistant","content":"What did you personally own?"},"advisory":"unverified"}` with `X-ScaleMe-Mode: live`. Reply ≤2,000 units; strict provider JSON `{reply:string}`, output cap 500 tokens (or lower configured cap). This is unverified prose, **never** a FitAnalysis, evidence ledger record, validated bullet or verification claim.
+
+Both proxy and handler call `requirePrivateAi`. Existing `FIT_LIVE_AI_ENABLED=true` plus valid server-only private token are required, as is the additional **default-off** `COACH_LIVE_AI_ENABLED=true`. Authorization only in Bearer header, same-origin checks unchanged. No query/demo bypass. Authorization precedes body/budget/provider even for direct handler invocation. Single SDK attempt required; configured provider timeout must be ≤45 s. Same per-process minute/day/concurrency budget as fit/interview, no automatic retries.
+
+Errors retain `ApiError`: 400 `INVALID_REQUEST` (schema/content-type/query), 400 `UNSAFE_COACH_REQUEST` (known instruction/fabrication patterns), 408 body deadline, 413 body size, 401/403 `PRIVATE_ACCESS_REQUIRED`, 429 `RATE_LIMITED` + numeric Retry-After, 502 `INVALID_AI_RESPONSE`, 503/504 `AI_UNAVAILABLE`. No submitted/model/error content echoed. All handler responses `Cache-Control: no-store`, `Vary: Authorization`; successful responses alone carry live mode. Other methods use Next.js 405; no other paid execution entry exists.
+
+The client requires explicit send and consent, bounded local state, header-only session code, matching live header and strict response schema. No mount call, auto-retry, storage, telemetry, cookie or transfer to other tools. Clear/exit/reload remove active state. Cancellation invalidates late responses; already admitted calls may still be billed. The free practice-access endpoint does not establish coach availability, so the coach does not label itself live until its own authorized success.
+
 ## Contextual client private-preview access (additive transport requirement)
 
 The contextual client consumes PR #49's `{ resume, job, history, fit? } → { turn }` contract without changing those schemas. The PR remains unreviewed; adoption is conditional on human review. See [integration and local evidence handoff](CONTEXTUAL_INTERVIEW.md).
