@@ -1,5 +1,7 @@
 # AWS Bedrock integration plan — ScaleMe MVP
 
+Railway preparation: [private-demo readiness, credential rotation and owner gates](RAILWAY_PRIVATE_DEMO.md).
+
 **Owner:** @charlierichards13 (human). **Implementation partner:** Claude Pro on [Issue #6](https://github.com/charlierichards13/ScaleMe/issues/6).  
 **Status:** Local live path verified once (2026-11-15): one synthetic request through `POST /api/fit/analyze` reached Amazon Nova Lite in `us-east-2` through a restricted IAM role. Still a private, local-only setup; not deployed.  
 **Target:** A real resume + job-description analysis from the web app using AWS Bedrock, with structured evidence and truthful limitations.
@@ -35,15 +37,15 @@ The app should use **environment variable names** (not embedded credentials):
 | `AWS_REGION` | Region selected after confirming available model access. Verified setup: `us-east-2` |
 | `BEDROCK_MODEL_ID` | Model identifier confirmed enabled in that region. Verified setup: `amazon.nova-lite-v1:0` (in-region, on-demand) |
 | `AWS_PROFILE` | Optional local AWS CLI profile name; not a secret. Verified setup: a profile that assumes the restricted role (see below) |
-| `BEDROCK_TIMEOUT_MS` | Optional; per-call timeout in milliseconds. Default `45000`; invalid values fall back to the default |
-| `BEDROCK_MAX_OUTPUT_TOKENS` | Optional; maximum model output tokens. Default `3000`; invalid values fall back to the default |
+| `BEDROCK_TIMEOUT_MS` | Optional; integer `1`–`45000` ms. Default `45000`; invalid values fail closed (503) |
+| `BEDROCK_MAX_OUTPUT_TOKENS` | Optional; integer `1`–`4096`. Default `3000`; invalid values fail closed (503) |
 | `BEDROCK_MAX_ATTEMPTS` | Optional; AWS SDK attempts per request, `1` to `2`. Default `1` (no automatic retry, so one request is at most one paid call) |
 | `FIT_LIVE_AI_ENABLED` | **Required for live calls.** Real Bedrock calls happen only when this is `true` (case-insensitive). Default: off |
 | `FIT_RATE_LIMIT_GLOBAL_PER_MIN` | Optional; live calls per sliding minute, shared by all callers, `1` to `600`. Default `10` |
 | `FIT_DAILY_CALL_LIMIT` | Optional; live calls per sliding 24 hours, `1` to `10000`. Default `50` |
 | `FIT_MAX_CONCURRENT` | Optional; model calls running at once, `1` to `20`. Default `2` |
 
-The four cost-guard variables (`BEDROCK_MAX_ATTEMPTS` and the `FIT_*` limits) **fail closed**: if one is set to an invalid or out-of-range value, live requests return 503 instead of running without a limit. The limits are held in the memory of one server process; see the cost-guard section of `docs/security/THREAT_MODEL.md` for why that keeps the endpoint private-only.
+All resource-limit variables (`BEDROCK_MAX_ATTEMPTS`, `BEDROCK_TIMEOUT_MS`, `BEDROCK_MAX_OUTPUT_TOKENS` and the `FIT_*` limits) **fail closed**: if one is set to an invalid or out-of-range value, live requests return 503 instead of running without a limit. The limits are held in the memory of one server process; see the cost-guard section of `docs/security/THREAT_MODEL.md` for why that keeps the endpoint private-only.
 
 `FIT_LIVE_AI_ENABLED=true`, `AWS_REGION` and `BEDROCK_MODEL_ID` are **all required** for live analysis. If the switch is off, the route returns `AI_UNAVAILABLE` (503, `retryable: false`) and never contacts AWS. Setting `AWS_REGION` and `BEDROCK_MODEL_ID` alone does not enable paid calls. If either AWS setting is missing, `POST /api/fit/analyze` returns `AI_UNAVAILABLE` (HTTP 503, `retryable: false`) without contacting AWS. Names are listed in `web/.env.example` (names only, no values). The code never reads access keys itself; the AWS SDK default provider chain supplies credentials server-side. Never create a `NEXT_PUBLIC_` variable for any of these.
 

@@ -69,3 +69,24 @@ describe("getBedrockConfig maxAttempts", () => {
     }
   });
 });
+
+describe("Bedrock resource bounds", () => {
+  it.each([
+    ["BEDROCK_TIMEOUT_MS", "45001"], ["BEDROCK_TIMEOUT_MS", "abc"],
+    ["BEDROCK_TIMEOUT_MS", "0"], ["BEDROCK_MAX_OUTPUT_TOKENS", "4097"],
+    ["BEDROCK_MAX_OUTPUT_TOKENS", "9007199254740992"],
+    ["BEDROCK_MAX_OUTPUT_TOKENS", "1e3"], ["BEDROCK_MAX_OUTPUT_TOKENS", "-1"],
+  ])("rejects %s=%s before AWS", (name, value) => {
+    try {
+      getBedrockConfig({ ...aws, [name]: value });
+      expect.fail("Invalid bounds must fail closed");
+    } catch (error) {
+      expect(error).toMatchObject({ code: "AI_UNAVAILABLE", status: 503, retryable: false, message: LIVE_AI_UNAVAILABLE_MESSAGE });
+    }
+  });
+  it("accepts inclusive bounds and preserves defaults for blank values", () => {
+    expect(getBedrockConfig({ ...aws, BEDROCK_TIMEOUT_MS: "1", BEDROCK_MAX_OUTPUT_TOKENS: "1" })).toMatchObject({ timeoutMs: 1, maxOutputTokens: 1 });
+    expect(getBedrockConfig({ ...aws, BEDROCK_TIMEOUT_MS: "45000", BEDROCK_MAX_OUTPUT_TOKENS: "4096" })).toMatchObject({ timeoutMs: 45000, maxOutputTokens: 4096 });
+    expect(getBedrockConfig({ ...aws, BEDROCK_TIMEOUT_MS: " ", BEDROCK_MAX_OUTPUT_TOKENS: "" })).toMatchObject({ timeoutMs: 45000, maxOutputTokens: 3000 });
+  });
+});

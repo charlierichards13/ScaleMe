@@ -4,6 +4,13 @@ Use for code reviews, agent handoffs and the hackathon demo. This is **not** pro
 
 ## Every pull request
 
+Railway preparation: pinned public origin and spoofed headers verified in unit
+tests and 35 local production HTTP probes; token/timeout bounds and expired-session
+errors tested without AWS. Actual Railway edge, runtime identity, expiry, live
+inference and adversarial model behavior remain **not verified**. Follow the
+[private-demo owner gates](../RAILWAY_PRIVATE_DEMO.md); the three-request live
+test is skipped unless explicitly approved and opted in.
+
 Contextual interview private-preview checks (branch-local evidence, not public-launch certification):
 
 - [x] Three fictional profiles complete five answers through the actual handlers with the AWS SDK mocked; resume/job/history/target continuity and no raw-text logs checked.

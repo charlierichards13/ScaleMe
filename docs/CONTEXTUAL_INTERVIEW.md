@@ -1,5 +1,7 @@
 # Contextual interview private preview
 
+For Railway hosting, use the [private demonstration readiness and credential runbook](RAILWAY_PRIVATE_DEMO.md).
+
 Entry: `/interview/contextual`, inside the existing workspace shell. Refs #7.
 
 The user pastes resume text, a job description/title and explicit required requirements (one per line). The client assigns fixed `req-1`… IDs for this immutable context, explicitly calls `/api/fit/analyze`, renders each requirement/status/exact quote, then explicitly calls `/api/interview/next` to begin. Each subsequent submission sends the same resume/job, status-only fit context and complete alternating history, including returned coach target IDs. It renders the actual `coachMessage` as escaped text. No production question bank or synthetic response substitutes for failed AI output.

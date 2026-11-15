@@ -31,6 +31,22 @@ describe("private paid-AI boundary", () => {
     }
     expect(unstable_doesMiddlewareMatch({ config, nextConfig: {}, url: "/interview" })).toBe(false);
   });
+  it("pins the public HTTPS origin behind a Railway reverse proxy", () => {
+    const railway = { ...env, RAILWAY_ENVIRONMENT_ID: "fictional-environment", SCALEME_PRIVATE_AI_ORIGIN: "https://judges.example" };
+    const internal = (origin: string) => new Request("http://internal.railway:3000/api/fit/analyze", {
+      headers: { Authorization: `Bearer ${token}`, Origin: origin,
+        "X-Forwarded-Host": "evil.example", "X-Forwarded-Proto": "https" },
+    });
+    expect(requirePrivateAi(internal("https://judges.example"), railway)).toBeNull();
+    expect(requirePrivateAi(internal("https://evil.example"), railway)?.status).toBe(403);
+    expect(requirePrivateAi(internal("http://internal.railway:3000"), railway)?.status).toBe(403);
+    expect(requirePrivateAi(internal("https://judges.example"), { ...env, RAILWAY_ENVIRONMENT_ID: "fictional-environment" })?.status).toBe(503);
+    expect(requirePrivateAi(new Request("http://internal.railway:3000/api/fit/analyze"), railway)?.status).toBe(401);
+  });
+  it.each(["", "http://judges.example", "https://judges.example/", "https://judges.example/path",
+    "https://judges.example?x=1", "https://user:pass@judges.example", "https://judges.example#fragment", "not a URL"])("fails closed for invalid pinned origin %s", origin => {
+    expect(requirePrivateAi(request(), { ...env, SCALEME_PRIVATE_AI_ORIGIN: origin })?.status).toBe(503);
+  });
   it("permits only explicit free demos without access; access checks cannot bypass using demo=true", () => {
     vi.stubEnv("FIT_LIVE_AI_ENABLED", "false");
     for (const path of ["/api/fit/analyze?demo=true", "/api/interview/next?demo=true&step=0"]) {

@@ -41,8 +41,8 @@ export function getBedrockConfig(env: Env = process.env): BedrockConfig {
   return {
     region,
     modelId,
-    timeoutMs: positiveInt(env.BEDROCK_TIMEOUT_MS, 45_000),
-    maxOutputTokens: positiveInt(env.BEDROCK_MAX_OUTPUT_TOKENS, 3_000),
+    timeoutMs: boundedInt(env, "BEDROCK_TIMEOUT_MS", 45_000, 1, 45_000),
+    maxOutputTokens: boundedInt(env, "BEDROCK_MAX_OUTPUT_TOKENS", 3_000, 1, 4_096),
     maxAttempts: boundedInt(env, "BEDROCK_MAX_ATTEMPTS", 1, 1, 2),
   };
 }
@@ -58,11 +58,6 @@ export function getFitGuardConfig(env: Env = process.env): FitGuardConfig {
     dailyLimit: boundedInt(env, "FIT_DAILY_CALL_LIMIT", GUARD_DEFAULTS.dailyLimit, 1, 10_000),
     maxConcurrent: boundedInt(env, "FIT_MAX_CONCURRENT", GUARD_DEFAULTS.maxConcurrent, 1, 20),
   };
-}
-
-function positiveInt(value: string | undefined, fallback: number): number {
-  const n = Number(value);
-  return Number.isInteger(n) && n > 0 ? n : fallback;
 }
 
 // Unset/blank -> default. Set but not an integer within [min, max] -> fail closed:

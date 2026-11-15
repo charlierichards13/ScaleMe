@@ -72,6 +72,10 @@ describe("invokeBedrock", () => {
     ["TimeoutError", 504, true],
     ["ThrottlingException", 503, true],
     ["AccessDeniedException", 503, false],
+    ["ExpiredTokenException", 503, false],
+    ["ExpiredToken", 503, false],
+    ["InvalidClientTokenId", 503, false],
+    ["TokenRefreshRequired", 503, false],
     ["ValidationException", 503, false],
     ["SomethingElse", 503, true],
   ])("maps %s to a safe error without the raw AWS message", async (name, status, retryable) => {
@@ -162,8 +166,8 @@ describe("per-call output-token cap", () => {
 });
 
 describe("getBedrockConfig", () => {
-  it("applies defaults and ignores invalid numeric overrides", () => {
-    const cfg = getBedrockConfig({ AWS_REGION: "r", BEDROCK_MODEL_ID: "m", BEDROCK_TIMEOUT_MS: "abc" });
+  it("applies bounded defaults when numeric overrides are absent", () => {
+    const cfg = getBedrockConfig({ AWS_REGION: "r", BEDROCK_MODEL_ID: "m" });
     expect(cfg).toMatchObject({ region: "r", modelId: "m", timeoutMs: 45_000 });
   });
 });
