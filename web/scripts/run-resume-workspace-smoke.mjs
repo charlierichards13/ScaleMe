@@ -1,13 +1,12 @@
 /** Local synthetic-only production check. No .env file is created or changed. */
 import { spawn } from "node:child_process";
-import { randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
 
 const origin = "http://127.0.0.1:3191";
 const env = {
   ...process.env,
   RESUME_UPLOAD_ENABLED: "true",
-  RESUME_UPLOAD_TOKEN: randomBytes(32).toString("hex"),
+  RESUME_UPLOAD_EXPIRES_AT: "2099-01-01T00:00:00Z",
   RESUME_UPLOAD_ORIGIN: origin,
   FIT_LIVE_AI_ENABLED: "false",
   SCALEME_SMOKE_URL: origin,
