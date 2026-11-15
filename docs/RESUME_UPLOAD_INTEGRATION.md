@@ -1,4 +1,4 @@
-# Private resume upload integration
+> **Demo-mode update (2026-11-15):** The public-demo version removes the PDF access code and adds a server-enforced expiration. The access-code instructions below describe the original private preview only and are no longer applicable when deploying the new version. See [PUBLIC_PDF_DEMO.md](PUBLIC_PDF_DEMO.md). Paid AI endpoints still require their own authorization.\n\n# Private resume upload integration
 
 Branch: `feat/resume-upload-integration`; follow-up to Issue #4 / merged PR #50.
 This adds a private, synthetic-data-only upload preview. **Not approved for public applicant uploads.**
