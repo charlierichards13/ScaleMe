@@ -10,8 +10,16 @@ import {
 import { getBedrockConfig } from "./config";
 import { FitApiError, LIVE_AI_UNAVAILABLE_MESSAGE } from "./schemas";
 
+/** Optional per-route settings. Never contains user text. */
+export type InvokeOptions = {
+  /** Fixed route label for server logs, e.g. "interview/next". Defaults to "fit/analyze". */
+  logTag?: string;
+  /** Lower output-token cap for this call; never raises BEDROCK_MAX_OUTPUT_TOKENS. */
+  maxOutputTokens?: number;
+};
+
 // Tests replace this function with a mock. Nothing here needs real credentials until it runs.
-export type ModelInvoker = (system: string, userPrompt: string) => Promise<string>;
+export type ModelInvoker = (system: string, userPrompt: string, options?: InvokeOptions) => Promise<string>;
 
 let cachedClient: { region: string; maxAttempts: number; client: BedrockRuntimeClient } | undefined;
 
@@ -25,9 +33,11 @@ function getClient(region: string, maxAttempts: number): BedrockRuntimeClient {
   return cachedClient.client;
 }
 
-export const invokeBedrock: ModelInvoker = async (system, userPrompt) => {
+export const invokeBedrock: ModelInvoker = async (system, userPrompt, options = {}) => {
   const config = getBedrockConfig();
   const client = getClient(config.region, config.maxAttempts);
+  const tag = options.logTag ?? "fit/analyze";
+  const maxTokens = Math.min(config.maxOutputTokens, options.maxOutputTokens ?? config.maxOutputTokens);
 
   let output: ConverseCommandOutput;
   const startedAt = performance.now();
@@ -37,15 +47,15 @@ export const invokeBedrock: ModelInvoker = async (system, userPrompt) => {
         modelId: config.modelId,
         system: [{ text: system }],
         messages: [{ role: "user", content: [{ text: userPrompt }] }],
-        inferenceConfig: { maxTokens: config.maxOutputTokens, temperature: 0.2 },
+        inferenceConfig: { maxTokens, temperature: 0.2 },
       }),
       { abortSignal: AbortSignal.timeout(config.timeoutMs) },
     );
   } catch (err) {
-    throw toApiError(err, performance.now() - startedAt);
+    throw toApiError(err, performance.now() - startedAt, tag);
   }
 
-  logUsage(output, performance.now() - startedAt);
+  logUsage(output, performance.now() - startedAt, tag);
 
   const text = output.output?.message?.content
     ?.map((block) => ("text" in block ? block.text : ""))
@@ -60,10 +70,10 @@ export const invokeBedrock: ModelInvoker = async (system, userPrompt) => {
 
 // Usage metrics for cost tracking: NUMBERS ONLY. Never log prompts, resume/job text,
 // model output, model or account identifiers, or anything about the caller.
-function logUsage(output: ConverseCommandOutput, wallMs: number): void {
+function logUsage(output: ConverseCommandOutput, wallMs: number, tag: string): void {
   const truncated = output.stopReason === "max_tokens" ? 1 : 0;
   console.info(
-    `[fit/analyze] Bedrock usage: inputTokens=${metric(output.usage?.inputTokens)} ` +
+    `[${tag}] Bedrock usage: inputTokens=${metric(output.usage?.inputTokens)} ` +
       `outputTokens=${metric(output.usage?.outputTokens)} totalTokens=${metric(output.usage?.totalTokens)} ` +
       `modelLatencyMs=${metric(output.metrics?.latencyMs)} wallMs=${metric(wallMs)} truncated=${truncated}`,
   );
@@ -76,11 +86,11 @@ export function metric(value: unknown): number | "n/a" {
 
 // Map AWS errors to stable, safe messages. We never forward the raw AWS message
 // (it can contain account details) and never log request content.
-function toApiError(err: unknown, wallMs: number): FitApiError {
+function toApiError(err: unknown, wallMs: number, tag: string): FitApiError {
   const name = err instanceof Error ? err.name : "UnknownError";
   const status = (err as { $metadata?: { httpStatusCode?: number } })?.$metadata?.httpStatusCode;
   console.error(
-    `[fit/analyze] Bedrock call failed: ${name}${status ? ` (HTTP ${status})` : ""} wallMs=${metric(wallMs)}`,
+    `[${tag}] Bedrock call failed: ${name}${status ? ` (HTTP ${status})` : ""} wallMs=${metric(wallMs)}`,
   );
 
   if (name === "TimeoutError" || name === "AbortError") {
