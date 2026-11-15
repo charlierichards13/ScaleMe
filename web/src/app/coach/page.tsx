@@ -3,6 +3,9 @@ import { ArrowRight, FileSearch, FileText, FlaskConical, ListChecks, LockKeyhole
 import { routes } from "@/lib/routes";
 
 const paths = [
+  { title: "Talk through an experience", mode: "Private AI conversation · Off by default", icon: MessagesSquare,
+    description: "Ask the Bedrock coach a career question using only the context you explicitly provide. Requires private access and consent. Replies are unverified advice, separate from the evidence report.",
+    href: "/coach/conversation", action: "Open private conversation" },
   { title: "Prepare for a role", mode: "Local drafts · No model calls", icon: FileSearch,
     description: "Paste resume and job text in Fit Explorer. Prepare editable drafts, or deliberately open its fictional evidence sample. Live analysis in this explorer is locked.",
     href: routes.fitInsights, action: "Open Fit Explorer" },

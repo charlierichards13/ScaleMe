@@ -2,6 +2,19 @@
 
 Use for code reviews, agent handoffs and the hackathon demo. This is **not** proof of compliance. Mark **Verified** only when the test actually ran on the relevant branch/environment; otherwise mark **Not verified** and create an issue. Refer to the [Threat Model](THREAT_MODEL.md) and [SECURITY.md](../../SECURITY.md).
 
+## Private conversational Career Coach — Issue #64
+
+Branch checks use synthetic data and mocked AWS; live-model quality/injection resistance is not verified.
+
+- Route/proxy: default-off, missing/wrong token, Origin/fetch-site rejection before body/provider/budget, matcher and spoofed middleware header, no demo/query bypass, direct handler auth.
+- Contract: explicit consent, strict keys/roles/alternation, turn/per-field/cumulative/streamed-byte limits, slow body deadline; safe no-store errors.
+- Cost/provider: actual shared fit/interview quota, concurrency held until provider settles, single SDK attempt, output cap, provider timeout/failure/invalid JSON and no-log canaries.
+- Client/browser: no call on mount or absent consent; unavailable/401/403/429/503/network/wrong-mode honest states; manual retry without duplicate history; cancellation/reset/exit discard late responses; no cookies, storage, telemetry or cross-session transcript.
+- Prompt tests: known resume/job/history attacks blocked, all accepted context tagged as data, no token in prompt, no tools. Heuristics are not proof of semantic grounding or universal refusal.
+- Owner review still required: configured model/IAM/region, provider retention/disclosure, HTTPS private deployment, replica-wide quotas and one separately authorized synthetic live response with latency/cost. Keep draft and disabled.
+
+Executed results and screenshots: [Private Career Coach](../PRIVATE_CAREER_COACH.md).
+
 ## Every pull request
 
 Contextual interview private-preview checks (branch-local evidence, not public-launch certification):

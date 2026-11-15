@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { requirePrivateAi } from "@/lib/private-ai/access";
 
-/** Protect BOTH paid endpoints, including callers that bypass the browser UI. */
+/** Protect every paid endpoint, including callers that bypass the browser UI. */
 export function proxy(request: NextRequest) {
-  const isAiRoute = request.nextUrl.pathname !== "/api/practice/access";
-  if (isAiRoute && request.nextUrl.searchParams.get("demo") === "true") {
+  const hasFreeDemo = /^\/api\/(?:fit\/analyze|interview\/next)\/?$/.test(request.nextUrl.pathname);
+  if (hasFreeDemo && request.nextUrl.searchParams.get("demo") === "true") {
     return NextResponse.next(); // Those handlers ignore the body and never call AWS.
   }
   const rejected = requirePrivateAi(request);
@@ -16,5 +16,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/fit/analyze/:path*", "/api/interview/next/:path*", "/api/practice/access/:path*"],
+  matcher: ["/api/fit/analyze/:path*", "/api/interview/next/:path*", "/api/practice/access/:path*", "/api/coach/message/:path*"],
 };
