@@ -49,7 +49,7 @@ export default function ResumeUpload() {
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand"><FileText aria-hidden="true" className="h-5 w-5" /></span>
       <div className="min-w-0"><h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">Resume Lab</h1><p className="mt-1 text-sm leading-6 text-muted">Turn your experience into a clear starting point. Review first, then choose your next step.</p></div>
     </header>
-    <div className="mt-4"><Badge tone="warning">Private preview · synthetic input only</Badge></div>
+    <div className="mt-4"><Badge tone="warning">Limited-time PDF extraction demo</Badge></div>
     <ol aria-label="Resume journey" className="my-6 grid grid-cols-3 gap-2 text-xs font-semibold sm:gap-4 sm:text-sm">
       {["Add resume", "Review extraction", "Continue"].map((step, index) => <li key={step} aria-current={index === (resume ? 1 : 0) ? "step" : undefined} className={cx("rounded-xl border px-3 py-3", index === (resume ? 1 : 0) ? "border-brand/30 bg-brand-soft text-brand-strong" : "border-line text-muted")}><span className="mr-1">{index + 1}.</span>{step}</li>)}
     </ol>
