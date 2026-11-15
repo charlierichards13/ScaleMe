@@ -88,7 +88,16 @@ Run with `cargo test --manifest-path services/resume-parser/Cargo.toml --locked`
 - [ ] Before real resumes: test with representative real-world PDFs supplied with consent, and review the open decisions in the threat model.
 - [ ] Before private data: disable Linux core dumps / Windows Error Reporting memory dumps, enforce host memory limits, and ensure the parent kill timer also covers blocked input/output.
 
-## PDF / job-URL integrations (when they exist)
+## Private PDF upload integration
+
+- `server/upload.test.ts`: disabled/misconfigured gates, invalid private access/origin, multipart/file limits, missing/duplicate fields, renamed content, stalled streams even with non-resolving cancellation, per-process concurrency/rate, safe errors/filenames.
+- `server/process.test.ts`: fixed command/no inherited AWS secrets, schema failures, sanitized parser errors, hard timeout, caller abort, stdout cap, startup/crash, failed kill retaining capacity, relative path rejection.
+- `resume/client.test.ts` and `session.test.ts`: validated Resume handoff, session isolation/clear, actual fit request body, no auto-analysis and no fictional substitution.
+- Explicit real-binary suite: `npm exec -- vitest run --config vitest.resume.config.mts` after Rust release build; failure to find/execute the binary is a test failure, not a skip.
+- Linux container CI: `node web/scripts/docker-resume-smoke.mjs` exercises actual HTTP multipart → Rust → JSON in a non-root, read-only, resource-restricted container; checks canaries and unchanged filesystem.
+- [ ] Human review before public uploads: private ingress, code rotation, multi-instance quotas, consent/retention disclosure, host limits/crash dumps and representative real exporter PDFs. Existing parser-specific unverified cases remain open.
+
+## PDF / job-URL integrations
 
 - [ ] PDF: valid text PDF, non-PDF with `.pdf` suffix, oversized file, corrupt PDF, image-only document, unexpected metadata, parser timeout. *(Parser-level cases are in the table above; repeat them end to end through the upload route once it exists.)*
 - [ ] URL: `http://127.0.0.1`, `http://localhost`, cloud metadata/link-local addresses, private IP ranges, DNS aliases, redirect-to-private targets, credential-bearing URLs, unsupported protocols.
