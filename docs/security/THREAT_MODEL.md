@@ -145,6 +145,8 @@ Status: AWS configuration verified by the coding agent with read-only calls and 
 
 Status: implemented on `feat/interview-next-api` and **mock-tested only** (mocked Bedrock, synthetic data). No live call has been made for this route; it is not independently reviewed. Code: `web/src/app/api/interview/next/route.ts`, `web/src/lib/ai/interview*.ts`. Details: [INTERVIEW_API.md](../INTERVIEW_API.md).
 
+**Persistence clarification:** Today (Issue #7 API): no interview histories are persisted. The client re-sends history each turn and the server keeps none. This clarification lives here so the parser's separate hosting/open-decision additions can integrate unchanged.
+
 **Data flow introduced:** on each live turn the full resume text, job title/company/text, requirement descriptions and the **whole interview history so far** (up to 12 turns of 2,000 characters) leave the server for Bedrock, the same provider and region as fit analysis. Interview answers are new personal data sent to the model. Client-supplied fit `explanation`/`evidence` fields are stripped and **not** sent. Nothing is stored or logged; the history is re-sent by the client every turn.
 
 **Trust boundaries touched:** a second unauthenticated, cost-bearing route. It is gated by the same `FIT_LIVE_AI_ENABLED` switch and draws on the **same** in-process limiter as `/api/fit/analyze` (one budget for both, owner decision 2026-11-15), so it adds no separate inference path and does not raise the call ceiling. `?demo=true` reads no body and calls no AWS.
@@ -206,7 +208,7 @@ Capture the change in the same PR and add corresponding tests to [Review Checkli
 - How will abuse limits be enforced across deployment instances (shared store vs trusted gateway)? Today: in-process only (Issue #23), which is not sufficient for public exposure.
 - ~~Which Bedrock model, region and least-privilege resource ARN?~~ **Decided 2026-11-15 (owner):** in-region `amazon.nova-lite-v1:0` in `us-east-2` via the restricted `ScaleMeDevBedrockInvoke` role. Still open: Bedrock retention/logging settings, and whether to evaluate a Claude model. That would mean cross-region inference, an AWS Marketplace subscription and probably no promotional-credit coverage, so it needs its own approval.
 - Is the prototype available to the public, or kept local/private using only synthetic data?
-- Are interview histories persisted? If so, how are records encrypted, authorized and deleted? Today (Issue #7 API): no. The client re-sends history each turn and the server keeps none.
+- Are interview histories persisted? If so, how are records encrypted, authorized and deleted?
 - Where does the Rust matcher execute in hosted environments without arbitrary executable support?
 - Will job URL retrieval be restricted to a documented allowlist or delegated to a trusted provider?
 
