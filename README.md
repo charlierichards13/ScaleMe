@@ -7,6 +7,8 @@ ScaleMe is an AI-powered career preparation platform built at **SunHacks 2026**.
 
 > **Status:** Hackathon MVP in development. The architecture and features below are plans, not claims that they are already implemented.
 
+**Contextual interview private preview:** `/interview/contextual` accepts pasted resume/job text and explicit requirements, calls the actual fit/interview APIs, and collects exact candidate-reported answers for future reassessment. It requires owner-authorized private access; live AI stays off by default. `/interview` remains the separate fictional scripted practice. Backend PR #49 still needs human review; no live-model verification is claimed. [Setup, ownership and integration](docs/CONTEXTUAL_INTERVIEW.md).
+
 ## The problem
 
 Job seekers often have useful experiences that their resumes fail to communicate. Generic keyword checkers may point out missing terms, but they rarely ask *what actually changed because of your work* or help you practice defending your claims in an interview.

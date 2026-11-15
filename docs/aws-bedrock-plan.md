@@ -6,6 +6,8 @@
 
 ## Keep the first deployment small
 
+**Contextual interview private preview:** both paid Next.js routes now also require an owner-configured `SCALEME_PRIVATE_AI_TOKEN` and the tester's corresponding bearer access code, enforced by `src/proxy.ts`. `FIT_LIVE_AI_ENABLED=false` is explicit in `.env.example`. Missing/invalid access settings fail closed; AWS settings alone cannot grant browser access. `/api/practice/access` is a free authorization check. See [authorized private setup and limitations](CONTEXTUAL_INTERVIEW.md). Do not enable, invoke paid models, deploy, change IAM or reuse AWS credentials as the app code without owner approval. Existing per-process budgets and AWS role requirements remain in place.
+
 For the hackathon, use **Next.js Route Handlers in `web/src/app/api/`** as the server boundary:
 
 ```text

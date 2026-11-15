@@ -4,6 +4,15 @@ Use for code reviews, agent handoffs and the hackathon demo. This is **not** pro
 
 ## Every pull request
 
+Contextual interview private-preview checks (branch-local evidence, not public-launch certification):
+
+- [x] Three fictional profiles complete five answers through the actual handlers with the AWS SDK mocked; resume/job/history/target continuity and no raw-text logs checked.
+- [x] Default-off/misconfigured access, wrong/missing bearer code and cross-origin denial; both free demos remain explicit and AWS-free.
+- [x] Browser adapter tests cover wrong mode, missing/duplicate/unknown requirements, fabricated quotes, malformed/oversized responses, timeouts, cancellation, Retry-After and manual retry without duplicating history.
+- [x] Exact candidate-reported answers are collected without confirmation, inferred relevance or fit-status changes; no storage/telemetry/dependencies added.
+- [ ] Human review of PR #49 and coordination of frontend navigation/explorer ownership.
+- [ ] Private deployment boundary, HTTPS, access-code distribution/rotation, shared abuse controls and provider-retention settings reviewed before activation. No live call or deployment performed by this implementation.
+
 - [ ] Agent read root/nested `AGENTS.md`, `CONTRIBUTING.md` and relevant security docs.
 - [ ] Branch/file ownership respected; no unrelated refactors, destructive commands or unauthorized cloud changes.
 - [ ] Inputs validated at the **server** for type, length, size and format; runtime JSON schemas used where appropriate.

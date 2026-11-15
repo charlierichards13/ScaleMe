@@ -4,6 +4,18 @@
 **Clients:** Next.js responsive web/PWA first; an optional Expo native client later uses the same HTTP endpoints.  
 **Design rules:** JSON over HTTPS, TypeScript-friendly types, stable error shapes, evidence-backed claims, no fabricated skills or outcomes.
 
+## Contextual client private-preview access (additive transport requirement)
+
+The contextual client consumes PR #49's `{ resume, job, history, fit? } → { turn }` contract without changing those schemas. The PR remains unreviewed; adoption is conditional on human review. See [integration and local evidence handoff](CONTEXTUAL_INTERVIEW.md).
+
+- The Next.js server proxy gates **both** `/api/fit/analyze` and `/api/interview/next` before paid handlers. Live requests require `FIT_LIVE_AI_ENABLED=true`, a valid server-only `SCALEME_PRIVATE_AI_TOKEN`, and `Authorization: Bearer <owner-provided private access code>`. The code is an application access credential, never an AWS credential. The server does not inject it into HTML or JavaScript. Client-provided code lives in component memory only.
+- Default-off or missing/invalid private access configuration: `503 AI_UNAVAILABLE`, non-retryable. Configured but missing/wrong access code: `401 PRIVATE_ACCESS_REQUIRED`, non-retryable. Wrong `Origin` or cross-site browser request: `403 PRIVATE_ACCESS_REQUIRED`, non-retryable. Responses are generic and `Cache-Control: no-store`; no submitted values are echoed. These checks precede body parsing and quota acquisition at the HTTP boundary. Direct handler unit tests do not exercise the proxy.
+- Exact `?demo=true` continues to bypass paid access for the existing fixed, labeled, body-ignoring demos. No fallback from live to demo is automatic.
+- `POST /api/practice/access` uses the same access gate, returns `{ "available": true }` on success, and never reads a body, calls AWS or acquires quota. `?demo=true` does not bypass this route. This confirms private-preview access only; AWS readiness is checked by subsequent paid handlers.
+- Client calls omit cookies, prohibit redirects, and require `X-ScaleMe-Mode: live` for analysis/interview output. Timeout is 55 seconds (default server timeout 45 seconds); responses are bounded to 200 KB. Retrying or cancelling does not refund or undo a model request already accepted by the server.
+
+This shared private-preview credential is not a user account/session system, a distributed quota, or public-launch authorization. Deploy only with server-side proxy support and HTTPS in an authorized private environment after human review. No deployment is part of this change.
+
 ## Architecture choice for the hackathon
 
 Start with **Next.js Route Handlers** in `web/src/app/api/` so the frontend can integrate quickly. The handlers may call Amazon Bedrock directly from the server. If AWS deployment calls for it, move the same handlers behind API Gateway/Lambda without changing the client contract.

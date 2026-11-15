@@ -6,6 +6,16 @@
 
 This document is a required reference for any change that introduces a service, data field, input source, privileged tool, persistence, or external call. **Statuses below mean proposed controls until verified in code and tests.**
 
+## Contextual interview private-preview update (2026-11-15)
+
+This branch supersedes the historical "unauthenticated paid route" descriptions below at the **Next.js HTTP boundary**: `src/proxy.ts` guards both paid endpoints with a high-entropy owner-provided bearer access code and the existing default-off live switch. No shared UI, existing API handler or model prompt is replaced. Exact `demo=true` remains the free body-ignoring route. `/api/practice/access` checks authorization without AWS or quota use. Configuration is server-only; the browser receives no environment access code or AWS credential. A tester's manually entered app code lives in React memory, travels only in Authorization, and is cleared on finish/reset. Wrong/missing code and wrong-origin requests fail before paid handlers; errors are generic, uncached and contain no applicant text. No cookies are added.
+
+The new `/interview/contextual` client explicitly sends resume/job/requirements, then full previous interview questions/answers and fit statuses to the existing APIs after disclosure and consent. React renders text, runtime schemas validate responses, every structured requirement must appear once, and unsupported/unknown provenance is rejected. Browser requests and responses are bounded, redirects prohibited, timeout/cancellation handled, and retries require an explicit click. Already admitted model calls may complete/be billed after cancellation. No persistence, logging of user text, telemetry, tools or external job/PDF ingestion is introduced. The local evidence handoff retains exact candidate-reported answers and question targets without asserting relevance or changing support statuses.
+
+**Verified with mocked AWS:** three distinct fictional profiles/jobs, full five-answer sessions, previous answers in prompts, target continuity, no cross-profile leakage, no raw text/code in logs, retry preservation, anonymous denial, malformed/wrong-mode outputs, free demos and off-by-default configuration. Browser/production HTTP verification is recorded in the PR. These checks do not verify live model quality, provider retention, prompt-injection resistance or public-hosting behavior.
+
+**Remaining risks:** shared private code grants access to a whole preview budget, provides no individual identity or per-user fairness, and requires secure owner distribution/rotation and HTTPS. No new account/database is added. The per-process cost budget remains restartable and is not a distributed hard cap. The access gate requires a Next.js server that executes proxy; direct route exports are internal functions, not independently authorized service entry points. Reconcile with future authentication/proxy changes and review the actual hosting boundary before any deployment. Do not deploy publicly; #49 still needs human review. Real personal data requires the existing provider retention/privacy review. [Integration and setup](../CONTEXTUAL_INTERVIEW.md).
+
 ## Security goals
 
 1. Protect private candidate data, interview history, credentials and service logs.
