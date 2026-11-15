@@ -1,5 +1,5 @@
 /** Production Resume Lab/onboarding smoke using Chromium CDP and Node 22 built-ins.
- * Run a private production server first; then node scripts/resume-workspace-smoke.mjs.
+ * Run a time-limited demo production server first; then node scripts/resume-workspace-smoke.mjs.
  * Optional: SCALEME_SMOKE_URL, CHROMIUM_PATH, SCALEME_SCREENSHOT_DIR.
  * Only fictional inputs. No cloud/model calls or additional dependencies. */
 import assert from 'node:assert/strict';
@@ -87,7 +87,6 @@ try {
   await command('Runtime.enable'); await command('Network.enable'); await command('Page.enable');
   await command('Browser.grantPermissions', { origin, permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'] });
   await command('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
-  assert.ok(process.env.RESUME_UPLOAD_TOKEN, 'provide a private synthetic testing code through the environment');
   const fixture = join(profile, 'synthetic-resume.pdf');
   await writeFile(fixture, syntheticPdf());
   const navigate = async (path) => {
@@ -105,7 +104,6 @@ try {
     await wait(`document.body.innerText.includes('PDF selected. Nothing has been uploaded.')`);
   };
   const parse = async () => {
-    await type('input[type=password]', process.env.RESUME_UPLOAD_TOKEN);
     await click('Extract resume');
   };
   const noOverflow = async () => assert.ok(await evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'horizontal overflow');
@@ -117,11 +115,6 @@ try {
   await wait(`location.pathname === '/resume-lab' && !!window.__resumeQuery('input[type=file]')`);
   await choose();
   assert.equal(requests.filter(r => r.method === 'POST').length, 0, 'selection must not upload');
-  await click('Extract resume');
-  await wait(`window.__resumeQuery('[role=alert]')?.textContent.includes('project owner')`);
-  assert.equal(requests.filter(r => r.method === 'POST').length, 0, 'missing code must not upload');
-  await type('input[type=password]', 'synthetic-wrong-code'); await click('Extract resume');
-  await wait(`window.__resumeQuery('[role=alert]')?.textContent.includes('was not accepted')`);
   await parse();
   await wait(`!!window.__resumeQuery('#resume-review-title')`);
   assert.ok(await evaluate(`document.body.innerText.includes('Built a fictional scheduling tool with Python.')`));
@@ -157,7 +150,7 @@ try {
   assert.ok(await evaluate(`document.activeElement.type === 'file'`));
   await command('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 });
   await command('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 });
-  assert.ok(await evaluate(`document.activeElement.type === 'password'`));
+  assert.ok(await evaluate(`document.activeElement.type !== 'password'`));
   await click('Open navigation'); await follow('Dashboard');
   await wait(`location.pathname === '/dashboard'`);
   await click('Open navigation'); await follow('Resume Lab');
@@ -193,7 +186,7 @@ try {
   await parse(); await wait(`document.body.innerText.includes('Extracting resume…')`);
   await click('Cancel upload'); await wait(`document.body.innerText.includes('Upload cancelled')`);
   await evaluate(`window.fetch = (...args) => args[0] === '/api/resume/parse' ? Promise.resolve(new Response('{}', {status:503})) : window.__originalFetch(...args);`);
-  await parse(); await wait(`window.__resumeQuery('[role=alert]')?.textContent.includes('Private uploads are disabled')`);
+  await parse(); await wait(`window.__resumeQuery('[role=alert]')?.textContent.includes('Resume uploads are unavailable')`);
   await evaluate(`window.fetch = window.__originalFetch`);
   await navigate('/onboarding'); await choose(); await parse();
   await wait(`document.body.innerText.includes('Resume extracted and ready to review.')`);
