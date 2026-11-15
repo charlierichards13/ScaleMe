@@ -21,16 +21,25 @@ Job seekers often have useful experiences that their resumes fail to communicate
 
 ### What makes it different?
 
-**ScaleMe discovers missing context through conversation.** It does not simply paraphrase the original resume. For example, “Built an internal tool” could lead to questions about users, constraints, technical decisions, adoption, and measurable outcomes—then an improved bullet grounded in the candidate's actual responses. The AI must not invent numbers, qualifications, or accomplishments.
+**Our intended differentiator is an auditable evidence-discovery loop, not just AI resume rewriting.** Similar AI career tools already exist; we aim to make the *reasons* behind each improvement visible and testable.
+
+1. **Find what is not demonstrated.** Evaluate target-job requirements against resume excerpts without implying that missing evidence means missing ability.
+2. **Investigate with targeted questions.** Ask about one unresolved requirement and use the candidate's response to uncover relevant, previously undocumented work.
+3. **Track source evidence.** Tie the assessment to a specific resume excerpt or interview answer, with stable IDs and clear candidate-reported/confirmed labels.
+4. **Reassess documented coverage.** Compare required requirements supported by candidate evidence before and after the interview—not a hiring probability or a change in actual qualifications.
+5. **Propose only traceable improvements.** Show original versus revised bullets and block or question unsupported metrics, tools, dates and achievements.
+
+**Integrity note:** Candidate-reported or candidate-confirmed achievements are **not independently verified**. Planned features are not claims that the prototype already implements them. See the [differentiation plan, competitor context and judge demo](docs/DIFFERENTIATION.md).
 
 ## Hackathon MVP
 
 - [ ] Responsive dashboard with a complete, judge-friendly happy path
 - [ ] PDF resume upload, text extraction, and useful error handling
 - [ ] Job description input; URL ingestion when practical
-- [ ] Resume-to-role analysis with evidence for each finding
-- [ ] Interactive **text-based** mock interview with challenging follow-up questions
-- [ ] Evidence-backed impact bullet suggestions and an action plan
+- [ ] Requirement-level analysis with inspectable evidence and explicit **not evidenced vs missing skill** distinction
+- [ ] Interactive **text-based** interview that targets unresolved requirements and uses answer-aware follow-ups
+- [ ] Source-linked candidate evidence records and before/after **documented coverage** comparison
+- [ ] Evidence-backed impact suggestions with candidate review and blocked unsupported additions
 - [ ] Working AWS-backed AI pathway
 - [ ] A meaningful, testable Rust matching component
 - [ ] Short demo, sample inputs, and submission documentation
@@ -112,6 +121,14 @@ ScaleMe/
 
 ## Getting started
 
+### Resume Impact Lab prototype
+
+Visit `/impact-lab` for a standalone **FICTIONAL DEMO** of two before/after resume
+suggestions, exact evidence inspection, candidate confirmation/rejection, guarded
+copying, and targeted grilling questions. It uses deterministic hand-written fixtures,
+no paid APIs, and no persistence. The live AI discovery workflow remains future work.
+See [demo instructions and limitations](docs/IMPACT_LAB_DEMO.md).
+
 The **Next.js scaffold is now available** in `web/`. With Node.js 22 installed:
 
 ```bash
@@ -137,9 +154,9 @@ GitHub Actions runs automatically after its workflow is merged; enforcing passin
 
 ## Demo story
 
-**Before:** a resume reads like a task list and undersells real work.  
-**During:** ScaleMe compares the resume to a target job, then challenges the candidate to explain decisions, tradeoffs, and impact.  
-**After:** the candidate leaves with accurate stronger bullets, targeted interview talking points, and a concrete improvement plan.
+**Before:** a synthetic resume leaves one target-job requirement without supporting evidence.  
+**During:** ScaleMe asks a requirement-targeted question; a candidate answer becomes a traceable evidence record and triggers reassessment.  
+**After:** the candidate sees the updated evidence coverage and a source-grounded revised bullet, while unsupported claims stay excluded.
 
 **Expo format (from event briefing):** 3-minute project demo + 2-minute judge Q&A. Prioritize a live, end-to-end workflow over slides.
 

@@ -110,6 +110,64 @@ export type ApiError = {
 
 For MVP, `web/src/lib/contracts.ts` can export these types or equivalent runtime-validated Zod schemas. Avoid duplicated hand-written type definitions in separate agents' implementations.
 
+## Proposed additive evidence-discovery extension (v0.2; **not implemented**)
+
+The types above remain the **v0.1 integration baseline** while #3/#6/#7/#8 are developed on separate branches. Before adopting new wire fields, the team should agree on the following *additive* extension, update runtime validators and consumers together, and use real acceptance tests. Do not silently change a live response shape based on this planning text.
+
+```ts
+export type CandidateEvidenceRecord = {
+  id: string; // stable within a resume/interview session
+  source: "resume" | "interview"; // NEVER job: job text is a requirement, not candidate proof
+  quote: string; // exact span in candidate-provided text; verify on the server
+  sourceRef: string; // resume section/offset or stable interview turn ID
+  review: "candidate_reported" | "candidate_confirmed";
+};
+
+export type RequirementEvidenceLink = {
+  requirementId: string; // must exist in the same JobPosting.requirements
+  candidateEvidenceIds: string[]; // only IDs in CandidateEvidenceRecord[]
+};
+
+export type CoverageSnapshot = {
+  phase: "initial" | "after_interview";
+  requiredRequirementIds: string[]; // stable denominator for both phases
+  supportedRequirementIds: string[];
+  unclearRequirementIds: string[];
+  notEvidencedRequirementIds: string[];
+};
+
+export type DiscoveryExtension = {
+  evidenceRecords: CandidateEvidenceRecord[];
+  links: RequirementEvidenceLink[];
+  before: CoverageSnapshot;
+  after: CoverageSnapshot;
+};
+
+export type TargetedInterviewResponse = InterviewResponse & {
+  targetRequirementId?: string; // required once targeted questioning ships
+};
+
+export type GuardedImpactSuggestion = Omit<ImpactSuggestion, "improved"> & {
+  improved?: string; // absent when a proposed claim is blocked
+  candidateEvidenceIds: string[];
+  reviewStatus: "ready_for_candidate_review" | "needs_confirmation" | "blocked";
+  reviewReason?: string;
+};
+```
+
+**Rules for adoption:**
+
+- The client should display a clearly separated **candidate-reported** vs **candidate-confirmed** state. Confirmation is not independent employer/credential verification.
+- Job-description excerpts may justify the existence of a requirement but must **not** count as evidence that the candidate satisfies it.
+- Compute coverage counts **in application code** from validated requirement IDs and statuses; do not accept arbitrary totals output by the model. Only compare snapshots over the **same requirement ID set**.
+- A requirement may become supported after an interview only when a relevant exact candidate-supplied quote is linked. A rephrased bullet by itself must not change status.
+- The interview and impact routes should eventually support these records, but **keep the existing v0.1 requests and responses valid** until all consuming branches coordinate migration. Possible reassessment strategies: optional interview context on `/api/fit/analyze` or a dedicated `/api/fit/reassess`; choose one before implementation.
+- All references and quotes are sensitive candidate data. Avoid permanent storage/logging for the MVP; use synthetic fixtures and server-side validation.
+- The optional Rust claim guard may flag additions such as new percentages, counts, dates or tools, but it does **not** establish the independent truth of a candidate's report.
+
+**Synthetic integration acceptance:** with a testing requirement initially `not_evidenced`, an answer about testing the portal may change that requirement to `supported` with an exact interview reference; an unrelated or missing answer must leave it unresolved, and an invented “40% faster” metric must not pass as source-grounded. See [DIFFERENTIATION.md](DIFFERENTIATION.md).
+
+---
 ## Endpoints (proposed)
 
 ### `POST /api/resume/parse`
@@ -128,8 +186,43 @@ For MVP, `web/src/lib/contracts.ts` can export these types or equivalent runtime
 
 **Request:** `{ "resume": Resume, "job": JobPosting }`.  
 **Response:** `{ "analysis": FitAnalysis }`.  
-**Failures:** `INVALID_RESUME`, `INVALID_JOB`, `AI_UNAVAILABLE`, `INVALID_AI_RESPONSE`.  
-**Implementation:** use the Rust matcher for explainable requirement signals and Bedrock for qualitative reasoning, constrained by evidence.
+**Failures:** `INVALID_REQUEST`, `INVALID_RESUME`, `INVALID_JOB`, `AI_UNAVAILABLE`, `INVALID_AI_RESPONSE`.
+**Implementation:** use the Rust matcher for explainable requirement signals and Bedrock for qualitative reasoning, constrained by evidence. *Current state (branch `feat/bedrock-fit`, Issue #6): Bedrock only; the Rust matcher is not integrated.*
+
+**Request limits (server-enforced; the request is rejected before any AWS call):**
+
+| Field | Limit |
+| --- | --- |
+| Whole JSON body | 200,000 bytes (read as a bounded stream, so a missing `Content-Length` does not bypass it) |
+| `resume.text` | 1 to 30,000 characters (whitespace-only is rejected) |
+| `job.title` | 1 to 200 characters |
+| `job.text` | 1 to 20,000 characters |
+| `job.requirements` | at most 30 items. If supplied, the analysis may only use these `id`s. If omitted, the model extracts requirements and names them `r1`, `r2`, ... |
+
+Unknown extra fields are ignored. `filename`, `sourceUrl` and `sections` are accepted but are **not** sent to the model.
+
+**Status codes and error codes (all use the shared `ApiError` shape):**
+
+| HTTP | `error.code` | Retryable | When |
+| --- | --- | --- | --- |
+| 400 | `INVALID_REQUEST` | no | Body is not valid JSON |
+| 413 | `INVALID_REQUEST` | no | Body exceeds 200,000 bytes |
+| 400 | `INVALID_RESUME` | no | `resume` missing, empty, wrong type or too long |
+| 400 | `INVALID_JOB` | no | `job` missing, empty, wrong type or too long (checked after the resume) |
+| 503 / 504 | `AI_UNAVAILABLE` | usually | Not configured (`retryable: false`), access denied or bad model ID (`false`), throttled (`true`), timeout 504 (`true`), other AWS failure (`true`) |
+| 502 | `INVALID_AI_RESPONSE` | yes | Model reply was empty, not JSON, failed schema validation, or used a requirement id that was not supplied |
+| 500 | `AI_UNAVAILABLE` | yes | Unexpected server error (generic message) |
+
+`INVALID_REQUEST` is **not** a resume/job content error: it means the HTTP body itself could not be used. `INVALID_RESUME` and `INVALID_JOB` messages never echo the submitted text.
+
+**Server-side guarantees on the returned `FitAnalysis`:**
+- An `evidence` item is kept only if its `quote` appears in the submitted resume (`source: "resume"`) or job (`source: "job"`) text, ignoring case and whitespace. Others are dropped. `source: "interview"` is dropped because this endpoint receives no interview data.
+- A `supported` assessment with no verified resume quote is downgraded to `unclear` and its explanation says so.
+- `disclaimer` is always replaced with a fixed server-side string; the model's version is ignored.
+- Quote matching is a substring check: it shows the quote exists in the input, not that it proves the requirement. A very short quote can match by chance, so reviewers should read the evidence.
+- `explanation`, `strengths`, `clarificationQuestions` and `growthSuggestions` are model-written text. They are schema- and length-checked but **not** fact-checked. Prompt rules forbid invented facts and hiring probabilities, but the code does not detect them.
+
+**Demo mode:** `POST /api/fit/analyze?demo=true` returns a fixed, hand-written synthetic `FitAnalysis`. The request body is ignored (it is not even parsed), and AWS is not called. The response has header `X-ScaleMe-Mode: demo` and `X-ScaleMe-Demo-Label`, and the `summary` begins with `DEMO:` and the `disclaimer` with `DEMO (synthetic sample, not a live AWS Bedrock result)`. A normal response has `X-ScaleMe-Mode: live`. The route never switches to demo on its own when AWS fails; the client must ask for it. There is no `mode` field in the JSON body (open decision: see Decisions below).
 
 ### `POST /api/interview/next`
 
@@ -183,6 +276,20 @@ For MVP, `web/src/lib/contracts.ts` can export these types or equivalent runtime
 }
 ```
 
+## Example `fit/analyze` input error (synthetic)
+
+`POST /api/fit/analyze` with body `{oops` returns HTTP 400:
+
+```json
+{
+  "error": {
+    "code": "INVALID_REQUEST",
+    "message": "The request body must be valid JSON.",
+    "retryable": false
+  }
+}
+```
+
 ## Standard error example
 
 ```json
@@ -213,6 +320,10 @@ These are deterministic keyword/alias signals, not final judgments of candidate 
 5. Add PWA manifest and icons, test mobile layout, then consider a separate Expo client.
 
 ## Decisions to finalize before implementation
+
+- **Runtime schemas location:** `fit/analyze` currently defines its Zod schemas in `web/src/lib/ai/schemas.ts`, not the shared `web/src/lib/contracts.ts` suggested above. Agree on one export source before the frontend imports them.
+- **Demo/live marker:** the demo is currently identified by response headers and `DEMO` text, not a JSON field. Decide whether to add an optional `mode: "live" | "demo"` to the contract.
+- **`INVALID_REQUEST`:** the frontend should handle it (for example a generic "something was wrong with the request" message) in addition to the resume/job errors.
 
 - Data persistence: default to **no user accounts** and no permanent resume storage in the hackathon demo.
 - AWS region/model and backend hosting: choose based on actual access and permissions, not guessed defaults.

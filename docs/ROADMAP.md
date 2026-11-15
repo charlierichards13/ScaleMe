@@ -1,7 +1,7 @@
 # ScaleMe — Hackathon Roadmap
 
 **Event:** SunHacks, November 14–15, 2026  
-**Goal:** A believable three-minute demonstration of resume upload → job comparison → context-aware interview → honest impact suggestions.  
+**Goal:** A believable three-minute demonstration of resume upload → requirement-level evidence → targeted interview → documented coverage change → source-grounded impact suggestion. [Differentiation and acceptance tests](DIFFERENTIATION.md).  
 **Tracking source of truth:** [GitHub Issues](https://github.com/charlierichards13/ScaleMe/issues). Keep this roadmap at a milestone level; the Issues/Projects board owns the live status.
 
 > Scope rule: a small, fully working vertical slice beats five half-finished features. Desktop and mobile use one responsive Next.js/PWA frontend. Native Expo is a stretch goal, not a blocker.
@@ -31,13 +31,13 @@
 
 | Issue | Owner | Done when |
 | --- | --- | --- |
-| [#6 Bedrock fit analysis](https://github.com/charlierichards13/ScaleMe/issues/6) | @charlierichards13 | One real AWS-backed structured, evidence-based assessment |
+| [#6 Bedrock fit analysis](https://github.com/charlierichards13/ScaleMe/issues/6) | @charlierichards13 | One real AWS-backed assessment with requirement IDs, explicit uncertainty and candidate-source evidence |
 | [#9 AWS infrastructure](https://github.com/charlierichards13/ScaleMe/issues/9) | @charlierichards13 | Backend is configured with server-side credentials and least privilege |
-| [#12 Rust matching](https://github.com/charlierichards13/ScaleMe/issues/12) | @charlierichards13 | Real match signal influences analysis; tests pass |
-| [#7 Mock interview](https://github.com/charlierichards13/ScaleMe/issues/7) | @MisterProper667 | Coach asks coherent answer-aware follow-ups |
-| [#8 Impact report](https://github.com/charlierichards13/ScaleMe/issues/8) | @charlierichards13 | Factual before/after bullets grounded in resume/interview evidence |
+| [#12 Rust matching](https://github.com/charlierichards13/ScaleMe/issues/12) | @charlierichards13 | Tested deterministic requirement signals influence analysis; unsupported-number guard is P1 only |
+| [#7 Mock interview](https://github.com/charlierichards13/ScaleMe/issues/7) | @MisterProper667 | Coach targets one unresolved requirement and asks answer-aware follow-ups with a stable requirement ID |
+| [#8 Impact report](https://github.com/charlierichards13/ScaleMe/issues/8) | @charlierichards13 | Before/after requirement coverage plus grounded bullet suggestions, source links and unsupported-claim handling |
 
-**Third integration gate:** full upload → analysis → interview → revised bullets flow works, including a documented synthetic demo fallback when an external integration is unavailable.
+**Third integration gate:** the same required requirement changes status **only after** a relevant candidate answer; a reviewer can inspect the exact evidence, recomputed supported-requirement count and grounded bullet. If the backend is unavailable, a separate clearly labeled synthetic fallback is permissible, not a fake live AI result.
 
 ## Milestone 4 — Quality, expo and submission
 
@@ -79,7 +79,9 @@ The presence of `.github/workflows/ci.yml` *runs* automatic checks; it does **no
 
 ## Scope control
 
-**Must ship:** resume text, pasted job description, AWS-backed analysis, coherent text interview, evidence-based suggestions, responsive UI, three-minute demo.
+**Must ship:** resume text, pasted job description, AWS-backed requirement-level analysis, targeted text interview, candidate-source evidence trail, supported-required-requirement counts before/after, grounded suggestions, responsive UI and three-minute demo.
+
+**Contract-first checkpoint:** [#2](https://github.com/charlierichards13/ScaleMe/issues/2) owners must agree on the proposed additive evidence/coverage extensions in [api-contract.md](api-contract.md) before #3/#6/#7/#8 integrate them. Do not make every coding agent independently invent schema fields. Keep the current v0.1 implementation intact until coordinated updates and tests are ready.
 
 **If time permits:** automated URL retrieval, Rust enrichment, installable PWA, nicer interview history, real-time visualizations, Grok bot workflow requirements.  
 **Not for initial hackathon scope:** full native mobile app, accounts, long-term storage, app-store publishing, voice calls.
