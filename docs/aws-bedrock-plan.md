@@ -81,6 +81,7 @@ We did **not** activate Advanced Features. Activation is irreversible and remove
 | Item | Status |
 | --- | --- |
 | `POST /api/fit/analyze` using the Bedrock Runtime **Converse** API (`@aws-sdk/client-bedrock-runtime`) | Implemented |
+| `POST /api/interview/next`: same client, live switch and shared cost budget; 400 output tokens per turn | Implemented, mock-tested only (no live call). See [INTERVIEW_API.md](INTERVIEW_API.md) |
 | Request/response validation, evidence-quote checking, advice grounding, safe errors, labeled `?demo=true` | Implemented, covered by **mocked** unit tests (95 tests in `web/`; no network, no credentials) |
 | Real Bedrock invocation through ScaleMe | **Verified once** (2026-11-15): one synthetic request, HTTP 200, `X-ScaleMe-Mode: live`, about 4.5 s end to end. See "First live test" below |
 | Real prompt-injection resistance, behavior across varied inputs, cost per call at scale | **NOT VERIFIED.** One clean synthetic request does not establish these |

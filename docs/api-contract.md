@@ -78,12 +78,14 @@ export type FitAnalysis = {
 export type InterviewTurn = {
   role: "coach" | "candidate";
   content: string;
+  targetRequirementId?: string; // additive (implemented): coach turns only, echoed back from InterviewResponse
 };
 
 export type InterviewResponse = {
   coachMessage: string;
   focus: "context" | "contribution" | "tradeoffs" | "impact" | "reflection";
   canFinish: boolean;
+  targetRequirementId?: string; // additive (implemented): server-chosen; absent in general sessions
 };
 
 export type ImpactSuggestion = {
@@ -143,9 +145,8 @@ export type DiscoveryExtension = {
   after: CoverageSnapshot;
 };
 
-export type TargetedInterviewResponse = InterviewResponse & {
-  targetRequirementId?: string; // required once targeted questioning ships
-};
+// Implemented for /api/interview/next: `targetRequirementId` now lives on InterviewResponse itself.
+export type TargetedInterviewResponse = InterviewResponse;
 
 export type GuardedImpactSuggestion = Omit<ImpactSuggestion, "improved"> & {
   improved?: string; // absent when a proposed claim is blocked
@@ -273,19 +274,52 @@ Clients should wait at least `Retry-After` seconds before retrying, retry at mos
 
 ### `POST /api/interview/next`
 
-**Request:**
+**Status:** implemented (server route `web/src/app/api/interview/next/route.ts`, logic in `web/src/lib/ai/interview*.ts`). Unit tests use **mocked** Bedrock only; live behavior is not verified. Guarded by the same live switch and the **same** per-process cost budget as `/api/fit/analyze`.
+
+**Request** (v0.1 shape still valid; `fit` and the echoed `targetRequirementId` are optional additions):
 ```json
 {
   "resume": { "id": "resume-demo", "text": "Software engineer who built an internal employee portal." },
-  "job": { "id": "job-demo", "title": "Software Engineer Intern", "text": "Experience with APIs and testing" },
+  "job": {
+    "id": "job-demo",
+    "title": "Software Engineer Intern",
+    "text": "Experience with APIs and testing",
+    "requirements": [
+      { "id": "r1", "description": "Experience with APIs", "importance": "required" },
+      { "id": "r2", "description": "Experience testing web applications", "importance": "required" }
+    ]
+  },
   "history": [
-    { "role": "coach", "content": "What problem did your portal solve?" },
-    { "role": "candidate", "content": "It reduced navigation between several internal resources." }
-  ]
+    { "role": "coach", "content": "How did you check the portal before colleagues used it?", "targetRequirementId": "r2" },
+    { "role": "candidate", "content": "I checked that it worked before we launched it." }
+  ],
+  "fit": { "assessments": [ { "requirementId": "r1", "status": "supported" }, { "requirementId": "r2", "status": "not_evidenced" } ] }
 }
 ```
-**Response:** `{ "turn": InterviewResponse }`.  
-**Behavior:** Ask one focused follow-up at a time, citing the user's own previous details. The initial request may use an empty `history` array. Limit history length and input size.
+
+**Response:** `{ "turn": InterviewResponse }`, for example `{ "turn": { "coachMessage": "...", "focus": "impact", "canFinish": false, "targetRequirementId": "r2" } }`. Header `X-ScaleMe-Mode: live`.
+
+**Validation and limits** (all before any live-AI gate, budget use or AWS call):
+- `resume` and `job` use the same schemas and limits as `/api/fit/analyze`. Body max 200,000 bytes, read in a bounded stream.
+- `history`: required array (may be empty), at most **12** turns; each `content` is trimmed, 1–2,000 characters. Turns must start with `coach`, alternate, and end with a `candidate` answer. Only coach turns may carry `targetRequirementId`.
+- `job.requirements` ids must be unique.
+- `fit` (optional): `{ assessments: [{ requirementId, status }] }`, at most 30. Other `RequirementAssessment` fields (`explanation`, `evidence`) are accepted but **stripped and never used**. Every id must exist in `job.requirements`, at most once each. `fit` without `job.requirements` is rejected, because those ids cannot be checked.
+
+**Server-selected target (deterministic, model cannot override):**
+- Client fit statuses are **untrusted and unverified**. They only order the questions; they are never treated as evidence and never change a status.
+- Unresolved requirements are ordered `not_evidenced`, then `unclear`, then not assessed (no fit entry), then by importance (`required`, `preferred`, `unspecified`), then posting order. `supported` requirements are skipped.
+- Each target gets **two** questions: `contribution` (what the candidate did), then a narrower `impact` follow-up on the same requirement, based on the latest answer (missing detail if vague; how it was checked / what changed if specific, with "not measured" accepted). At most 5 targeted questions, then one untargeted `reflection` question.
+- **General session:** if the job has no structured requirements, or all are `supported`, turns have **no** `targetRequirementId` and follow `context`, `contribution`, `tradeoffs`, `impact`, `reflection`.
+- Turn *k* of a session is plan step *k*, so the server keeps no session state. An echoed `targetRequirementId` must equal what the server planned for that turn; a mismatch (different job/fit or edited history) is `INVALID_HISTORY`. v0.1 clients may omit it.
+- After the last question the server returns a **closing** turn (no question, `focus: "reflection"`, `canFinish: true`). A request answering past it is `INVALID_HISTORY`. `canFinish` is also `true` once the candidate has given 4 answers, and on the reflection turn.
+
+**Model output checks:** the model returns only `{ "coachMessage": string }` (max 1,000 characters); any other key is ignored. Focus, target and `canFinish` always come from the server. The message must contain exactly one `?` (zero for the closing turn), no number that does not appear in the resume, job, requirement descriptions or history, and no hiring-probability/score/guarantee language. A failure returns **`502 INVALID_AI_RESPONSE`** (`retryable: true`). The route never substitutes a scripted question for rejected live output.
+
+**Errors:** `INVALID_REQUEST` (400 malformed JSON / 413 too large), `INVALID_RESUME`, `INVALID_JOB`, `INVALID_HISTORY`, `INVALID_FIT_CONTEXT` (400, not retryable); `AI_UNAVAILABLE` (503 live switch off / not configured; 503/504 AWS problems); `RATE_LIMITED` (429 with `Retry-After`, shared with fit analysis); `INVALID_AI_RESPONSE` (502).
+
+**Demo mode:** `POST /api/interview/next?demo=true&step=N` (N = 0–3, default 0) returns a fixed, hand-written synthetic step for the "testing the portal" story in [DIFFERENTIATION.md](DIFFERENTIATION.md), using the fit demo ids (`r2` is the target). The body is **not read**, AWS is not called, and it needs no AWS settings and no budget. Header `X-ScaleMe-Mode: demo` and `X-ScaleMe-Demo-Label`; every `coachMessage` begins with `DEMO:`. The coach messages respond to the **sample answers** in `DEMO_INTERVIEW_STEPS` (`web/src/lib/ai/interview-demo.ts`), not to what a user types. Other `step` values return 400 `INVALID_REQUEST`. The route never falls back to demo on its own.
+
+**Not in this endpoint:** evidence records, `candidate_reported`/`candidate_confirmed` links and reassessment. An interview answer does **not** change any fit status yet; the reassessment route is still an open decision (see the v0.2 rules above).
 
 ### `POST /api/impact/rewrite`
 
@@ -363,7 +397,7 @@ These are deterministic keyword/alias signals, not final judgments of candidate 
 1. Build the full UI from **synthetic mocked responses** that conform to these contracts.
 2. Implement PDF and pasted job inputs.
 3. Wire `fit/analyze` to Bedrock and Rust; handle loading/errors.
-4. Wire `interview/next` and `impact/rewrite`.
+4. Wire `interview/next` (backend implemented; UI wiring pending) and `impact/rewrite`.
 5. Add PWA manifest and icons, test mobile layout, then consider a separate Expo client.
 
 ## Decisions to finalize before implementation

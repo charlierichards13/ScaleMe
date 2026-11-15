@@ -131,6 +131,23 @@ Status: AWS configuration verified by the coding agent with read-only calls and 
 - **No audit-log review.** CloudTrail was not reviewed, because the restricted role has no CloudTrail access and the test did not use the admin profile for it.
 - **One sample only.** Live behaviour was checked on a single clean synthetic request. Adversarial and benchmark runs are still to do and each needs separate approval.
 
+## Issue #7 interview coach API
+
+Status: implemented on `feat/interview-next-api` and **mock-tested only** (mocked Bedrock, synthetic data). No live call has been made for this route; it is not independently reviewed. Code: `web/src/app/api/interview/next/route.ts`, `web/src/lib/ai/interview*.ts`. Details: [INTERVIEW_API.md](../INTERVIEW_API.md).
+
+**Data flow introduced:** on each live turn the full resume text, job title/company/text, requirement descriptions and the **whole interview history so far** (up to 12 turns of 2,000 characters) leave the server for Bedrock, the same provider and region as fit analysis. Interview answers are new personal data sent to the model. Client-supplied fit `explanation`/`evidence` fields are stripped and **not** sent. Nothing is stored or logged; the history is re-sent by the client every turn.
+
+**Trust boundaries touched:** a second unauthenticated, cost-bearing route. It is gated by the same `FIT_LIVE_AI_ENABLED` switch and draws on the **same** in-process limiter as `/api/fit/analyze` (one budget for both, owner decision 2026-11-15), so it adds no separate inference path and does not raise the call ceiling. `?demo=true` reads no body and calls no AWS.
+
+**Controls in code (mock-tested):** bounded body read; Zod schemas for resume, job, history (at most 12 turns, 1-2,000 characters, strict role alternation) and fit context (known, unique requirement ids only); a deterministic server-side question plan the model cannot change (the model returns only `coachMessage`; any other key is discarded); an echoed `targetRequirementId` must match the server's plan; every history turn (including client-written "coach" turns) and the requirement text are wrapped in random-token tags as untrusted data; output checks for exactly one question, no number absent from the inputs, and no hiring-probability/score language, failing with a safe 502 and **no scripted substitute**; all request checks run before the live switch and budget, so invalid requests cost nothing; output-token cap of 400 per turn; logs contain only fixed reason strings and numeric usage (canary-tested).
+
+**Known residual risks:**
+- Same cost-guard limits as fit analysis (per process, no per-user fairness). One interview uses up to 7 calls of the shared budget (default 50/day), so a few sessions can exhaust it.
+- History is not bound to earlier server responses. A client can rewrite earlier coach turns or answers; only the target check, tagging and output checks limit what that achieves.
+- Client fit statuses are unverified. A false status only changes question order; it never becomes evidence.
+- Prose risks remain: a follow-up can still imply an achievement without a number, be irrelevant, or be steered by injected text. Only the checks above are enforced in code; none is tested against a live model.
+- The number check matches digits only: a number written as words ("forty percent") is not caught.
+
 ## Review triggers
 
 ### Fit Evidence Explorer prototype (Issue #40)
@@ -179,7 +196,7 @@ Capture the change in the same PR and add corresponding tests to [Review Checkli
 - How will abuse limits be enforced across deployment instances (shared store vs trusted gateway)? Today: in-process only (Issue #23), which is not sufficient for public exposure.
 - ~~Which Bedrock model, region and least-privilege resource ARN?~~ **Decided 2026-11-15 (owner):** in-region `amazon.nova-lite-v1:0` in `us-east-2` via the restricted `ScaleMeDevBedrockInvoke` role. Still open: Bedrock retention/logging settings, and whether to evaluate a Claude model. That would mean cross-region inference, an AWS Marketplace subscription and probably no promotional-credit coverage, so it needs its own approval.
 - Is the prototype available to the public, or kept local/private using only synthetic data?
-- Are interview histories persisted? If so, how are records encrypted, authorized and deleted?
+- Are interview histories persisted? If so, how are records encrypted, authorized and deleted? Today (Issue #7 API): no. The client re-sends history each turn and the server keeps none.
 - Where does the Rust matcher execute in hosted environments without arbitrary executable support?
 - Will job URL retrieval be restricted to a documented allowlist or delegated to a trusted provider?
 
