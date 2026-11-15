@@ -121,6 +121,14 @@ ScaleMe/
 
 ## Getting started
 
+### Resume Impact Lab prototype
+
+Visit `/impact-lab` for a standalone **FICTIONAL DEMO** of two before/after resume
+suggestions, exact evidence inspection, candidate confirmation/rejection, guarded
+copying, and targeted grilling questions. It uses deterministic hand-written fixtures,
+no paid APIs, and no persistence. The live AI discovery workflow remains future work.
+See [demo instructions and limitations](docs/IMPACT_LAB_DEMO.md).
+
 The **Next.js scaffold is now available** in `web/`. With Node.js 22 installed:
 
 ```bash
