@@ -29,8 +29,8 @@ export function ProfileSummary({ profile, isDemo }: { profile: CandidateProfile;
       <SectionHeading
         id="profile-heading"
         title="Profile & goals"
-        description={isDemo ? "Fictional profile." : isEmpty ? "Optional goals are in guest setup." : undefined}
-        action={isDemo ? <Badge tone="demo">Sample</Badge> : undefined}
+        description={isDemo ? "Fictional profile, shown only on this dashboard." : isEmpty ? "Guest setup is a separate preview; goals are not imported here." : undefined}
+        action={isDemo ? <Badge tone="demo">Fictional</Badge> : undefined}
       />
       <ul className="divide-y divide-line">
         {rows.map((row) => {

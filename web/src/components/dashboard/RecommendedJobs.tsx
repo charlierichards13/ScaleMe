@@ -26,11 +26,11 @@ export function RecommendedJobs({ jobs, showAuthorization }: { jobs: JobPreview[
     <Card aria-labelledby="jobs-heading">
       <SectionHeading
         id="jobs-heading"
-        title="Recommended roles"
+        title="Roles to explore"
         description={
           jobs.length > 0
             ? "Fictional sample listings. Saves are temporary and may reset when you leave this page."
-            : undefined
+            : "Role discovery is planned. No live listings are shown here."
         }
         action={
           <Link href={routes.discover} className={buttonStyles.ghost}>

@@ -1,6 +1,8 @@
 # Career Dashboard (Issue #34)
 
-**Branch:** `feat/dashboard-flow` · **Status:** frontend only. No new APIs, storage or AI calls.
+**Current presentation update:** [Phase B verification, screenshots and demo route](DASHBOARD_PHASE_B.md) (Issue #58, `feat/dashboard-workspace-polish`).
+
+**Original implementation:** `feat/dashboard-flow` · **Status:** frontend only. No new APIs, storage or AI calls.
 
 The dashboard at `/dashboard` is the home of the ScaleMe workspace. It introduces the four main tools, shows what the candidate has added so far, and suggests what to do next. Every value is either **intentionally empty** or **labeled DEMO / fictional**.
 
@@ -13,15 +15,15 @@ Issue #34 described the dashboard as the opening route. The product direction ha
 | Area | Component | Data |
 | --- | --- | --- |
 | Sidebar (desktop) / drawer (mobile) | `components/layout/AppShell.tsx`, `Sidebar.tsx`, `nav-items.ts` | Static nav. A status, when shown, is *Sample*, *Practice*, *Preview*, or *Planned* |
-| Header, demo switch, profile link | `components/dashboard/DashboardView.tsx` | Client state only |
-| Hero + story ladder | `HeroPanel.tsx` | Empty state opens interview practice. Sample data opens the sample resume story and the fit explorer |
-| Four tool cards | `FeatureCards.tsx` | Discover stays on `/discover-preview` (*Planned*). Fit opens `/fit-insights` (*Preview*). Grill opens `/impact-lab` (*Sample*). Interview opens `/interview` (*Practice*) |
+| Guest/sample header, demo switch, setup link | `components/dashboard/DashboardView.tsx` | Client state only |
+| Ink hero + story ladder | `HeroPanel.tsx` | Empty state opens interview practice. Sample data opens the sample resume story and the fit explorer |
+| Four tool cards | `FeatureCards.tsx` | Discover stays on `/discover-preview` (*Planned*). Fit opens `/fit-insights` (*Preview*). Resume Lab opens `/impact-lab` (*Sample*). Interview opens `/interview` (*Practice*) |
 | Recommended roles | `RecommendedJobs.tsx`, `JobPreviewCard.tsx` | Empty, or 3 fictional listings in demo mode |
 | Evidence insights | `EvidenceInsights.tsx` | Empty, or 3 sample assessments in demo mode |
 | Profile & goals | `ProfileSummary.tsx` | Empty, or the sample profile in demo mode |
 | Open a working page | `NextSteps.tsx` | Derived by `getNextSteps()` |
 
-Shared primitives (`Card`, `Badge`, `DemoBadge`, `EmptyState`, `SectionHeading`, `buttonStyles`) are in `components/ui/primitives.tsx`. Design tokens are in `app/globals.css` (canvas `#F8F9FC`, ink `#202638`, muted `#64748B`, line `#E6E9F0`, brand `#5856D6`, brand-soft `#EEF0FF`). Icons come from `lucide-react` (pinned `1.61.0`).
+Shared primitives (`Card`, `Badge`, `DemoBadge`, `EmptyState`, `SectionHeading`, `buttonStyles`) are in `components/ui/primitives.tsx`. Design tokens are in `app/globals.css` (canvas `#F8F9FC`, ink `#0D1039`, muted `#535A77`, line `#E6E9F0`, brand `#7153FC`, brand-strong `#3928B8`, brand-soft `#F0EBFF`). Icons come from `lucide-react` (pinned `1.61.0`).
 
 ## Data model and the future live integration
 
@@ -38,7 +40,7 @@ Demo mode is a toggle held in client state. It makes no network requests (no Bed
 | --- | --- |
 | `/dashboard` | Dashboard (was `/` before Issue #43). `/` is now the public welcome page |
 | `/coach` | The previous chat-first demo, moved here unchanged except for a "Back to dashboard" link. It is still scripted, not live AI. Sidebar status is *Practice* |
-| `/impact-lab` | Fictional Resume Impact Lab (PR #39). The sidebar's *Resume Lab* item, the *Grill My Resume* card, and the sample-resume next step link to it |
+| `/impact-lab` | Fictional Resume Impact Lab (PR #39). The sidebar's *Resume Lab* item, the *Resume Lab* card, and the sample-resume next step link to it |
 | `/interview` | Scripted practice workspace. Sidebar and the dashboard card label it *Practice*. See [INTERVIEW.md](INTERVIEW.md) |
 | `/discover-preview` | **Temporary** placeholder. The real `/discover` belongs to PR #37 and is not in this build. Once #37 merges, set `routes.discover` back to `"/discover"` and delete `app/(workspace)/discover-preview/`. The primary button opens the fit explorer |
 | `/resume-lab` | Upload placeholder. The primary button opens the sample resume story. The hero does not link here; Resume Lab in the sidebar opens `/impact-lab` |
@@ -64,7 +66,7 @@ Demo mode is a toggle held in client state. It makes no network requests (no Bed
 - `web/src/lib/dashboard/snapshot.test.ts`: empty vs demo snapshots, deterministic output, next-step ordering, and honest fixtures (every job fictional, no `not_evidenced` evidence quotes, no percentages or probability wording).
 - `web/src/lib/routes.test.ts`: every route constant resolves to a real `page.tsx` (route groups included), so a 404 link fails CI. Also checks that nav items and next steps use known routes, that Fit Analysis opens `/fit-insights` as *Preview*, that Mock Interviews and Career Coach open as *Practice*, and that no nav item is labeled *Soon* or starts with "AI ". Covers `isActive` matching.
 
-These test logic only. Component interaction tests would need a DOM test environment, which isn't set up yet; the manual checks below cover interactions.
+These unit tests cover logic. `web/scripts/dashboard-workspace-smoke.mjs` adds production Chromium interaction/regression coverage without a DOM test dependency; see the Phase B verification above.
 
 ## Manual verification done (production build, `next start`)
 

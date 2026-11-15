@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ArrowUpRight, Compass, MessageCircleQuestion, Mic, Scale, type LucideIcon } from "lucide-react";
-import { buttonStyles, cx } from "@/components/ui/primitives";
+import { ArrowUpRight, Compass, FileText, Mic, Scale, type LucideIcon } from "lucide-react";
+import { Badge, buttonStyles, cx } from "@/components/ui/primitives";
 import { routes } from "@/lib/routes";
 
 type Feature = {
@@ -8,76 +8,44 @@ type Feature = {
   description: string;
   href: string;
   icon: LucideIcon;
-  /** Icon tile colors; kept to soft tints so the page stays calm. */
-  tint: string;
   status: string;
 };
 
 const features: Feature[] = [
-  {
-    title: "Discover Opportunities",
-    description: "Read what role browsing will include.",
-    href: routes.discover,
-    icon: Compass,
-    tint: "bg-sky-50 text-sky-700",
-    status: "Planned",
-  },
-  {
-    title: "Analyze My Fit",
-    description: "Prepare a resume and job on this device, or open a labeled fictional sample. Live analysis is off.",
-    href: routes.fitInsights,
-    icon: Scale,
-    tint: "bg-emerald-50 text-emerald-700",
-    status: "Preview",
-  },
-  {
-    title: "Grill My Resume",
-    description: "Confirm sample quotes, then copy a bullet they support.",
-    href: routes.impactLab,
-    icon: MessageCircleQuestion,
-    tint: "bg-brand-soft text-brand",
-    status: "Sample",
-  },
-  {
-    title: "Mock Interview",
-    description: "Five fixed questions, then reread what you wrote.",
-    href: routes.interview,
-    icon: Mic,
-    tint: "bg-amber-50 text-amber-700",
-    status: "Practice",
-  },
+  { title: "Discover", description: "Role browsing is planned. See what’s coming.", href: routes.discover, icon: Compass, status: "Planned" },
+  { title: "Analyze my fit", description: "Local resume/job drafts or fictional examples. Live analysis is off.", href: routes.fitInsights, icon: Scale, status: "Preview" },
+  { title: "Resume Lab", description: "Review fictional sample quotes and copy a bullet they support.", href: routes.impactLab, icon: FileText, status: "Sample" },
+  { title: "Mock Interview", description: "Five fixed questions. Separate private contextual entry inside; live AI off by default.", href: routes.interview, icon: Mic, status: "Practice" },
 ];
 
 export function FeatureCards() {
   return (
     <section aria-labelledby="tools-heading">
-      <h2 id="tools-heading" className="sr-only">
-        Career tools
-      </h2>
-      <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-1">
+        <h2 id="tools-heading" className="text-base font-semibold tracking-tight text-ink">Your career tools</h2>
+        <p className="text-xs leading-5 text-muted">Choose a workspace to explore</p>
+      </div>
+      <ul className="grid grid-cols-2 gap-3 lg:gap-4 xl:grid-cols-4">
         {features.map((feature) => {
           const Icon = feature.icon;
           return (
-            <li key={feature.title}>
-              <Link
-                href={feature.href}
-                className={cx(
-                  "group flex h-full flex-col rounded-2xl border border-line bg-surface p-5 shadow-card transition duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-card-hover",
-                  buttonStyles.focusRing,
-                )}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <span className={cx("flex h-11 w-11 items-center justify-center rounded-xl", feature.tint)} aria-hidden="true">
+            <li key={feature.title} className="min-w-0">
+              <Link href={feature.href} className={cx(
+                "group flex h-full flex-col rounded-2xl border border-line bg-surface p-3.5 shadow-card transition-colors hover:border-brand/50 hover:bg-brand-soft/30 sm:p-5",
+                buttonStyles.focusRing,
+              )}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-soft text-brand-strong sm:h-10 sm:w-10" aria-hidden="true">
                     <Icon className="h-5 w-5" />
                   </span>
-                  <ArrowUpRight
-                    aria-hidden="true"
-                    className="h-5 w-5 text-slate-300 transition-colors group-hover:text-brand"
-                  />
+                  <Badge tone={feature.status === "Sample" ? "demo" : "neutral"}>{feature.status}</Badge>
                 </div>
-                <h3 className="mt-4 text-[15px] font-semibold text-ink">{feature.title}</h3>
-                <p className="mt-1.5 flex-1 text-sm leading-6 text-muted">{feature.description}</p>
-                <span className="mt-4 text-xs font-medium text-slate-500">{feature.status}</span>
+                <h3 className="mt-4 text-sm font-semibold leading-5 text-ink sm:text-[15px]">{feature.title}</h3>
+                <p className="mt-2 flex-1 text-xs leading-5 text-muted sm:text-sm sm:leading-6">{feature.description}</p>
+                <span className="mt-4 flex items-center gap-1 text-xs font-semibold text-brand-strong">
+                  {feature.status === "Planned" ? "View plans" : "Open workspace"}
+                  <ArrowUpRight aria-hidden="true" className="h-4 w-4 shrink-0" />
+                </span>
               </Link>
             </li>
           );
