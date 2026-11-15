@@ -105,6 +105,7 @@ ScaleMe/
 ├── web/                  # Next.js user experience
 ├── services/
 │   ├── api/              # Backend endpoints and AI orchestration
+│   ├── resume-parser/    # Rust PDF resume parser (exists; not yet wired to the app)
 │   └── matching-rust/    # Rust matching module
 ├── docs/                 # Contracts, architecture, demo material
 └── README.md
@@ -149,7 +150,7 @@ npm run dev
 
 Open http://localhost:3000. On Windows PowerShell, if execution policy blocks `npm.ps1`, use `npm.cmd ci` and `npm.cmd run dev` instead.
 
-**Current state:** `/` is the public welcome page and `/onboarding` is a short guest setup that saves nothing (see [docs/WELCOME_ONBOARDING.md](docs/WELCOME_ONBOARDING.md)). The career dashboard is at `/dashboard` (see [docs/DASHBOARD.md](docs/DASHBOARD.md)). Use its *Sample data* switch for a clearly labeled fictional walkthrough. The earlier scripted chat demo lives at `/coach`. Resume analysis, live AI and job listings are still under development. Rust/Cargo and AWS credentials will be needed for their respective modules once implemented. An `.env.example` should contain variable names only, without credentials.
+**Current state:** `/` is the public welcome page and `/onboarding` is a short guest setup that saves nothing (see [docs/WELCOME_ONBOARDING.md](docs/WELCOME_ONBOARDING.md)). The career dashboard is at `/dashboard` (see [docs/DASHBOARD.md](docs/DASHBOARD.md)). Use its *Sample data* switch for a clearly labeled fictional walkthrough. The earlier scripted chat demo lives at `/coach`. Resume analysis, live AI and job listings are still under development. A standalone Rust PDF resume parser exists in `services/resume-parser/` (tested with synthetic PDFs only, not yet connected to the app; see [docs/RESUME_INGESTION.md](docs/RESUME_INGESTION.md)). Rust/Cargo is needed to build it, and AWS credentials will be needed for live AI. An `.env.example` should contain variable names only, without credentials.
 
 ### Planning and collaboration
 
@@ -157,7 +158,7 @@ Open http://localhost:3000. On Windows PowerShell, if execution policy blocks `n
 - [API contracts](docs/api-contract.md): shared data shapes for web, AI and Rust
 - [Issues and tasks](../../issues): live source of truth for work
 - [Pull requests](../../pulls): review changes before merging
-- [Automated CI](.github/workflows/ci.yml): lint, type checks, build, and future Rust tests
+- [Automated CI](.github/workflows/ci.yml): lint, type checks, build, and Rust checks for the resume parser
 
 GitHub Actions runs automatically after its workflow is merged; enforcing passing checks before merges requires a separate repository ruleset/branch protection setting.
 

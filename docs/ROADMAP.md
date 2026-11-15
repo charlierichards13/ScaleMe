@@ -67,7 +67,7 @@ Use the Project's **Workflows → Auto-add to project** to automatically capture
 2. Branch from the latest `main` (for example `feat/job-ingestion`), not from another agent's unpublished changes.
 3. Read [API contracts](api-contract.md) before writing frontend/backend integrations. Propose changes to the contract explicitly instead of silently inventing incompatible payloads.
 4. Open a pull request with `Closes #<issue>` where the issue is fully implemented, or `Refs #<issue>` for partial work.
-5. GitHub Actions **Web quality** checks `npm ci`, lint, TypeScript, tests (when added), and production build. **Rust quality** checks fmt, clippy and tests after the Rust crate exists.
+5. GitHub Actions **Web quality** checks `npm ci`, lint, TypeScript, tests (when added), and production build. **Rust quality** checks fmt, clippy, tests and a release build for `services/resume-parser/` (always), and fmt, clippy and tests for the matcher once its crate exists.
 6. The other teammate reviews, then merge to `main` **after checks pass**. If repository rules allow it, require a review and passing status checks in **Settings → Rules → Rulesets** (or **Branches**).
 7. Pull the updated `main` before beginning the next issue. Never paste real applicant resumes, tokens, or AWS secrets into the repo or AI-agent prompts.
 

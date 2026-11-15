@@ -1,0 +1,2 @@
+# The golden JSON is compared byte for byte by the Rust test and parsed by the web test.
+tests/golden/*.json text eol=lf

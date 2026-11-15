@@ -1,0 +1,31 @@
+[package]
+name = "resume-parser"
+version = "0.1.0"
+edition = "2021"
+# The locked aes 0.9.4 dependency requires Rust 1.89.
+rust-version = "1.89"
+description = "ScaleMe Issue #4: turns a text-based PDF resume into the v0.1 Resume JSON contract. No AI, no network, no storage."
+publish = false
+
+[lib]
+name = "resume_parser"
+path = "src/lib.rs"
+
+[[bin]]
+name = "resume-parser"
+path = "src/main.rs"
+
+[dependencies]
+# The ONLY PDF dependency. Pinned exactly: upgrades are a deliberate, reviewed change
+# (see docs/RESUME_INGESTION.md, "Library comparison"). Default features are empty; the OCR,
+# rendering, model-download and Python features (which pull in network and native code) stay off.
+pdf-inspector = { version = "=1.25.2", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Already in the dependency tree through pdf-inspector; used only for the opaque resume id.
+getrandom = "0.4"
+
+[profile.release]
+# Keep unwinding so a panic inside the PDF library is caught and reported as PARSING_FAILED.
+panic = "unwind"
+overflow-checks = true
