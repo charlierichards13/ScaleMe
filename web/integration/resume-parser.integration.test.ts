@@ -5,12 +5,11 @@ import { syntheticPdf } from "../scripts/resume-upload-smoke.mjs";
 
 describe("actual uploaded PDF → executable → Zod Resume", () => {
   it("runs the real binary, preserves the source and rejects corrupt inputs", async () => {
-    const token = "synthetic-only-private-integration-token";
-    process.env.RESUME_UPLOAD_ENABLED = "true"; process.env.RESUME_UPLOAD_TOKEN = token;
+    process.env.RESUME_UPLOAD_ENABLED = "true"; process.env.RESUME_UPLOAD_EXPIRES_AT = "2099-01-01T00:00:00Z";
     const handler = createUploadHandler();
     for (const [bytes, status] of [[syntheticPdf(), 200], [Buffer.from("%PDF-1.4\nbroken"), 422]] as const) {
       const body = new FormData(); body.set("file", new Blob([new Uint8Array(bytes)]), "synthetic.pdf");
-      const response = await handler(new Request("http://localhost:3000/api/resume/parse", { method: "POST", body, headers: { Authorization: `Bearer ${token}` } }));
+      const response = await handler(new Request("http://localhost:3000/api/resume/parse", { method: "POST", body, headers: {} }));
       expect(response.status).toBe(status);
       if (status === 200) {
         const resume = ResumeSchema.parse((await response.json()).resume);
@@ -18,6 +17,6 @@ describe("actual uploaded PDF → executable → Zod Resume", () => {
         expect(resume.sections?.[0].text).toBe("Built a fictional scheduling tool with Python.");
       }
     }
-    delete process.env.RESUME_UPLOAD_ENABLED; delete process.env.RESUME_UPLOAD_TOKEN;
+    delete process.env.RESUME_UPLOAD_ENABLED; delete process.env.RESUME_UPLOAD_EXPIRES_AT;
   });
 });

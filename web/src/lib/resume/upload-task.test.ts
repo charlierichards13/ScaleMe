@@ -13,7 +13,7 @@ describe("shared explicit upload operation", () => {
     const task = createUploadTask(publish, upload);
     await task.select(pdf());
     expect(upload).not.toHaveBeenCalled(); expect(task.getSnapshot().phase).toBe("ready");
-    await task.extract("private-test-code");
+    await task.extract();
     expect(upload).toHaveBeenCalledOnce(); expect(publish).toHaveBeenLastCalledWith(parsed);
     expect(task.getSnapshot().phase).toBe("success");
     await task.select(pdf()); expect(publish).toHaveBeenLastCalledWith(null);
@@ -26,15 +26,16 @@ describe("shared explicit upload operation", () => {
     expect(publish).toHaveBeenLastCalledWith(null); expect(upload).not.toHaveBeenCalled();
   });
 
-  it("explains missing access without sending a request", async () => {
-    const upload = vi.fn(); const task = createUploadTask(vi.fn(), upload);
-    await task.select(pdf()); await task.extract("");
-    expect(task.getSnapshot().message).toContain("project owner"); expect(upload).not.toHaveBeenCalled();
+  it("does not require a code to start extraction", async () => {
+    const upload = vi.fn().mockResolvedValue(parsed); const task = createUploadTask(vi.fn(), upload);
+    await task.select(pdf()); await task.extract();
+    expect(upload).toHaveBeenCalledOnce();
+    expect(task.getSnapshot().phase).toBe("success");
   });
 
-  it.each(["Private uploads are disabled or the parser is unavailable.", "The private upload access code was not accepted.", "The parser took too long. Try a simpler PDF."])("retains a retryable file and safe failure: %s", async (message) => {
+  it.each(["Resume uploads are unavailable or the demo window has ended.", "Upload capacity is busy. Try again later.", "The parser took too long. Try a simpler PDF."])("retains a retryable file and safe failure: %s", async (message) => {
     const publish = vi.fn(); const task = createUploadTask(publish, vi.fn().mockRejectedValue(new Error(message)));
-    await task.select(pdf()); await task.extract("code");
+    await task.select(pdf()); await task.extract();
     expect(task.getSnapshot()).toMatchObject({ phase: "error", message });
     expect(task.getSnapshot().file).not.toBeNull(); expect(publish).toHaveBeenLastCalledWith(null);
   });
@@ -43,17 +44,17 @@ describe("shared explicit upload operation", () => {
     let resolve!: (resume: Resume) => void;
     const upload = vi.fn<typeof uploadResume>(() => new Promise<Resume>((done) => { resolve = done; }));
     const publish = vi.fn(); const task = createUploadTask(publish, upload);
-    await task.select(pdf()); const pending = task.extract("code");
+    await task.select(pdf()); const pending = task.extract();
     expect(task.getSnapshot().phase).toBe("processing");
     task[action](); resolve(parsed); await pending;
     expect(publish).not.toHaveBeenCalledWith(parsed);
-    expect(upload.mock.calls[0][2].aborted).toBe(true);
+    expect(upload.mock.calls[0][1].aborted).toBe(true);
   });
 
   it("bounds a stalled transport and rejects a late result", async () => {
     vi.useFakeTimers(); let resolve!: (resume: Resume) => void;
     const publish = vi.fn(); const task = createUploadTask(publish, () => new Promise((done) => { resolve = done; }));
-    await task.select(pdf()); const pending = task.extract("code");
+    await task.select(pdf()); const pending = task.extract();
     await vi.advanceTimersByTimeAsync(30_000);
     expect(task.getSnapshot()).toMatchObject({ phase: "error", message: "The upload took too long. Try a simpler PDF." });
     resolve(parsed); await pending; expect(publish).not.toHaveBeenCalledWith(parsed);
