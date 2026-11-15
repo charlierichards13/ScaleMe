@@ -18,16 +18,15 @@ export function syntheticPdf(text = "SYNTHETIC RESUME\nEXPERIENCE\nBuilt a ficti
   return Buffer.from(pdf);
 }
 
-export async function smoke(base, token) {
-  const send = async (bytes, auth = true) => {
+export async function smoke(base) {
+  const send = async (bytes) => {
     const body = new FormData();
     body.set("file", new Blob([bytes], { type: "application/pdf" }), "synthetic-resume.pdf");
     return fetch(`${base}/api/resume/parse`, {
-      method: "POST", body, headers: { Origin: base, ...(auth ? { Authorization: `Bearer ${token}` } : {}) },
+      method: "POST", body, headers: { Origin: base },
       signal: AbortSignal.timeout(20_000),
     });
   };
-  assert.equal((await send(syntheticPdf(), false)).status, 401);
   const valid = await send(syntheticPdf());
   assert.equal(valid.status, 200);
   assert.equal(valid.headers.get("cache-control"), "no-store");
@@ -40,11 +39,10 @@ export async function smoke(base, token) {
   assert.equal((await send(Buffer.alloc(5 * 1024 * 1024 + 1))).status, 413);
   const lab = await fetch(`${base}/resume-lab`);
   assert.equal(lab.status, 200);
-  assert.match(await lab.text(), /Private upload access code/);
+  assert.match(await lab.text(), /PDF extraction demo/);
   console.log("Synthetic HTTP upload → Linux/host Rust parser → Resume JSON smoke passed.");
 }
 
 if (process.argv[1]?.endsWith("resume-upload-smoke.mjs")) {
-  if (!process.env.RESUME_UPLOAD_TOKEN) throw new Error("Set a private test token (never print it).");
-  await smoke(process.argv[2] ?? "http://localhost:3000", process.env.RESUME_UPLOAD_TOKEN);
+  await smoke(process.argv[2] ?? "http://localhost:3000");
 }
