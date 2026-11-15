@@ -35,6 +35,10 @@ Use fictional candidates, fictional jobs and **no real credentials in prompts**.
 | Oversized/malformed request | Huge body, empty resume, malformed JSON | Client-safe 4xx, no model call and no document echo |
 | Model unavailable | Missing config, denied permissions, throttling, timeouts | Appropriate retryable status/error without raw AWS exception |
 | Cost abuse | Repeated requests in short bursts | Shared rate/concurrency limits or documented private-demo restriction |
+| Cost guard: burst / daily cap | More than the per-minute limit or daily cap of valid requests | `429 RATE_LIMITED` with `Retry-After`; Bedrock call count equals the limit, never more |
+| Cost guard: concurrency | Many simultaneous requests while model calls are slow | At most `FIT_MAX_CONCURRENT` model calls; the rest get 429 at once (not queued); the slot is freed after success, timeout, throttle, invalid output or crash |
+| Cost guard: forged identity | Different `X-Forwarded-For` / `X-Real-IP` / `Forwarded` on each request | No extra quota; the shared limit still applies |
+| Cost guard: live switch | `FIT_LIVE_AI_ENABLED` unset, `false` or misspelled; invalid limit variable | 503, no Bedrock call; demo still works |
 | Privacy | Synthetic canary email/secret-like string in request | No leak in diagnostics, logs or unrelated sessions |
 | Demo integrity | `?demo=true` and normal route failing | Demo clearly labeled and never silently used as live analysis |
 
@@ -58,7 +62,8 @@ Unit tests with mocked Bedrock verify **our code**, not that Bedrock resists pro
 
 - [ ] Confirm private test environment and chosen Bedrock model permissions/region.
 - [ ] Verify least-privilege IAM, no `NEXT_PUBLIC_` secrets, appropriate HTTPS and cross-origin behavior.
-- [ ] Record AWS budget, alarms, max tokens, request concurrency and rate limits.
+- [ ] Record AWS budget, alarms, max tokens, request concurrency and rate limits. App-side defaults (Issue #23): 10/min, 50/day, 2 concurrent, SDK `maxAttempts` 1, all per process. Owner reports a $5 AWS budget notification and a $20 project spending limit (not verified by the agent; not a hard cap). Verified spend alerting and a shared/gateway limit are still required before public exposure.
+- [ ] Set `FIT_LIVE_AI_ENABLED=true` only on a private, deliberately live server; leave it unset everywhere else.
 - [ ] Check real user-data policy, data residency/disclosure, logging, retention and deletion.
 - [ ] Validate non-demo API end-to-end, security headers and safe error responses.
 - [ ] Review latest high/critical dependency advisories and dependency PRs.
