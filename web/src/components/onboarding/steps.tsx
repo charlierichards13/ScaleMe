@@ -38,7 +38,7 @@ function Notice({ children }: { children: ReactNode }) {
 
 /* Step 1 — Resume ------------------------------------------------------- */
 
-/** Uses the same explicit, private upload controller as Resume Lab. */
+/** Uses the same explicit upload controller as Resume Lab. */
 export function ResumeStep({ upload }: { upload: ResumeUploadTask }) {
   const resume = useActiveResume();
   return <div className="space-y-5">
@@ -47,7 +47,7 @@ export function ResumeStep({ upload }: { upload: ResumeUploadTask }) {
       <p className="mt-2 break-all text-sm text-muted">{resume.filename} · Available in this tab for Resume Lab and Fit Explorer.</p>
       <button type="button" className={cx(buttonStyles.secondary, "mt-4 min-h-11")} onClick={upload.clear}>Remove parsed resume</button>
     </div> : <ResumeUploadControls upload={upload} />}
-    <Notice>Parsing is optional. Continue without a PDF, or select one locally and extract it only when you have private preview access.</Notice>
+    <Notice>Parsing is optional. Continue without a PDF, or select one and extract it during the demo window. Avoid uploading sensitive personal information.</Notice>
   </div>;
 }
 /* Step 2 — Goals -------------------------------------------------------- */
