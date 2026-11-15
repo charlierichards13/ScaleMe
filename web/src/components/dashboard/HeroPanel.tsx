@@ -38,8 +38,8 @@ export function HeroPanel({
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             {hasResume ? (
-              <Link href={routes.impactLab} className={buttonStyles.primary}>
-                Review the sample story
+              <Link href={routes.resumeLab} className={buttonStyles.primary}>
+                Explore Resume Lab
                 <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </Link>
             ) : (

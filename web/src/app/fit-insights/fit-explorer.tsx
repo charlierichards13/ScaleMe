@@ -58,8 +58,8 @@ export default function FitExplorer({ uploadedResume }: { uploadedResume?: Resum
         </Link>
         <nav aria-label="Career preparation">
           <span aria-current="page">Fit Evidence Explorer</span>
-          <Link href="/impact-lab">
-            Resume Impact Lab <ArrowRight size={15} aria-hidden="true" />
+          <Link href={routes.resumeLab}>
+            Resume Lab <ArrowRight size={15} aria-hidden="true" />
           </Link>
         </nav>
       </header>

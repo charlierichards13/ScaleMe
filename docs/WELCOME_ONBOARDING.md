@@ -64,6 +64,8 @@ Onboarding and Resume Lab use `ResumeUploadControls`, `useResumeUpload`, and the
 
 Successful JSON is validated by the existing ResumeSchema and published to the shared in-memory Resume session. Continue/skip cancels any pending request before changing steps. Skipping the resume step clears selection and parsed data; removing or replacing a resume clears old parsed state immediately, even if replacement validation fails. Late validation, cancellation, unmount and timeout responses cannot publish success. Other steps' Back/Skip behavior is unchanged.
 
+Enter in the private upload access-code field invokes the same explicit extraction action as its button and prevents the outer form from advancing. Missing codes show the normal owner-access explanation; repeat, loading and IME composition cannot start another request. Other onboarding fields retain their normal Enter/Continue behavior. The dashboard reads the same parsed Resume session without inventing a saved account or altering fictional sample data.
+
 The completion screen distinguishes local selection, actual extraction and no resume. It links to Resume Lab and, after extraction, Fit Explorer. Parsed data survives client-side navigation in this tab; onboarding's other answers do not. Reloading clears both. No localStorage, sessionStorage, cookies, IndexedDB, database, logging or automatic AI request is added. See [private setup and limits](RESUME_UPLOAD_INTEGRATION.md).
 ### Future integration (not built)
 

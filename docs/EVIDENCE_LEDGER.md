@@ -2,6 +2,8 @@
 
 > P0 integration update: `/interview/contextual` now hands completion into the existing Impact Lab in the same page. Historical standalone/unconnected notes below describe the dependency PR; see [current behavior and limits](CONTEXTUAL_INTERVIEW.md#p0-completion-integration-supersedes-forthcoming-engine-above).
 
+> Resume Lab integration (PR #59): `/resume-lab` is now the canonical local improvement workspace. **Improve my resume** passes the validated uploaded Resume to the same `ImpactLab` component as `initialResume`, with `embedded` + `integrated`. The exact extracted text is imported read-only; the user adds a job, chooses importance, answers clarifications, reviews exact evidence, confirms both statements and copies the same conservative extractive proposal described below. No second engine or AI request is introduced. Review/improve stages keep the component mounted; explicit reset clears job/answers/reviews/proposals but retains the uploaded source. Clearing/replacing the active Resume remounts the workspace, invalidating old improvement state. The original contextual `initialWorkspace` + `embedded` path remains review-only, unchanged. `/impact-lab` remains a compatibility entry for bookmarks/tests with a canonical Resume Lab link; primary product navigation no longer sends users there. [Journey and verification](RESUME_UPLOAD_INTEGRATION.md).
+
 Implemented on `feat/evidence-reassessment`, based on `main` at
 `ffc072be0943525727a40fdc667ee1a151498c57`. This replaces the fixed-only Impact Lab
 with an actual local input → assessment → answer → reassessment → review/copy flow.

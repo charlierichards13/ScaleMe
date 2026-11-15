@@ -46,10 +46,10 @@ export function getNextSteps(profile: CandidateProfile, hasInsights: boolean): N
   } else {
     steps.push({
       id: "explain-project",
-      title: "Review a sample resume story",
-      description: "Confirm sample quotes, then copy a supported bullet.",
-      href: routes.impactLab,
-      cta: "Open sample",
+      title: "Explore Resume Lab",
+      description: "Use your own synthetic input or explicitly choose a fictional sample in the local improvement workflow.",
+      href: routes.resumeLab,
+      cta: "Open Resume Lab",
     });
   }
 

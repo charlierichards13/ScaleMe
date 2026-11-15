@@ -18,7 +18,7 @@ export const routes = {
   discover: "/discover-preview",
   /** Canonical private PDF upload/review workspace; explicit tab-memory handoff. */
   resumeLab: "/resume-lab",
-  /** Local resume/job/answer evidence workflow (Issue #8). */
+  /** Legacy compatibility route; canonical improvement now lives in Resume Lab. */
   impactLab: "/impact-lab",
   /**
    * Placeholder kept so PR #46 can replace this page.

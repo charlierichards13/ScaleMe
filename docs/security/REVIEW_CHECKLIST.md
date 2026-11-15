@@ -115,6 +115,8 @@ Run with `cargo test --manifest-path services/resume-parser/Cargo.toml --locked`
 
 ## Private PDF upload integration
 
+- Final frontend pass: `final-integration.test.ts` covers imported exact source text, embedded clarification controls, confirmation-gated copying/revocation through the existing engine, legacy contextual review-only rendering, pure guest/demo dashboard overlay, and Enter/loading/repeat/composition behavior. `resume-final-smoke.mjs` exercises the actual upload → integrated improvement → confirmed copy flow, stage retention/reset, dashboard ready/clear/reload and real onboarding keyboard events; no Rust implementation changes or local Cargo runs are required for this frontend pass.
+
 - Product follow-up: `upload-task.test.ts` covers explicit submission, invalid replacements clearing stale state, missing/private errors, cancellation/disposal/timeout and late validation/results. `workspace.test.ts` covers canonical navigation, escaped sections/fallback, truthful private and onboarding UI. `resume-workspace-smoke.mjs` covers actual Chromium file input → HTTP Rust extraction → Fit prefill, clear/replace, four-step onboarding and keyboard/mobile/no-AI/no-storage checks. Record its actual outcome in the PR; it is separate from API-only smoke.
 
 - `server/upload.test.ts`: disabled/misconfigured gates, invalid private access/origin, multipart/file limits, missing/duplicate fields, renamed content, stalled streams even with non-resolving cancellation, per-process concurrency/rate, safe errors/filenames.

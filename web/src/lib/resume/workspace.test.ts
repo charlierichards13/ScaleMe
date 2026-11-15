@@ -12,9 +12,10 @@ describe("Resume Lab product destinations and honest review", () => {
     const html = renderToStaticMarkup(createElement(FeatureCards));
     expect(html).toMatch(/href="\/resume-lab"/); expect(html).toContain("Resume Lab");
   });
-  it("keeps working evidence and interview destinations, with private disclosure", () => {
+  it("offers integrated pasted-text improvement and interview practice, with private disclosure", () => {
     const html = renderToStaticMarkup(createElement(ResumeUpload));
-    expect(html).toContain('href="/impact-lab"'); expect(html).toContain('href="/interview"');
+    expect(html).toContain("Use pasted resume text"); expect(html).toContain('href="/interview"');
+    expect(html).not.toContain('href="/impact-lab"');
     expect(html).toContain("disabled by default"); expect(html).toContain("not an account password");
     expect(html).not.toContain('href="/fit-insights"');
   });

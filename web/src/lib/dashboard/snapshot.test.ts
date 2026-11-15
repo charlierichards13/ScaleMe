@@ -46,7 +46,7 @@ describe("getNextSteps", () => {
   it("keeps a sample profile on labeled sample pages", () => {
     const steps = getNextSteps(demoProfile, true);
     expect(steps.map((step) => step.id)).toEqual(["explain-project", "review-gaps", "mock-interview"]);
-    expect(steps.map((step) => step.href)).toEqual([routes.impactLab, routes.fitInsights, routes.interview]);
+    expect(steps.map((step) => step.href)).toEqual([routes.resumeLab, routes.fitInsights, routes.interview]);
   });
 
   it("never suggests more than four steps", () => {

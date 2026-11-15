@@ -7,9 +7,11 @@ This adds a private, synthetic-data-only upload preview. **Not approved for publ
 
 1. Visit `/resume-lab`, select a text-based PDF, enter the privately distributed upload access code, and explicitly choose **Extract resume**.
 2. The browser posts multipart `file` to `/api/resume/parse`. The Node backend validates access and bounds the body, then pipes PDF bytes to the Rust executable's stdin. Its validated response remains `{ resume: Resume }` from the existing v0.1 contract.
-3. Review expandable detected sections and readable full text; JSON is secondary technical detail. **Open Fit Explorer** navigates to `/fit-insights` with the same validated Resume in tab memory.
-4. The team's existing Fit Explorer opens with extracted text already in its editable resume draft. Enter a job title/description and use its existing input checks. Its live-AI button remains intentionally disabled; its fictional demonstrations remain separately labeled. Upload/import neither calls AI nor changes the team's live-access policy. This PR connects actual parsed input to the existing explorer rather than introducing another analysis form.
-5. Clear the resume in Resume Lab, or reload/close the tab, to remove its in-memory handoff. No localStorage, sessionStorage, cookies, database or server resume cache is used. Client-side navigation preserves the tab's module; a hard reload deliberately clears it.
+3. Review expandable detected sections and readable full text; JSON is secondary technical detail.
+4. Choose **Improve my resume** in the same workspace. The existing ImpactLab component receives the validated Resume and imports its exact, read-only text automatically. Add a target job, review its requirement inventory/importance, assess locally, select an original experience and target requirement, answer a clarification, then inspect exact supporting statements. Both statements must be candidate-confirmed before copying the extractive suggestion. No repasting or route handoff is needed. Vague/unsupported/contradictory statements cannot create copyable achievements; confirmation is not independent verification.
+5. Switch between review and improvement without losing the job, pending answer or evidence review. **Reset improvement** requires an explicit discard confirmation, clears job/answers/reviews/proposals and keeps the imported source. Clearing/replacing the Resume destroys its keyed improvement workspace, preventing stale improvements from carrying to a different resume. Users without a PDF can explicitly choose **Use pasted resume text**, using the same engine; fictional samples remain opt-in and labeled.
+6. **Open Fit Explorer** navigates to its existing text-prefilled draft; live analysis remains intentionally disabled. The dashboard reads the same tab-memory session through a client-only overlay: resume-ready status plus review/improve/Fit actions, without mutating the pure server snapshot or fictional fixture. In sample mode, actual tab resume status is visibly separate from the fictional profile. No scores, goals or job matches are inferred from extraction.
+7. Clear the resume in Resume Lab, or reload/close the tab, to remove its handoff and restore the normal guest dashboard. No localStorage, sessionStorage, cookies, database or server resume cache is used. Upload, local improvement and navigation neither call AI nor change the team's live-access policy.
 
 Future interview integration can import `useActiveResume` from `web/src/lib/resume/active-resume.ts` in a client component, then pass that object through the agreed interview contract after a separate explicit consent step. This PR does not edit interview/Bedrock implementation or introduce another resume format.
 
@@ -17,11 +19,11 @@ Future interview integration can import `useActiveResume` from `web/src/lib/resu
 
 Resume Lab is the canonical sidebar/mobile/dashboard resume destination (`/resume-lab`). Its shared-brand cards show a file picker/drop area, filename/size, explicit extraction, indeterminate processing/cancel, fixed safe errors, successful section/full-text review, and clear/replace actions. Native details, labeled inputs, visible focus and status announcements support keyboard use; motion respects reduced-motion preferences. Private access is explained as an owner-provided preview code, not a user password. Selecting a file alone never uploads it.
 
-The four-step onboarding flow reuses the same upload controls/controller/client/session. Local selection survives forward/back navigation; explicit extraction publishes the same Resume JSON. Skip/removal/replacement clears stale parsed state; cancellation, timeout, unmount and superseded validation/transport results cannot publish a late success. The completion screen links to Resume Lab and, when parsed, Fit Explorer. Ordinary visitors may continue without uploading anything.
+The four-step onboarding flow reuses the same upload controls/controller/client/session. Local selection survives forward/back navigation; explicit extraction publishes the same Resume JSON. **Enter in the access-code field extracts, never advances onboarding**; missing code uses the normal explanatory error, and loading/repeat/composition do not double-submit. Other fields retain their normal Enter/Continue behavior. Skip/removal/replacement clears stale parsed state; cancellation, timeout, unmount and superseded validation/transport results cannot publish a late success. The completion screen links to Resume Lab and, when parsed, Fit Explorer. Ordinary visitors may continue without uploading anything.
 
-`/impact-lab` is **retained**, without redirects or evidence-ledger edits. PR #51 is still open and owns that workflow; contextual completion also imports its component. Resume Lab links to the actual local evidence workflow and explicitly explains that users paste resume/job text there; no automatic handoff or fabricated analysis is implied. Full consolidation waits for coordinated ownership. The fixed mock interview link is labeled independent of the uploaded resume. #61 authentication/abuse controls, #62 full Resume Fit request preservation and #63 image digest pinning remain separate issues.
+`/impact-lab` is **retained only for compatibility**, with a link back to canonical Resume Lab and no separate primary navigation entry. Existing bookmarks, standalone regression fixtures and contextual completion's component import remain valid. All primary dashboard/Fit resume CTAs now point at Resume Lab. The same component accepts `initialResume`, `embedded` and `integrated` for the complete local workflow; the contextual `initialWorkspace` + `embedded` review-only behavior is unchanged. The owner explicitly transferred #51 integration ownership; its open status is no longer a blocker, and no blanket PR merge or second engine was needed. The fixed mock interview remains independent of the uploaded resume. #61/#62/#63 remain deferred.
 
-Coordination notices were posted on #51 and #60 before this follow-up. #60 overlaps dashboard FeatureCards/Sidebar: this branch changes only resume card content/destination, the navigation item's href/status, empty-profile next-step content, and outdated guest privacy copy. Its component layouts, drawer logic and shared primitives are preserved. Resolve eventual content overlap without replacing its visual polish. Neither PR was merged here.
+Coordination notices were posted on #51 and #60. The final pass adds only a narrow DashboardView client status/overlay, canonical resume CTA content and the existing session hook; no dashboard layout/style or shared primitive rewrite. Preserve #60's visual polish and compose these narrow state/content changes when resolving eventual overlap. Neither PR was merged here.
 
 ## Coordination
 
@@ -67,7 +69,7 @@ SCALEME_SMOKE_URL=http://localhost:3000 CHROMIUM_PATH=/path/to/chrome node web/s
 
 PowerShell uses `$env:NAME` assignments instead. The script generates its synthetic PDF in its temporary browser profile and cleans that exact generated directory after exit. Optional `SCALEME_SCREENSHOT_DIR` selects an ignored output directory. It tests actual file input events and HTTP extraction, dashboard/client navigation, Fit prefill, review/clear/replace, onboarding select/back/continue/skip/remove/complete, processing cancellation, mobile overflow, keyboard focus and reload isolation. It asserts no AI/external requests or browser storage. Cancellation transport is deliberately stalled in the browser; actual process cancellation/timeouts remain covered by server tests. A passed API smoke alone never counts as browser verification.
 
-Alternatively, after building, run `node scripts/run-resume-workspace-smoke.mjs` from `web/` with `CHROMIUM_PATH` set. This starts a loopback-only production server on port 3191, generates an ephemeral private code in process memory without printing it or editing `.env.local`, runs the Resume Lab and existing evidence/contextual browser regressions, then stops the server. Contextual browser transport is mocked; no live AI calls are made.
+Alternatively, after building the web app, run `node scripts/run-resume-workspace-smoke.mjs` from `web/` with `CHROMIUM_PATH` set and the existing Rust executable available. This starts a loopback-only production server on port 3191, generates an ephemeral private code without printing it or editing `.env.local`, and runs **one focused Chromium scenario** (`resume-final-smoke.mjs`): real PDF extraction → imported local evidence → confirmed copy/revocation → dashboard ready/clear/reload → onboarding Enter → interview compatibility. The script uses a temporary synthetic PDF/profile, cleans it afterward, and may write screenshots only to an explicitly selected ignored web output directory. It does not build/test/change Rust. Older suites remain opt-in CLI arguments, not automatically repeated.
 
 ## HTTP and process controls
 
@@ -105,6 +107,24 @@ CI runs `node web/scripts/docker-resume-smoke.mjs`: builds the image, checks non
 
 ## Verification commands
 
+For the **frontend-only final integration pass**, use the existing prebuilt Rust executable for the actual upload scenario. Do **not** run local Cargo format/Clippy/tests/release builds or modify `services/resume-parser/`. The existing GitHub Rust/container CI remains unchanged. No dependency install/audit was repeated locally because manifests and lockfiles are unchanged; CI retains both.
+
+Final pass commands from `web/` (PowerShell uses `npm.cmd`):
+
+```text
+npm exec -- vitest run src/lib/resume/final-integration.test.ts src/lib/resume/workspace.test.ts src/lib/dashboard/snapshot.test.ts
+npm run test --if-present
+npm run lint
+npm exec -- next typegen
+npm exec -- tsc --noEmit
+npm run build
+node scripts/run-resume-workspace-smoke.mjs
+```
+
+Final-pass results: **26 focused tests / 3 files**, **489 total Web tests / 32 files** (focused tests are included, not extra), lint clean, route types/TypeScript clean, production build **23 pages**. One React props-inference error in the new component tests was corrected and only TypeScript was rerun. The focused browser driver required two corrections (explicit requirement selection before revocation, and treating the dashboard destination as a link); only the failed browser check was rerun. No assertions or product security controls were weakened.
+
+The final Chromium run passed using actual PDF extraction with the **existing executable**, then the existing local ledger: imported source → job inventory → assessment → clarification → exact-source proposal → both confirmations → clipboard. It also demonstrated contradiction revocation, retained job/pending answer between stages, route-return retention, explicit reset/keep-working, clearing/replacing stale improvement state, separate real/demo dashboard status, clear/reload to guest state, real access-code Enter events with missing/valid codes and exactly one submission, normal Enter on another onboarding step, desktop/390/320px layouts, keyboard confirmation and mock-interview interaction/contextual-page compatibility. No external/AI requests, browser storage writes or runtime errors were observed. Screenshots were inspected under ignored `web/.next/resume-final-screenshots/`; nothing under the Rust service was changed. Full live contextual-model behavior remains outside this frontend pass and is not claimed.
+
 Existing Rust/Web checks remain required (CONTRIBUTING.md). From `web/`:
 
 ```bash
@@ -120,7 +140,7 @@ npm run build
 
 The explicit integration suite requires the built binary and fails if it is absent; it is never silently skipped. Unit tests exercise auth/gates, malformed/oversized/stalled input, rate/concurrency, child timeout/abort/crash/output limits, privacy, session isolation and client Fit payloads. Linux Docker CI is the actual packaging/HTTP test. Local Docker execution requires a Docker daemon; results and any unavailable checks must be reported accurately in the draft PR.
 
-## Local verification record (2026-11-15)
+## Earlier local verification record (2026-11-15, before final integration pass)
 
 On the product/onboarding follow-up from remote main `8a95366`, Windows GNU Rust checks passed (fmt, Clippy, **96 tests**, release build). Web npm ci/audit (10 existing moderate tooling advisories, no high/critical), lint with no warnings, typegen, TypeScript, **478 tests / 31 files**, **one explicit real-binary integration test**, and production standalone build (**23 pages**) passed. Package manifests/lockfile are unchanged. A stale generated `.next` cache initially caused a Turbopack CSS worker startup panic; removing only that verified generated directory fixed the normal production build, without source/config changes or relaxed checks.
 

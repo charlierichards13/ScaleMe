@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, FileText, ShieldCheck } from "lucide-react";
 import { Badge, Card, buttonStyles, cx } from "@/components/ui/primitives";
 import { ResumeUploadControls } from "@/components/resume/ResumeUploadControls";
@@ -9,6 +9,7 @@ import { useActiveResume } from "@/lib/resume/active-resume";
 import { useResumeUpload } from "@/lib/resume/use-resume-upload";
 import { routes } from "@/lib/routes";
 import type { Resume } from "@/lib/ai/schemas";
+import ImpactLab from "@/app/impact-lab/impact-lab";
 
 export function ResumeReview({ resume }: { resume: Resume }) {
   return <div className="mt-6 space-y-5">
@@ -34,15 +35,24 @@ export function ResumeReview({ resume }: { resume: Resume }) {
 
 export default function ResumeUpload() {
   const resume = useActiveResume();
+  // Replacing/clearing the validated input destroys every old improvement draft.
+  return <ResumeWorkspace key={resume?.id ?? "no-resume"} resume={resume} />;
+}
+
+export function ResumeWorkspace({ resume }: { resume: Resume | null }) {
   const upload = useResumeUpload();
+  const [improving, setImproving] = useState(false);
+  const [startedImprovement, setStartedImprovement] = useState(false);
   const reviewTitle = useRef<HTMLHeadingElement>(null);
   const uploadTitle = useRef<HTMLHeadingElement>(null);
-  const hadResume = useRef(false);
+  const improveTitle = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (resume && !hadResume.current) reviewTitle.current?.focus();
-    if (!resume && hadResume.current) uploadTitle.current?.focus();
-    hadResume.current = !!resume;
-  }, [resume]);
+    if (improving) improveTitle.current?.focus();
+    else if (resume) reviewTitle.current?.focus();
+    else uploadTitle.current?.focus();
+  }, [resume, improving]);
+
+  function improve() { setStartedImprovement(true); setImproving(true); }
 
   return <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
     <header className="flex items-start gap-3">
@@ -51,8 +61,9 @@ export default function ResumeUpload() {
     </header>
     <div className="mt-4"><Badge tone="warning">Private preview · synthetic input only</Badge></div>
     <ol aria-label="Resume journey" className="my-6 grid grid-cols-3 gap-2 text-xs font-semibold sm:gap-4 sm:text-sm">
-      {["Add resume", "Review extraction", "Continue"].map((step, index) => <li key={step} aria-current={index === (resume ? 1 : 0) ? "step" : undefined} className={cx("rounded-xl border px-3 py-3", index === (resume ? 1 : 0) ? "border-brand/30 bg-brand-soft text-brand-strong" : "border-line text-muted")}><span className="mr-1">{index + 1}.</span>{step}</li>)}
+      {["Add resume", "Review extraction", "Improve experience"].map((step, index) => <li key={step} aria-current={index === (improving ? 2 : resume ? 1 : 0) ? "step" : undefined} className={cx("rounded-xl border px-3 py-3", index === (improving ? 2 : resume ? 1 : 0) ? "border-brand/30 bg-brand-soft text-brand-strong" : "border-line text-muted")}><span className="mr-1">{index + 1}.</span>{step}</li>)}
     </ol>
+    <div hidden={improving}>
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
       <Card className="min-w-0" aria-labelledby={resume ? "resume-review-title" : "resume-add-title"}>
         {resume ? <>
@@ -70,14 +81,25 @@ export default function ResumeUpload() {
       <aside className="space-y-5">
         <Card aria-labelledby="resume-next-title"><h2 id="resume-next-title" className="font-semibold">Choose what comes next</h2>
           <p className="mt-2 text-sm leading-6 text-muted">{resume ? "Your reviewed text can fill the existing Fit Explorer draft. Live analysis remains unavailable there." : "Extract a resume to bring its text into Fit Explorer. No analysis starts automatically."}</p>
-          {resume && <Link href={routes.fitInsights} className={cx(buttonStyles.primary, "mt-4 min-h-11 w-full")}>Open Fit Explorer<ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>}
-          <Link href={routes.impactLab} className={cx(buttonStyles.secondary, "mt-4 min-h-11 w-full")}>Explore evidence workflow</Link>
-          <p className="mt-2 text-xs leading-5 text-muted">The existing Impact Lab accepts pasted resume and job text. Nothing is imported automatically; fictional samples are optional and labeled.</p>
+          {resume && <><button type="button" onClick={improve} className={cx(buttonStyles.primary, "mt-4 min-h-11 w-full")}>Improve my resume<ArrowRight aria-hidden="true" className="h-4 w-4" /></button>
+            <Link href={routes.fitInsights} className={cx(buttonStyles.secondary, "mt-3 min-h-11 w-full")}>Open Fit Explorer<ArrowRight aria-hidden="true" className="h-4 w-4" /></Link></>}
+          {!resume && <button type="button" onClick={improve} className={cx(buttonStyles.secondary, "mt-4 min-h-11 w-full")}>Use pasted resume text</button>}
+          <p className="mt-2 text-xs leading-5 text-muted">Improve locally with a target job, exact source statements and candidate confirmation. Nothing is sent to AI.</p>
           <Link href={routes.interview} className={cx(buttonStyles.ghost, "mt-3 min-h-11")}>Practice mock interviews<ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>
           <p className="mt-1 text-xs leading-5 text-muted">Fixed questions, independent of this resume.</p>
         </Card>
         <Card aria-labelledby="resume-privacy-title"><h2 id="resume-privacy-title" className="flex items-center gap-2 text-sm font-semibold"><ShieldCheck aria-hidden="true" className="h-4 w-4 text-brand" />You control the next step</h2><p className="mt-2 text-sm leading-6 text-muted">No permanent PDF storage, account or saved profile. Parsed data stays in this tab until cleared or reloaded. Uploading does not send it to AI.</p></Card>
       </aside>
     </div>
+    </div>
+    {startedImprovement && <section hidden={!improving} aria-labelledby="resume-improve-title">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <h2 id="resume-improve-title" ref={improveTitle} tabIndex={-1} className={cx("rounded text-lg font-semibold", buttonStyles.focusRing)}>Improve your resume</h2>
+        <div className="flex flex-wrap gap-3"><button type="button" onClick={() => setImproving(false)} className={cx(buttonStyles.secondary, "min-h-11")}>{resume ? "Review extraction" : "Back to upload"}</button>
+          {resume && <Link href={routes.fitInsights} className={cx(buttonStyles.secondary, "min-h-11")}>Open Fit Explorer</Link>}</div>
+      </div>
+      <p className="mb-5 text-sm leading-6 text-muted">{resume ? `Using ${resume.filename ?? "your extracted resume"}. ` : "Paste your own synthetic resume below. "}Job text, answers and reviews stay in this workspace when you switch stages. Reset improvement explicitly to start over; replacing or clearing the resume discards its improvement.</p>
+      <ImpactLab initialResume={resume ?? undefined} embedded integrated />
+    </section>}
   </div>;
 }

@@ -21,7 +21,9 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   assert.ok(ready, "local production server did not become ready; build first and leave port 3191 free");
-  for (const script of ["resume-workspace-smoke.mjs", "evidence-ledger-smoke.mjs", "contextual-impact-smoke.mjs"]) {
+  // One focused production Chromium run by default; older suites remain opt-in.
+  const scripts = process.argv.slice(2);
+  for (const script of scripts.length ? scripts : ["resume-final-smoke.mjs"]) {
     const child = spawn(process.execPath, [`scripts/${script}`], { env, windowsHide: true, stdio: "inherit" });
     const status = await new Promise((resolve, reject) => { child.once("error", reject); child.once("exit", resolve); });
     assert.equal(status, 0, `Failed: ${script}`);

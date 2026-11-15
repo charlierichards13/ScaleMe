@@ -5,6 +5,7 @@ import { FileText, LoaderCircle, LockKeyhole, Upload, X } from "lucide-react";
 import { buttonStyles, cx } from "@/components/ui/primitives";
 import { formatFileSize } from "@/lib/onboarding/resume-file";
 import type { ResumeUploadTask } from "@/lib/resume/use-resume-upload";
+import { extractOnAccessEnter } from "@/lib/resume/upload-keyboard";
 
 export function ResumeUploadControls({ upload }: { upload: ResumeUploadTask }) {
   const id = useId();
@@ -40,7 +41,7 @@ export function ResumeUploadControls({ upload }: { upload: ResumeUploadTask }) {
     </div>
     <div>
       <label htmlFor={`${id}-code`} className="text-sm font-semibold text-ink">Private upload access code</label>
-      <input id={`${id}-code`} type="password" autoComplete="off" maxLength={4096} value={code} disabled={busy} onChange={(event) => setCode(event.target.value)}
+      <input id={`${id}-code`} type="password" autoComplete="off" maxLength={4096} value={code} disabled={busy} onChange={(event) => setCode(event.target.value)} onKeyDown={(event) => extractOnAccessEnter(event, busy, extract)}
         className="mt-2 min-h-11 w-full rounded-xl border border-line bg-surface px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-brand" />
     </div>
     <div className="flex flex-wrap gap-3">
