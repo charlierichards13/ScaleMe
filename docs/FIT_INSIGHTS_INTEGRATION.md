@@ -7,7 +7,8 @@ This change does not make the application ready for public real-data use.
 ## Functional today
 
 The existing `/fit` workspace entry links to `/fit-insights` and explains preview versus
-live availability. Shared sidebar/route definitions remain unchanged for PR #45.
+live availability. The explorer's **Back to dashboard** link uses `routes.dashboard`
+(`/dashboard`); `/` remains the public welcome page introduced by PR #45.
 
 - Responsive input/results panels with route-local styles, existing palette/font,
   workspace/Impact Lab links, skip link, visible focus, associated field help/errors,
@@ -85,11 +86,48 @@ behavior (#23 / #24). No configuration is needed for this fictional demo. The br
 does not secure direct backend requests. Backend handlers, AI code, AWS settings and
 credentials are unchanged. No live AWS/model behavior was tested; nothing was deployed.
 
-PR #45's file set, including shared navigation, homepage/dashboard/onboarding, README and
-central security docs, is untouched. The focused [security addendum](security/FIT_INSIGHTS_CLIENT_REVIEW.md)
-records the threat/checklist delta without colliding with that developer's work.
+PR #45's merged shared navigation, homepage/dashboard/onboarding, README and central
+security docs are preserved exactly from main. The focused
+[security addendum](security/FIT_INSIGHTS_CLIENT_REVIEW.md) records the original client
+integration's threat/checklist delta.
 
-## Verification
+## Main synchronization verification (2026-11-15, PR #46)
+
+Integrated main `a3b2285` into `feat/fit-evidence-integration`, including merged PR #45
+and the PR #47 mock interview workspace. The only conflicting file was
+`web/src/app/fit-insights/fit-explorer.tsx`: retain the integration's `useSearchParams`
+import and complete explorer UI, add main's `routes` import, and apply the dashboard
+destination and accessible name to the new header. The offline walkthrough remains embedded.
+
+All 39 other incoming paths match main exactly. Apart from this integration note and
+the header resolution, all original PR files, tests, fixtures and screenshots are unchanged.
+Backend/API, AI/Bedrock, AWS/environment/dependency/CI configuration and central security
+files match main exactly. No live calls were enabled and no client gates changed.
+
+Node 24.22.1 / npm 11.9.0; from `web/`:
+
+- `npm ci --cache /workspace/work/npm-cache --ignore-scripts` — passed; existing ESLint peer warnings.
+- `npm run lint` — passed.
+- `npm exec -- next typegen` — passed.
+- `npm exec -- tsc --noEmit` — passed.
+- `npm test` — 142 tests across 13 files passed, including incoming onboarding/interview tests.
+- `npm run build` — passed; welcome, onboarding, dashboard and explorer routes generated.
+- `npm audit --audit-level=high --cache /workspace/work/npm-cache` — passed;
+  nine existing moderate development-tool advisories remain. Dependencies were not changed.
+- `git diff origin/main...HEAD --check` — passed; no unresolved merge entries or conflict
+  markers remain. Main's existing Markdown hard-break whitespace in `docs/INTERVIEW.md`
+  is preserved.
+
+Production Chromium smoke checks at 390/1440 px passed: welcome → four guest onboarding
+steps → dashboard → Fit Analysis → explorer → dashboard; local validation and disabled live
+control; explicit fictional load; status-filter recovery; offline reveal/compare from 2/4 to
+3/4. All six routes (including mock interview) returned 200 without horizontal overflow.
+The sole observed API request was a bodyless `POST /api/fit/analyze?demo=true`, only after
+the load click. No page exceptions, cookies or browser storage were observed. These checks
+do not repeat the original full accessibility/failure audit below. No live model call,
+deployment or PR merge was performed. No Rust crate exists, so Rust checks do not apply.
+
+## Initial integration verification
 
 From `web/`, using Node 24.22.1 / npm 11.9.0 (CI uses Node 22):
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { routes } from "@/lib/routes";
 import {
   ArrowLeft,
   ArrowRight,
@@ -51,8 +52,8 @@ export default function FitExplorer() {
         Skip to fit preparation
       </a>
       <header className="fit-app-header">
-        <Link href="/fit" className="fit-app-back">
-          <ArrowLeft size={17} aria-hidden="true" /> Career workspace
+        <Link href={routes.dashboard} className="fit-app-back" aria-label="ScaleMe dashboard">
+          <ArrowLeft size={17} aria-hidden="true" /> Back to dashboard
         </Link>
         <nav aria-label="Career preparation">
           <span aria-current="page">Fit Evidence Explorer</span>
