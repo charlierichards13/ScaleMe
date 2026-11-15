@@ -330,3 +330,22 @@ These are deterministic keyword/alias signals, not final judgments of candidate 
 - PDF size limit: define and enforce before public upload.
 - Optional job-URL ingestion: secure and best-effort only; text input is guaranteed.
 - Mobile: prioritize responsive PWA; Expo is a separate stretch project sharing API contracts.
+
+## Fit Evidence Explorer client integration (demo only)
+
+The frontend at `/fit-insights` consumes the existing v0.1 fit response through
+`web/src/lib/fit/client.ts`, reusing browser-safe schemas in `lib/ai/schemas.ts`. No wire
+types, backend limits, handlers or demo payloads change. Local draft checks mirror the
+existing field/encoded-body limits; they do not run analysis.
+
+Explicit `/fit-insights?demo=true` selection reveals a separate load action. Only that
+user action makes a bodyless `POST /api/fit/analyze?demo=true`; it never submits drafts.
+The client validates analysis, `X-ScaleMe-Mode: demo` and existing DEMO text markers and
+never synthesizes fallback results. Live invocation rejects before network access pending
+backend security merge and separate authorization.
+
+v0.1 returns IDs but no extracted descriptions/importance or per-assessment question links.
+The UI shows IDs, overall questions and returned-assessment status counts without inventing
+a required denominator. HTTP 429 is handled defensively using Retry-After and a visible
+manual-retry cooldown; this does not assert backend rate limiting has shipped. See
+[functional scope, tests and activation requirements](FIT_INSIGHTS_INTEGRATION.md).
