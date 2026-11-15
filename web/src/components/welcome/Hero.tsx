@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cx } from "@/components/ui/primitives";
-import { getStartedHref } from "@/lib/routes";
+import { getStartedHref } from "@/lib/auth-status";
 import { HeroArt } from "./HeroArt";
 import { container, cta, eyebrow } from "./styles";
 

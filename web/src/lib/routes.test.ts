@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { isActive, primaryNav, secondaryNav } from "@/components/layout/nav-items";
 import { getDashboardSnapshot } from "@/lib/dashboard/snapshot";
-import { authAvailable, getStartedHref, plannedAuthRoutes, routes } from "./routes";
+import { accountsEnabled, authPages, getStartedHref, showSignInLink } from "./auth-status";
+import { routes } from "./routes";
 
 const appDir = fileURLToPath(new URL("../app", import.meta.url));
 
@@ -57,14 +58,34 @@ describe("welcome / dashboard split (Issue #43)", () => {
     expect(collisions.map((group) => group.name)).toEqual([]);
   });
 
-  it("Get Started goes to guest onboarding until accounts exist, then to sign-up", () => {
-    expect(authAvailable).toBe(pageExists(plannedAuthRoutes.signUp));
-    expect(getStartedHref(false)).toBe(routes.onboarding);
-    expect(getStartedHref(true)).toBe(plannedAuthRoutes.signUp);
-  });
-
   it("the sidebar's Dashboard item points at /dashboard, not the welcome page", () => {
     expect(primaryNav.find((item) => item.label === "Dashboard")?.href).toBe("/dashboard");
+  });
+});
+
+describe("account entry points vs. working accounts (Issue #42 boundary)", () => {
+  it("accounts are not enabled in this build", () => {
+    expect(accountsEnabled).toBe(false);
+  });
+
+  it("Get Started keeps visitors on the guest pathway whether or not the #42 screens exist", () => {
+    // Only `accountsEnabled` decides; the sign-up screen existing (UI only) does not.
+    expect(getStartedHref()).toBe(routes.onboarding);
+    expect(showSignInLink()).toBe(false);
+    expect(pageExists(routes.onboarding)).toBe(true);
+    expect(pageExists(routes.dashboard)).toBe(true);
+  });
+
+  it("only working accounts send Get Started to sign-up and show a real Sign in link", () => {
+    expect(getStartedHref(true)).toBe(authPages.signUp);
+    expect(showSignInLink(true)).toBe(true);
+  });
+
+  it("accounts can only be enabled once both account pages exist (no 404 links)", () => {
+    if (accountsEnabled) {
+      expect(pageExists(authPages.signIn)).toBe(true);
+      expect(pageExists(authPages.signUp)).toBe(true);
+    }
   });
 });
 

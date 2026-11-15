@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ArrowRight, X } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { buttonStyles, cx } from "@/components/ui/primitives";
-import { authAvailable, plannedAuthRoutes, routes } from "@/lib/routes";
+import { authPages, showSignInLink } from "@/lib/auth-status";
+import { routes } from "@/lib/routes";
 import { container, navLink } from "./styles";
 
 const SIGN_IN_NOTE_ID = "sign-in-note";
@@ -37,15 +38,16 @@ const signInClass = cx(
 );
 
 /**
- * Sign-in belongs to Issue #42 (another branch). Until it ships, the button
- * opens a native popover that explains guest mode honestly instead of linking
- * to a page that doesn't exist or faking a login. No JavaScript is needed:
- * the browser handles opening, Escape and click-outside.
+ * The sign-in screen is Issue #42 (UI only). Until real accounts work
+ * (`accountsEnabled`), the button opens a native popover that explains guest
+ * mode honestly, even if the screen exists, instead of sending visitors to a
+ * form that can't sign them in. No JavaScript is needed: the browser handles
+ * opening, Escape and click-outside.
  */
 function SignInEntry() {
-  if (authAvailable) {
+  if (showSignInLink()) {
     return (
-      <Link href={plannedAuthRoutes.signIn} className={signInClass}>
+      <Link href={authPages.signIn} className={signInClass}>
         Sign in
       </Link>
     );

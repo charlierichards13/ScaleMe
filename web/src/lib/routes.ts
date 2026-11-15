@@ -30,24 +30,5 @@ export const routes = {
 
 export type AppRoute = (typeof routes)[keyof typeof routes];
 
-/**
- * Account pages owned by Issue #42 (another branch). They are NOT in `routes`
- * because they don't exist on this branch, and the route test rejects links
- * that would 404. When #42 merges: move these into `routes` and set
- * `authAvailable` to true so the welcome page links to them directly.
- */
-export const plannedAuthRoutes = {
-  signIn: "/sign-in",
-  signUp: "/sign-up",
-} as const;
-
-export const authAvailable: boolean = false;
-
-/**
- * Where the welcome page's "Get Started" buttons go. Until accounts exist,
- * visitors go straight to the guest onboarding. Once sign-up ships, new users
- * sign up first, and sign-up (not this page) sends them on to onboarding.
- */
-export function getStartedHref(accountsAvailable: boolean = authAvailable): string {
-  return accountsAvailable ? plannedAuthRoutes.signUp : routes.onboarding;
-}
+// Sign-in / sign-up entry points and the "accounts actually work" switch live
+// in `auth-status.ts`, kept separate on purpose (see that file).
