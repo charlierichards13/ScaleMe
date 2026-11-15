@@ -121,6 +121,23 @@ ScaleMe/
 
 ## Getting started
 
+### Fit Evidence Explorer prototype
+
+Visit `/fit-insights` for a standalone **FICTIONAL DEMO** of requirement-level evidence
+inspection and before/after interview coverage. Reveal a sample candidate answer, then
+compare **2 of 4 → 3 of 4 required requirements supported**; vague or unrelated answers
+leave coverage unchanged. No AWS, uploads, persistence, or API wiring. Candidate reports
+are not independently verified, and coverage is not hiring probability.
+See [demo instructions, screenshots, and limitations](docs/FIT_INSIGHTS_DEMO.md).
+
+### Resume Impact Lab prototype
+
+Visit `/impact-lab` for a standalone **FICTIONAL DEMO** of two before/after resume
+suggestions, exact evidence inspection, candidate confirmation/rejection, guarded
+copying, and targeted grilling questions. It uses deterministic hand-written fixtures,
+no paid APIs, and no persistence. The live AI discovery workflow remains future work.
+See [demo instructions and limitations](docs/IMPACT_LAB_DEMO.md).
+
 The **Next.js scaffold is now available** in `web/`. With Node.js 22 installed:
 
 ```bash
@@ -132,7 +149,7 @@ npm run dev
 
 Open http://localhost:3000. On Windows PowerShell, if execution policy blocks `npm.ps1`, use `npm.cmd ci` and `npm.cmd run dev` instead.
 
-**Current state:** the starter page is available; resume analysis and other product features are still under development. Rust/Cargo and AWS credentials will be needed for their respective modules once implemented. An `.env.example` should contain variable names only, without credentials.
+**Current state:** `/` is the public welcome page and `/onboarding` is a short guest setup that saves nothing (see [docs/WELCOME_ONBOARDING.md](docs/WELCOME_ONBOARDING.md)). The career dashboard is at `/dashboard` (see [docs/DASHBOARD.md](docs/DASHBOARD.md)). Use its *Sample data* switch for a clearly labeled fictional walkthrough. The earlier scripted chat demo lives at `/coach`. Resume analysis, live AI and job listings are still under development. Rust/Cargo and AWS credentials will be needed for their respective modules once implemented. An `.env.example` should contain variable names only, without credentials.
 
 ### Planning and collaboration
 

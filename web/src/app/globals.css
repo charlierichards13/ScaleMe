@@ -1,26 +1,96 @@
 @import "tailwindcss";
 
+/*
+ * ScaleMe design tokens. Light mode is the primary (and currently only)
+ * theme; every surface sets explicit colors so OS dark mode never produces a
+ * half-dark page. Contrast was checked against WCAG AA for body text.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #f8f9fc;
+  --surface: #ffffff;
+  --ink: #202638;
+  --muted: #64748b;
+  --line: #e6e9f0;
+  --brand: #5856d6;
+  --brand-strong: #4644b8;
+  --brand-soft: #eef0ff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --shadow-card: 0 1px 2px rgb(32 38 56 / 0.04), 0 1px 3px rgb(32 38 56 / 0.04);
+  --shadow-card-hover: 0 4px 16px rgb(32 38 56 / 0.08);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+/*
+ * Welcome page + onboarding motion (Issue #43). Everything here is opt-in via
+ * `prefers-reduced-motion: no-preference`, so with reduced motion (or if CSS
+ * animations never run) the page renders in its final, fully visible state.
+ * Section reveals use scroll-driven animations, so they need no JavaScript;
+ * browsers without `animation-timeline` support simply show the content.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .sm-rise {
+    animation: sm-rise 800ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  .sm-step-in {
+    animation: sm-rise 450ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  @supports (animation-timeline: view()) {
+    .sm-reveal {
+      animation: sm-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}
+
+/* Starts partly visible on purpose: time-based animations can stall in a
+   background tab, and the hero must stay readable if that happens. */
+@keyframes sm-rise {
+  from {
+    opacity: 0.4;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes sm-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

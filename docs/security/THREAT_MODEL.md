@@ -83,6 +83,10 @@ Status: merged to `main` in PR #33 after self-review by the implementing agent; 
 
 **Important:** A random delimiter/tag in the prompt is not a security boundary. A model can still follow adversarial instructions. Defense-in-depth should rely on **no privileged model tools**, strict outputs, evidence verification and application-side authorization.
 
+## Welcome page and guest onboarding (Issue #43, `feat/welcome-onboarding`)
+
+Frontend only: no API handler, model call, network request, authentication or persistence. `/` became the public welcome page and the dashboard moved to `/dashboard`. Neither is access-controlled, which is unchanged from before because no accounts exist. `/onboarding` keeps answers in React state only. Its optional resume picker reads just the first five bytes locally to confirm a `%PDF-` signature and keeps only the file name and size. These client checks are **not** a security control, and any future upload must re-validate on the server (Issue #4). File names and free text are rendered as escaped React text and capped at 100 characters. The *Sign in* button explains that accounts don't exist yet instead of simulating a session. `web/src/lib/auth-status.ts` separates the sign-in/sign-up screens (Issue #42, UI only) from `accountsEnabled`, which must stay `false` until server-side authentication actually works, so a UI-only sign-up page never becomes the welcome page's entry point. **Before** onboarding answers are saved or `/onboarding` is gated by sign-up (Issue #42), review: server-side validation, an authorization check on the stored profile, retention and deletion, and that onboarding completion is decided on the server. Details: [WELCOME_ONBOARDING.md](../WELCOME_ONBOARDING.md).
+
 ## Issue #23 cost guard (2026-11-14)
 
 Status: implemented and **mock-tested only** (fake clock, mocked Bedrock, synthetic data). Not independently reviewed, not load-tested against a running server. Code: `web/src/lib/ai/rate-limit.ts`, `web/src/lib/ai/config.ts`, `web/src/app/api/fit/analyze/route.ts`.
@@ -128,6 +132,31 @@ Status: AWS configuration verified by the coding agent with read-only calls and 
 - **One sample only.** Live behaviour was checked on a single clean synthetic request. Adversarial and benchmark runs are still to do and each needs separate approval.
 
 ## Review triggers
+
+### Fit Evidence Explorer prototype (Issue #40)
+
+`/fit-insights` uses bundled **FICTIONAL DEMO** resume/job/interview fixtures and local
+React state. It adds no applicant input, API call, model call, storage, telemetry, or
+external data flow. Exact source text and manually approved requirement/source/quote
+links gate support; job text, unknown IDs, mutated quotes, missing answers, vague answers,
+and irrelevant answers cannot add coverage. The fixed four-required-ID inventory is
+validated before counting. A sample answer must be revealed before it can support the
+after snapshot. These fixed-fixture checks do not implement general semantic validation,
+a live evidence ledger, or the proposed v0.2 API contract. Future integration needs
+server-side provenance/relevance validation and existing privacy/cost reviews.
+See [scope and verification](../FIT_INSIGHTS_DEMO.md).
+
+### Resume Impact Lab prototype (Issue #8)
+
+`/impact-lab` is an isolated browser UI using bundled **FICTIONAL DEMO** fixtures.
+It introduces no API handler, applicant input, model call, authentication, or persistence.
+Review state is component-local; the only outgoing content action is an explicit user
+copy to the browser clipboard after all linked sample statements are candidate-confirmed.
+Rejection locks copying again. React renders all quotes as text. Missing metrics are
+excluded and cannot be confirmed. Candidate confirmation is not external verification.
+The fixed-fixture guard is not suitable for arbitrary model output: live integration
+still requires server-side provenance/claim validation and the existing AI/privacy/cost
+reviews. See [demo scope and verification](../IMPACT_LAB_DEMO.md).
 
 Update this file whenever an agent changes:
 - External service/model provider, prompt contents, tool permissions, inference settings, pricing or rate limits.
