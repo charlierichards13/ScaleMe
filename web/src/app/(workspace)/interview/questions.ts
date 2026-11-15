@@ -6,7 +6,7 @@
 export const SCRIPTED_LABEL = "Scripted Demo — Not Live AI";
 
 export const SCRIPTED_NOTE =
-  "These five questions are a fixed script. They do not change based on your answers, your resume, or a job description. No live model is called.";
+  "These five questions are a fixed script. They do not change based on your answers, your resume, or a job description. No live model is called. Answers stay in memory on this page, are not uploaded, and are discarded when you leave or refresh.";
 
 export const INTERVIEW_MODES = ["technical", "behavioral"] as const;
 

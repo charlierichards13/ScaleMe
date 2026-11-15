@@ -29,7 +29,7 @@ export function ProfileSummary({ profile, isDemo }: { profile: CandidateProfile;
       <SectionHeading
         id="profile-heading"
         title="Profile & goals"
-        description={isEmpty ? "A few details make every recommendation more relevant." : undefined}
+        description={isDemo ? "Fictional profile." : isEmpty ? "Optional goals are in guest setup." : undefined}
         action={isDemo ? <Badge tone="demo">Sample</Badge> : undefined}
       />
       <ul className="divide-y divide-line">
@@ -48,8 +48,8 @@ export function ProfileSummary({ profile, isDemo }: { profile: CandidateProfile;
           );
         })}
       </ul>
-      <Link href={routes.settings} className={cx(buttonStyles.secondary, "mt-5 w-full")}>
-        {isEmpty ? "Set up your goals" : "Edit goals"}
+      <Link href={routes.onboarding} className={cx(buttonStyles.secondary, "mt-5 w-full")}>
+        Preview goal setup
       </Link>
     </Card>
   );

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ScaleMe | Career Growth Engine",
-  description: "Turn real experience into confident interview stories and evidence-backed career growth.",
+  title: "ScaleMe",
+  description: "Scripted interview practice and labeled sample career stories.",
 };
 
 export const viewport: Viewport = {

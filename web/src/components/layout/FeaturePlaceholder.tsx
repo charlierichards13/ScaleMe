@@ -1,11 +1,15 @@
 import Link from "next/link";
-import { ArrowLeft, Construction, MessagesSquare, type LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Construction, type LucideIcon } from "lucide-react";
 import { Badge, Card, buttonStyles } from "@/components/ui/primitives";
 import { routes } from "@/lib/routes";
 
+type PlaceholderAction = { href: string; label: string };
+
 /**
- * Honest landing page for a workspace that hasn't been built yet. Keeps
- * dashboard links meaningful without pretending the feature works.
+ * Honest landing page for a workspace that hasn't been built yet. Callers
+ * pass the primary action. The default matches the unedited /fit placeholder
+ * until PR #46 replaces that page. Sidebar and dashboard links use
+ * routes.fitInsights directly.
  */
 export function FeaturePlaceholder({
   title,
@@ -13,13 +17,16 @@ export function FeaturePlaceholder({
   summary,
   plannedSteps,
   dependsOn,
+  action,
 }: {
   title: string;
   icon: LucideIcon;
   summary: string;
   plannedSteps: string[];
   dependsOn: string;
+  action?: PlaceholderAction;
 }) {
+  const next = action ?? { href: routes.coach, label: "Try the Career Coach demo" };
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:py-12">
       <Link href={routes.dashboard} className={buttonStyles.ghost}>
@@ -60,9 +67,9 @@ export function FeaturePlaceholder({
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link href={routes.coach} className={buttonStyles.primary}>
-            <MessagesSquare aria-hidden="true" className="h-4 w-4" />
-            Try the Career Coach demo
+          <Link href={next.href} className={buttonStyles.primary}>
+            {next.label}
+            <ArrowRight aria-hidden="true" className="h-4 w-4" />
           </Link>
           <Link href={routes.dashboard} className={buttonStyles.secondary}>
             Return to dashboard

@@ -7,9 +7,9 @@ import { SiteFooter } from "@/components/welcome/SiteFooter";
 import { SiteHeader } from "@/components/welcome/SiteHeader";
 
 export const metadata: Metadata = {
-  title: "ScaleMe | Your AI career workspace",
+  title: "ScaleMe | Career workspace preview",
   description:
-    "Discover opportunities, uncover your strengths, and prepare for the career you want, all in one place.",
+    "Practice a scripted interview and review labeled sample stories in one workspace.",
 };
 
 /**

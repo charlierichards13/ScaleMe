@@ -9,7 +9,7 @@ import { container, eyebrow } from "./styles";
 const principles: Array<{ title: string; body: string; icon: LucideIcon }> = [
   {
     title: "Evidence, not keywords",
-    body: "Feedback points back to what your resume or your answers actually show.",
+    body: "A sample finding points at a quote from that sample. A keyword overlap is not treated as proof.",
     icon: ScanText,
   },
   {
@@ -40,10 +40,8 @@ export function About() {
             Finding the right opportunity can be hard, especially when you&apos;re unsure how to present your experience or
             prepare for interviews.
           </p>
-          <p>ScaleMe brings career discovery, resume improvement, and interview preparation into one personalized workspace.</p>
           <p>
-            Your experience is more than a list of keywords. ScaleMe helps you uncover what you&apos;ve actually accomplished,
-            communicate your strengths, and walk into your next opportunity with confidence.
+            ScaleMe is a guest workspace for scripted interview practice and labeled sample stories.
           </p>
         </div>
       </div>

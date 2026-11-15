@@ -10,7 +10,7 @@ export function Hero() {
       <div className="sm-rise max-w-xl">
         <p className={cx(eyebrow, "flex items-center gap-2.5")}>
           <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-brand" />
-          Your AI career workspace
+          Career workspace preview
         </p>
         <h1
           id="hero-title"
@@ -23,7 +23,7 @@ export function Hero() {
           <span className="text-brand">Scaled.</span>
         </h1>
         <p className="mt-7 max-w-md text-lg leading-8 text-slate-600">
-          Discover opportunities, uncover your strengths, and prepare for the career you want, all in one place.
+          Practice a scripted interview and review labeled sample stories in one workspace.
         </p>
         <div className="mt-10 flex flex-wrap gap-3">
           <Link href={getStartedHref()} className={cta.primary}>
