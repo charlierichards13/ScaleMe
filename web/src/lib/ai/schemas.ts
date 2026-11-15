@@ -78,6 +78,12 @@ export type ApiError = {
   error: { code: string; message: string; retryable: boolean };
 };
 
+// One generic client message for every "live AI cannot run on this server" case
+// (switched off, missing or invalid settings, AWS access denied, unusable model).
+// The specific cause goes to the server log via `internalReason`, never to the client.
+export const LIVE_AI_UNAVAILABLE_MESSAGE =
+  "Live AI analysis is not available on this server right now. You can try the labeled demo instead.";
+
 // A small error class so the route can turn any failure into a safe ApiError.
 export class FitApiError extends Error {
   constructor(
@@ -85,6 +91,11 @@ export class FitApiError extends Error {
     message: string,
     public retryable: boolean,
     public status: number,
+    /**
+     * SERVER-ONLY troubleshooting hint, logged but never sent to the client. Must be a fixed
+     * string or an environment-variable NAME: never a value, credential, header or user text.
+     */
+    public internalReason?: string,
   ) {
     super(message);
     this.name = "FitApiError";
