@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 type Message = { id: number; role: "assistant" | "user"; content: string };
@@ -210,7 +211,11 @@ export default function Home() {
           </div>
           <button type="button" onClick={() => setSidebarOpen(false)} className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-200 md:hidden" aria-label="Close sidebar">✕</button>
         </div>
-        <div className="px-3">
+        <div className="space-y-2 px-3">
+          <Link href="/"
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+            <span aria-hidden="true">←</span> Back to dashboard
+          </Link>
           <button type="button" onClick={newConversation}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold shadow-sm hover:bg-slate-100">
             <span aria-hidden="true" className="text-lg">＋</span> New conversation
