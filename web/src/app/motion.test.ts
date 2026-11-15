@@ -35,7 +35,7 @@ describe("reduced motion", () => {
 
   it("has a no-preference block that holds the welcome/onboarding motion", () => {
     expect(allowed).toHaveLength(1);
-    for (const name of ["sm-rise", "sm-float", "sm-sheen", "sm-shadow", "sm-step-in", "sm-reveal", "scroll-behavior"]) {
+    for (const name of ["sm-rise", "sm-step-in", "sm-reveal", "scroll-behavior"]) {
       expect(allowed[0], name).toContain(name);
     }
   });
@@ -44,6 +44,12 @@ describe("reduced motion", () => {
     const outside = allowed.reduce((source, block) => source.replace(block, ""), css);
     const offending = outside.split("\n").filter((line) => motionDeclaration.test(line));
     expect(offending).toEqual([]);
+  });
+
+  it("every sm-* keyframes block is used, and every used one exists (no leftovers after removing artwork)", () => {
+    const defined = [...css.matchAll(/@keyframes\s+(sm-[\w-]+)/g)].map((m) => m[1]).sort();
+    const used = [...new Set([...allowed[0].matchAll(/animation:\s*(sm-[\w-]+)/g)].map((m) => m[1]))].sort();
+    expect(defined).toEqual(used);
   });
 
   it("keyframes start visible enough to read if a time-based animation stalls", () => {

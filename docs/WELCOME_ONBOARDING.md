@@ -17,15 +17,14 @@ Links that meant "the dashboard" now use `routes.dashboard` instead of a hard-co
 ## Welcome page
 
 - **Server component, no client JavaScript of its own.** Anchor links, the sign-in note (native HTML `popover`) and all motion are plain HTML and CSS.
-- **Components** live in `web/src/components/welcome/`: `SiteHeader`, `Hero`, `HeroArt` (+ generated `hero-ribbon.ts`), `Features`, `About`, `FinalCta`, `SiteFooter` and shared classes in `styles.ts`. Colors reuse the existing tokens in `globals.css`. Fonts reuse Geist. No new dependencies.
-- **Hero artwork** is an original SVG sculpture: one continuous satin ribbon that rises in a widening spiral and unfurls to the upper right. It's modeled in 3D by `web/scripts/generate-hero-art.mjs` (centerline, tilt, tapering width, thickness, a key and fill light with a satin sheen, and mild perspective) and baked into about 120 static pieces in `hero-ribbon.ts`. Each piece is one path with its own shading gradient. Pieces are drawn back to front so folds overlap correctly, and side walls give the band thickness. There is no canvas, WebGL, runtime geometry or randomness, so server and client render identical markup. To change the form, edit the art-direction constants at the top of the script and run `node scripts/generate-hero-art.mjs` from `web/`.
+- **Components** live in `web/src/components/welcome/`: `SiteHeader`, `Hero`, `Features`, `About`, `FinalCta`, `SiteFooter` and shared classes in `styles.ts`. Colors reuse the existing tokens in `globals.css`. Fonts reuse Geist. No new dependencies.
+- **No hero illustration (for now).** The hero is typography only: left-aligned text with intentional whitespace to its right on desktop. Earlier ribbon artwork and its generator were removed when the team postponed the illustration. Any future artwork should be original, decorative (`aria-hidden`), deterministic for server rendering, and animated only inside the reduced-motion media query.
 - **Content integrity:** no testimonials, statistics, hiring probabilities, company claims or contact details. The About principles ("Evidence, not keywords", "Your words, never invented", "Private by default") restate the repository's integrity rules and current guest-only behavior. Keep them true if that changes.
 
 ### Motion
 
 Motion is only enabled under `prefers-reduced-motion: no-preference` (see the Issue #43 block in `web/src/app/globals.css`):
 
-- Hero art: a 16 s float (9 px, with a slight tilt), a contact shadow that tightens in step with it, and a faint white highlight that drifts across the ribbon's faces over 14 s (clipped to the faces, so it never touches the background).
 - Hero text: a single 800 ms settle on load that starts at 40% opacity, so the text stays readable if a background tab stalls the animation.
 - Section reveals use scroll-driven animations (`animation-timeline: view()`), so they need no JavaScript. Browsers without support, and users with reduced motion, see the content immediately.
 - Hover, focus and active transitions only change color, shadow or transform, so nothing shifts the layout.
@@ -83,7 +82,7 @@ Answers exist only in React state for the current page. A reload or navigation a
 
 - `web/src/lib/onboarding/state.test.ts`: step order and bounds, back/skip/next transitions, skip clearing only its own step, multi-select toggling, text normalization and the 100-character cap, opt-in defaults, resume metadata only, honest summary wording, and the resume checks (extension/MIME/size and the `%PDF-` signature versus a renamed HTML file).
 - `web/src/lib/routes.test.ts`: `/` is the welcome page, the dashboard is at `/dashboard`, `/onboarding` exists, no route-group page collides with `/`, the sidebar points at `/dashboard`, `isActive` matching, and the account boundary: accounts are off in this build, *Get Started* and *Sign in* stay on the guest path unless `accountsEnabled` is true (regardless of whether the #42 screens exist), and accounts can't be enabled while either screen is missing.
-- `web/src/app/motion.test.ts`: every `animation` and smooth-scroll declaration in `globals.css` sits inside the `prefers-reduced-motion: no-preference` block, and the hero entrance starts at least 40% visible. A planted out-of-block animation was confirmed to fail it. It also lists the hero sculpture's `sm-float`, `sm-sheen` and `sm-shadow` animations.
+- `web/src/app/motion.test.ts`: every `animation` and smooth-scroll declaration in `globals.css` sits inside the `prefers-reduced-motion: no-preference` block, and the hero entrance starts at least 40% visible. A planted out-of-block animation was confirmed to fail it. It also fails if any `sm-*` keyframes are defined but unused, or used but undefined.
 
 Component interaction tests would need a DOM test environment, which isn't set up. The browser checks below cover interactions.
 
@@ -97,12 +96,10 @@ Component interaction tests would need a DOM test environment, which isn't set u
 - No `/api` requests and no console errors during the flow. All existing routes return 200, including `/fit-insights` (PR #41, merged from `main`). `/sign-in` returns 404 as expected (Issue #42).
 - Reduced motion is enforced by `motion.test.ts` (all motion inside the `no-preference` media query). It wasn't emulated in a browser, because the browser tooling can't toggle `prefers-reduced-motion`.
 
+After removing the hero illustration (2026-11-15, `next start`): at 1440, 768 and 390 px there's no horizontal overflow, the hero text keeps its left edge and 576 px width, nothing illustrative remains in the hero, all *Get Started* links still go to `/onboarding`, and there are no console errors. This was checked with DOM measurements; no screenshots were taken because the browser pane was hidden.
+
 ## Screenshots (production build, synthetic content only)
 
-![Welcome page hero at 1440 px](images/welcome-hero-desktop.jpg)
-
 ![Welcome page features section at 1440 px](images/welcome-features-desktop.jpg)
-
-![Welcome page hero at 390 px](images/welcome-hero-mobile.jpg)
 
 ![Onboarding step 1 at 1440 px](images/onboarding-desktop.jpg)
