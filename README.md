@@ -124,6 +124,8 @@ ScaleMe/
 
 ## Getting started
 
+**Hosting:** Railway settings, variable names and verified fail-closed behavior are in [docs/DEPLOY_RAILWAY.md](docs/DEPLOY_RAILWAY.md). Deploy with live AI off unless the owner explicitly approves a private preview.
+
 ### Fit Evidence Explorer prototype
 
 Visit `/fit-insights` for a standalone **FICTIONAL DEMO** of requirement-level evidence
