@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, Mic, Sparkles } from "lucide-react";
-import { buttonStyles } from "@/components/ui/primitives";
+import { ArrowRight, Mic } from "lucide-react";
+import { buttonStyles, cx } from "@/components/ui/primitives";
 import { routes } from "@/lib/routes";
 
 const impactLadder = ["Problem", "Your contribution", "Technical decisions", "Trade-offs", "Evidence", "Impact"];
@@ -15,63 +15,41 @@ export function HeroPanel({
   onStartDemo: () => void;
 }) {
   return (
-    <section
-      aria-labelledby="hero-heading"
-      className="relative overflow-hidden rounded-2xl border border-line bg-surface p-6 shadow-card sm:p-8"
-    >
-      {/* Single soft accent wash; decorative only. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand-soft opacity-70 blur-3xl"
-      />
-      <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
+    <section aria-labelledby="hero-heading" className="rounded-2xl bg-ink p-5 text-white sm:p-7 lg:p-8">
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_240px] xl:items-center">
         <div>
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand-strong">
-            <Sparkles aria-hidden="true" className="h-3.5 w-3.5" />
-            Your career workspace
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-highlight">
+            {showDemoButton ? "Start with your story" : "Explore a fictional story"}
           </p>
-          <h2 id="hero-heading" className="mt-4 max-w-xl text-2xl font-bold leading-tight tracking-tight text-ink sm:text-[28px]">
-            Practice interviews. Review labeled samples.
+          <h2 id="hero-heading" className="mt-3 max-w-lg text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
+            {showDemoButton ? "Make your experience easier to explain." : "See what the evidence actually says."}
           </h2>
-          <p className="mt-3 max-w-xl text-[15px] leading-7 text-muted">
-            Sample data on this page is fictional. Interview practice uses a fixed script.
+          <p className="mt-3 max-w-lg text-sm leading-6 text-slate-300">
+            {showDemoButton
+              ? "Rehearse with five fixed questions, or explore clearly labeled fictional examples."
+              : "This dashboard shows sample quotes, roles and goals. Nothing here is a live assessment of you."}
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            {hasResume ? (
-              <Link href={routes.impactLab} className={buttonStyles.primary}>
-                Review the sample story
-                <ArrowRight aria-hidden="true" className="h-4 w-4" />
-              </Link>
-            ) : (
-              <Link href={routes.interview} className={buttonStyles.primary}>
-                <Mic aria-hidden="true" className="h-4 w-4" />
-                Practice an interview
-              </Link>
-            )}
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link href={hasResume ? routes.impactLab : routes.interview} className={cx(buttonStyles.primary, "focus-visible:ring-offset-ink")}>
+              {hasResume ? <>Review the sample story <ArrowRight aria-hidden="true" className="h-4 w-4" /></> : <><Mic aria-hidden="true" className="h-4 w-4" /> Practice an interview</>}
+            </Link>
             {showDemoButton ? (
-              <button type="button" onClick={onStartDemo} className={buttonStyles.secondary}>
+              <button type="button" onClick={onStartDemo} className={cx(buttonStyles.secondary, "focus-visible:ring-offset-ink")}>
                 Explore with sample data
               </button>
             ) : (
-              <Link href={routes.fitInsights} className={buttonStyles.secondary}>
+              <Link href={routes.fitInsights} className={cx(buttonStyles.secondary, "focus-visible:ring-offset-ink")}>
                 Open fit explorer
               </Link>
             )}
           </div>
         </div>
-
-        {/* Hidden on phones so the four tools stay near the top of the page. */}
-        <div className="hidden rounded-xl border border-line bg-canvas/80 p-4 sm:block">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">What a clear story covers</p>
-          <ol className="mt-3 space-y-2">
+        <div className="hidden border-l border-white/15 pl-7 xl:block">
+          <p className="text-xs font-medium text-slate-300">What a clear story covers</p>
+          <ol className="mt-4 space-y-2.5">
             {impactLadder.map((step, index) => (
-              <li key={step} className="flex items-center gap-3 text-sm text-ink">
-                <span
-                  aria-hidden="true"
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface text-[11px] font-semibold text-brand ring-1 ring-line"
-                >
-                  {index + 1}
-                </span>
+              <li key={step} className="flex items-center gap-3 text-sm">
+                <span aria-hidden="true" className="w-5 text-xs tabular-nums text-brand-highlight">0{index + 1}</span>
                 {step}
               </li>
             ))}

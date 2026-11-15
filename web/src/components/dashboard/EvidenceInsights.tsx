@@ -18,8 +18,8 @@ export function EvidenceInsights({ insights, isDemo }: { insights: EvidenceInsig
       <SectionHeading
         id="evidence-heading"
         title="Evidence insights"
-        description={isDemo ? "Quoted requirements from the sample profile." : "Prepare a local draft or open the labeled fictional sample."}
-        action={isDemo ? <Badge tone="demo">Sample analysis</Badge> : undefined}
+        description={isDemo ? "Requirements and exact quotes from the fictional sample." : "Start with what your experience actually shows."}
+        action={isDemo ? <Badge tone="demo">Fictional analysis</Badge> : undefined}
       />
 
       {insights.length === 0 ? (
@@ -40,9 +40,9 @@ export function EvidenceInsights({ insights, isDemo }: { insights: EvidenceInsig
               const meta = statusMeta[insight.status];
               const Icon = meta.icon;
               return (
-                <li key={insight.id} className="rounded-xl border border-line p-4">
+                <li key={insight.id} className="rounded-xl border border-line p-4 sm:p-5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <p className="min-w-0 flex-1 text-sm font-semibold text-ink">{insight.requirement}</p>
+                    <h3 className="min-w-0 flex-1 basis-48 text-sm font-semibold leading-6 text-ink">{insight.requirement}</h3>
                     <Badge tone={meta.tone}>
                       <Icon aria-hidden="true" className="h-3.5 w-3.5" />
                       {meta.label}
@@ -52,7 +52,7 @@ export function EvidenceInsights({ insights, isDemo }: { insights: EvidenceInsig
                   {insight.evidence.map((item) => (
                     <blockquote
                       key={`${item.source}-${item.quote}`}
-                      className="mt-2.5 border-l-2 border-brand/40 pl-3 text-sm leading-6 text-slate-700"
+                      className="mt-3 rounded-r-lg border-l-2 border-brand bg-brand-soft/50 px-3 py-2 text-sm leading-6 text-ink"
                     >
                       <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
                         {sourceLabel[item.source]}
@@ -64,11 +64,12 @@ export function EvidenceInsights({ insights, isDemo }: { insights: EvidenceInsig
               );
             })}
           </ul>
-          <p className="mt-4 text-xs leading-5 text-slate-500">
-            &ldquo;Not evidenced&rdquo; means your resume doesn&apos;t show it yet, not that you lack the skill.
-          </p>
         </>
       )}
+      <p className="mt-4 border-t border-line pt-4 text-xs leading-5 text-muted">
+        <strong className="font-semibold text-ink">Not evidenced ≠ missing skill.</strong> It means the resume doesn&apos;t show it yet.
+        {" "}Evidence states are not hiring predictions.
+      </p>
     </Card>
   );
 }

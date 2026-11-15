@@ -8,16 +8,16 @@ export function NextSteps({ steps }: { steps: NextStep[] }) {
     <Card aria-labelledby="next-heading">
       <SectionHeading
         id="next-heading"
-        title="Open a working page"
-        description="These pages do not share answers with each other."
+        title="Choose your next step"
+        description="Each opens a separate workspace. Dashboard data and saves stay here."
       />
-      <ol className="space-y-2">
+      <ol className="divide-y divide-line">
         {steps.map((step, index) => (
           <li key={step.id}>
             <Link
               href={step.href}
               className={cx(
-                "group flex items-center gap-3 rounded-xl border border-transparent p-3 transition-colors hover:border-line hover:bg-canvas",
+                "group flex items-center gap-3 rounded-xl px-1 py-4 transition-colors hover:bg-canvas",
                 buttonStyles.focusRing,
               )}
             >
@@ -25,7 +25,7 @@ export function NextSteps({ steps }: { steps: NextStep[] }) {
                 aria-hidden="true"
                 className={cx(
                   "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                  index === 0 ? "bg-brand text-white" : "bg-brand-soft text-brand",
+                  index === 0 ? "bg-brand-strong text-white" : "bg-brand-soft text-brand-strong",
                 )}
               >
                 {index + 1}

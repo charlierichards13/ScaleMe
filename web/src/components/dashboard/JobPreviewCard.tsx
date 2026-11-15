@@ -50,43 +50,44 @@ export function JobPreviewCard({
 }) {
   const SaveIcon = saved ? BookmarkCheck : Bookmark;
   return (
-    <article className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4 transition-colors hover:border-brand/30 sm:flex-row sm:items-start">
-      <div
-        aria-hidden="true"
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-canvas text-slate-500 ring-1 ring-line"
-      >
-        <Building2 className="h-5 w-5" />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-[15px] font-semibold text-ink">{job.title}</h3>
-          {job.fictional && <Badge tone="demo">Fictional</Badge>}
+    <article className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-4 transition-colors hover:border-brand/30 sm:p-5">
+      <div className="flex items-start gap-3">
+        <div
+          aria-hidden="true"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-canvas text-slate-500 ring-1 ring-line"
+        >
+          <Building2 className="h-5 w-5" />
         </div>
-        <p className="mt-0.5 text-sm text-muted">{job.company}</p>
 
-        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-          <li className="inline-flex items-center gap-1">
-            <MapPin aria-hidden="true" className="h-3.5 w-3.5 text-slate-400" />
-            {job.location} · {arrangementLabel[job.arrangement]}
-          </li>
-          <li>{employmentLabel[job.employmentType]}</li>
-          {job.period && (
-            <li className="inline-flex items-center gap-1">
-              <CalendarRange aria-hidden="true" className="h-3.5 w-3.5 text-slate-400" />
-              {job.period}
-            </li>
-          )}
-        </ul>
-
-        {showAuthorization && (
-          <div className="mt-2.5 rounded-lg bg-canvas px-3 py-2">
-            <AuthorizationNote statement={job.authorization} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-[15px] font-semibold text-ink">{job.title}</h3>
+            {job.fictional && <Badge tone="demo">Fictional</Badge>}
           </div>
-        )}
-      </div>
+          <p className="mt-0.5 text-sm text-muted">{job.company}</p>
 
-      <div className="flex shrink-0 gap-2 sm:flex-col sm:items-stretch">
+          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+            <li className="inline-flex items-center gap-1">
+              <MapPin aria-hidden="true" className="h-3.5 w-3.5 text-slate-400" />
+              {job.location} · {arrangementLabel[job.arrangement]}
+            </li>
+            <li>{employmentLabel[job.employmentType]}</li>
+            {job.period && (
+              <li className="inline-flex items-center gap-1">
+                <CalendarRange aria-hidden="true" className="h-3.5 w-3.5 text-slate-400" />
+                {job.period}
+              </li>
+            )}
+          </ul>
+
+          {showAuthorization && (
+            <div className="mt-2.5 rounded-lg bg-canvas px-3 py-2">
+              <AuthorizationNote statement={job.authorization} />
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
         <button
           type="button"
           onClick={onToggleSave}

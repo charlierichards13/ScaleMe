@@ -10,19 +10,19 @@ const focusRing =
 
 export const buttonStyles = {
   primary: cx(
-    "inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-brand-strong",
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-brand-strong",
     focusRing,
   ),
   secondary: cx(
-    "inline-flex items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-brand/40 hover:bg-brand-soft hover:text-brand-strong",
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-brand/40 hover:bg-brand-soft hover:text-brand-strong",
     focusRing,
   ),
   ghost: cx(
-    "inline-flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-brand transition-colors hover:bg-brand-soft hover:text-brand-strong",
+    "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-brand-strong transition-colors hover:bg-brand-soft",
     focusRing,
   ),
   icon: cx(
-    "inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted transition-colors hover:bg-brand-soft hover:text-brand-strong",
+    "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted transition-colors hover:bg-brand-soft hover:text-brand-strong",
     focusRing,
   ),
   focusRing,
@@ -33,7 +33,7 @@ type CardProps = ComponentPropsWithoutRef<"section"> & { padded?: boolean };
 export function Card({ className, padded = true, ...props }: CardProps) {
   return (
     <section
-      className={cx("rounded-2xl border border-line bg-surface shadow-card", padded && "p-5 sm:p-6", className)}
+      className={cx("min-w-0 rounded-2xl border border-line bg-surface shadow-card", padded && "p-5 sm:p-6", className)}
       {...props}
     />
   );
@@ -51,8 +51,8 @@ export function SectionHeading({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-      <div className="min-w-0">
+    <div className="mb-5 flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+      <div className="min-w-0 flex-1 basis-40">
         <h2 id={id} className="text-base font-semibold tracking-tight text-ink">
           {title}
         </h2>
@@ -78,7 +78,7 @@ export function Badge({ tone = "neutral", children, className }: { tone?: Tone; 
   return (
     <span
       className={cx(
-        "inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold",
+        "inline-flex max-w-full items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold leading-4",
         toneClasses[tone],
         className,
       )}
@@ -105,7 +105,7 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center rounded-xl border border-dashed border-line bg-canvas/60 px-5 py-8 text-center">
+    <div className="flex flex-col items-center rounded-xl border border-dashed border-line bg-canvas/60 px-4 py-7 text-center sm:px-6">
       <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-brand" aria-hidden="true">
         {icon}
       </div>

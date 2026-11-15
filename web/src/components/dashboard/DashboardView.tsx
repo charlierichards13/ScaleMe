@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { FlaskConical, UserRound } from "lucide-react";
-import { buttonStyles, cx } from "@/components/ui/primitives";
+import { Badge, buttonStyles, cx } from "@/components/ui/primitives";
 import { getDashboardSnapshot } from "@/lib/dashboard/snapshot";
 import type { DataSource } from "@/lib/dashboard/types";
 import { routes } from "@/lib/routes";
@@ -25,14 +25,18 @@ export function DashboardView() {
   const isDemo = snapshot.source === "demo";
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+    <div className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-ink">Dashboard</h1>
-          <p className="mt-1 text-sm text-muted">
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-widest text-muted">Workspace</span>
+            <Badge tone={isDemo ? "demo" : "neutral"}>{isDemo ? "Fictional sample" : "Guest · empty"}</Badge>
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Dashboard</h1>
+          <p className="mt-1.5 text-sm leading-6 text-muted">
             {isDemo
               ? "Fictional sample profile on this page."
-              : "Practice an interview, or turn on sample data for fictional roles."}
+              : "A place to practice, reflect and find your next step."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -46,10 +50,10 @@ export function DashboardView() {
       {isDemo && (
         <div
           role="status"
-          className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+            className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900"
         >
-          <p className="flex items-center gap-2">
-            <FlaskConical aria-hidden="true" className="h-4 w-4 shrink-0" />
+          <p className="flex min-w-0 flex-1 basis-64 items-start gap-2">
+            <FlaskConical aria-hidden="true" className="mt-1 h-4 w-4 shrink-0" />
             <span>
               <strong className="font-semibold">Demo mode.</strong> Fictional profile, listings and analysis. No live AI, job data or saved account.
             </span>
@@ -57,14 +61,14 @@ export function DashboardView() {
           <button
             type="button"
             onClick={() => setSource("empty")}
-            className={cx("rounded-lg px-2 py-1 text-sm font-semibold underline-offset-2 hover:underline", buttonStyles.focusRing)}
+            className={cx("min-h-11 rounded-lg px-2 py-2 text-sm font-semibold underline underline-offset-4", buttonStyles.focusRing)}
           >
             Exit demo
           </button>
         </div>
       )}
 
-      <div className="mt-6 space-y-6">
+      <div className="mt-5 space-y-6 sm:mt-6 sm:space-y-7">
         <HeroPanel
           hasResume={snapshot.profile.hasResume}
           showDemoButton={!isDemo}
@@ -73,18 +77,18 @@ export function DashboardView() {
 
         <FeatureCards />
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0 space-y-6">
+            <EvidenceInsights insights={snapshot.insights} isDemo={isDemo} />
             <RecommendedJobs
               key={snapshot.source}
               jobs={snapshot.jobs}
               showAuthorization={snapshot.profile.authorizationGuidance === true}
             />
-            <EvidenceInsights insights={snapshot.insights} isDemo={isDemo} />
           </div>
           <div className="min-w-0 space-y-6">
-            <ProfileSummary profile={snapshot.profile} isDemo={isDemo} />
             <NextSteps steps={snapshot.nextSteps} />
+            <ProfileSummary profile={snapshot.profile} isDemo={isDemo} />
           </div>
         </div>
 
@@ -105,7 +109,7 @@ function DemoSwitch({ checked, onChange }: { checked: boolean; onChange: (checke
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={cx(
-        "inline-flex h-10 items-center gap-2.5 rounded-xl border border-line bg-surface px-3 text-sm font-medium text-ink transition-colors hover:bg-canvas",
+          "inline-flex min-h-11 items-center gap-2.5 rounded-xl border border-line bg-surface px-3 text-sm font-medium text-ink transition-colors hover:bg-canvas",
         buttonStyles.focusRing,
       )}
     >
