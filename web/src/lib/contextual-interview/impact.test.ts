@@ -15,6 +15,12 @@ function session() {
 }
 
 describe("completion trust boundary", () => {
+  it("preserves exact original resume and job whitespace in the completion context", () => {
+    const draft = { ...impactProfiles[0].draft, resume: "  " + impactProfiles[0].draft.resume + "\n", job: "\n" + impactProfiles[0].draft.job + "  " };
+    const context = prepareContext(draft);
+    expect(context.resume.text).toBe(draft.resume);
+    expect(context.job.text).toBe(draft.job);
+  });
   it("keeps unlinked answers out of coverage and preserves all original data", () => {
     const handoff = session(); const before = structuredClone(handoff);
     const view = interviewImpact(handoff, {}).ledger.view();

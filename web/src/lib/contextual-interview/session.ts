@@ -16,8 +16,11 @@ export function prepareContext(draft: ContextDraft): FitRequest {
     job: { id: "session-job", title: draft.title, text: draft.job,
       requirements: lines.map((description, i) => ({ id: `req-${i + 1}`, description, importance: "required" })) },
   });
-  if (!result.success) throw new Error("Enter a resume (up to 30,000 characters), role title (200) and job description (20,000).");
-  return result.data;
+  if (!result.success || draft.resume.length > 30_000 || draft.job.length > 20_000) throw new Error("Enter a resume (up to 30,000 characters), role title (200) and job description (20,000).");
+  return { ...result.data,
+    resume: { ...result.data.resume, text: draft.resume },
+    job: { ...result.data.job, text: draft.job },
+  };
 }
 
 export const TurnResponseSchema = z.object({ turn: z.object({
