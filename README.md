@@ -130,13 +130,14 @@ leave coverage unchanged. No AWS, uploads, persistence, or API wiring. Candidate
 are not independently verified, and coverage is not hiring probability.
 See [demo instructions, screenshots, and limitations](docs/FIT_INSIGHTS_DEMO.md).
 
-### Resume Impact Lab prototype
+### Resume Impact Lab and evidence ledger
 
-Visit `/impact-lab` for a standalone **FICTIONAL DEMO** of two before/after resume
-suggestions, exact evidence inspection, candidate confirmation/rejection, guarded
-copying, and targeted grilling questions. It uses deterministic hand-written fixtures,
-no paid APIs, and no persistence. The live AI discovery workflow remains future work.
-See [demo instructions and limitations](docs/IMPACT_LAB_DEMO.md).
+Visit `/impact-lab` to paste resume/job text, freeze a requirement inventory, answer
+targeted questions, and inspect computed before/after evidence coverage. Exact candidate
+sources ground proposed wording; candidate confirmation unlocks copying. Processing is
+local and conservative, with no model calls or persistence. An optional fictional sample
+uses the same workflow. Fit Explorer/interview API wiring remains a coordinated follow-up.
+See [workflow, tests, limitations and integration adapters](docs/EVIDENCE_LEDGER.md).
 
 The **Next.js scaffold is now available** in `web/`. With Node.js 22 installed:
 
