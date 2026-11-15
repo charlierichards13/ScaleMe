@@ -84,6 +84,18 @@ Status: source exists in the author's worktree and was self-reviewed by the impl
 
 ## Review triggers
 
+### Resume Impact Lab prototype (Issue #8)
+
+`/impact-lab` is an isolated browser UI using bundled **FICTIONAL DEMO** fixtures.
+It introduces no API handler, applicant input, model call, authentication, or persistence.
+Review state is component-local; the only outgoing content action is an explicit user
+copy to the browser clipboard after all linked sample statements are candidate-confirmed.
+Rejection locks copying again. React renders all quotes as text. Missing metrics are
+excluded and cannot be confirmed. Candidate confirmation is not external verification.
+The fixed-fixture guard is not suitable for arbitrary model output: live integration
+still requires server-side provenance/claim validation and the existing AI/privacy/cost
+reviews. See [demo scope and verification](../IMPACT_LAB_DEMO.md).
+
 Update this file whenever an agent changes:
 - External service/model provider, prompt contents, tool permissions, inference settings, pricing or rate limits.
 - What applicant data is collected, processed, logged, retained, shared or persisted.
