@@ -8,7 +8,7 @@ export function Hero() {
   return (
     <section aria-labelledby="hero-title" className={cx(container, "relative pb-8 pt-10 sm:pb-20 sm:pt-16 lg:pb-28 lg:pt-20")}>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(ellipse_at_80%_20%,var(--brand-soft),transparent_65%)]" />
-      <div className="sm-rise relative max-w-xl">
+      <div className="sm-rise relative mx-auto max-w-xl">
         <p className={cx(eyebrow, "flex items-center gap-2.5")}>
           <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-brand" />
           Career workspace preview
