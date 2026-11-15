@@ -1,4 +1,4 @@
-# Private resume upload integration
+> **November 15, 2026 change:** This document describes the original access-code-protected prototype. The current proposed hackathon public-demo branch removes the upload access code and requires a server-side expiration timestamp instead. For active configuration and security boundaries see [PUBLIC_PDF_DEMO.md](PUBLIC_PDF_DEMO.md). Do not use the `RESUME_UPLOAD_TOKEN` instructions below for the public-demo version. The existing AI endpoints still have separate private access requirements.\n\n# Private resume upload integration
 
 Branch: `feat/resume-upload-integration`; follow-up to Issue #4 / merged PR #50.
 This adds a private, synthetic-data-only upload preview. **Not approved for public applicant uploads.**
