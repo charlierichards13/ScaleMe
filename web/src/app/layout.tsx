@@ -13,6 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // No production origin is assumed. Configure only an owner-approved URL.
+  metadataBase: process.env.SITE_URL ? new URL(process.env.SITE_URL) : undefined,
   title: "ScaleMe",
   description: "Scripted interview practice and labeled sample career stories.",
 };

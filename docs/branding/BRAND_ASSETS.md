@@ -6,7 +6,7 @@
 
 ## Files & recommended placement
 
-Copy the `web/` folder in this kit into the ScaleMe repository after creating a **new branding branch**. It is intentionally separate from the uncommitted navigation work and PR #46.
+The kit was installed by PR #52. Phase A (Issue #55) integrates these existing assets into the shared application shell without changing the artwork or feature implementations.
 
 - `web/public/brand/icon.svg` — transparent primary S symbol, all-size vector
 - `web/public/brand/icon-dark.svg` — violet S mark for dark backgrounds
@@ -52,9 +52,26 @@ All SVG wordmark and tagline letters are converted to paths so they render consi
 - Test 16px favicon legibility, light/dark contrast, browser mobile tab, app router asset response, Lighthouse and keyboard/screen-reader navigation.
 - Before public launch, perform a name/logo similarity or trademark check. Concept art was generated and then manually redrawn as a vector; this is not a claim of trademark clearance.
 
-## Suggested PR workflow
+## Shared application usage (Phase A, Issue #55)
 
-1. Finish, commit, and publish the active navigation PR before switching branches in your main worktree.
-2. Create `feat/scaleme-brand-assets` from the latest `main` in a clean worktree or separate folder.
-3. Copy the kit's `web/` tree, commit, push, and open a **draft PR** containing only brand resources.
-4. Review visual rendering, PNG dimensions, icon metadata, and CI. Then ask Grok to wire the shared header/sidebar/logo components in a separate UI PR.
+`web/src/components/layout/Logo.tsx` is the shared renderer:
+
+- Default: 144 px horizontal light-surface wordmark, with intrinsic aspect ratio.
+- `compact`: 36 px standalone symbol for the mobile workspace header.
+- `compactMobile`: standalone symbol below 640 px, wordmark above; used by the welcome header to keep navigation readable at 320 px.
+- `surface="dark"`: matching dark-surface artwork, used on the ink footer. Variants follow the actual surface, not the operating system theme.
+- Every visible image has the accessible name `ScaleMe`; navigation links retain their destination names. No tagline is baked into navigation images.
+
+The sidebar, onboarding and other existing consumers inherit the default wordmark. Feature-owned standalone layouts remain outside Phase A.
+
+`web/src/app/globals.css` supplies the shared tokens: `brand` (#7153FC), `brand-strong` (#3928B8) for hover/strong text, `brand-highlight` (#AC86FF) for dark-surface focus, `ink` (#0D1039), `canvas` (#F8F9FC), `muted` (#535A77), and a pale `brand-soft` (#F0EBFF) for selected navigation/background accents. Geist stays unchanged. Shared links/buttons retain visible focus, subtle state transitions and reduced-motion overrides.
+
+The welcome hero renders **Invest in your own potential.** as HTML. Supporting copy describes evidence-driven preparation through scripted interview practice and labeled samples. Guest entry still uses `getStartedHref()`; “See how it works” links to the existing feature explanations. Accounts, live analysis and planned features retain their existing disclosures.
+
+## Metadata configuration
+
+PR #52's app icon, Apple touch icon, favicon and Open Graph files remain unchanged. Next.js serves them through automatic App Router metadata.
+
+`SITE_URL` is an optional **build-time**, server-side absolute HTTP(S) site URL (see `web/.env.example`). Set it only to an owner-approved origin before publishing. It supplies `metadataBase` for absolute social-image URLs; it does not add a canonical link or make network requests. No production domain is currently established here. When unset, Next.js warns and resolves the automatic Open Graph image against its development fallback (`http://localhost:3000`); do not publish that fallback as production social metadata. A malformed configured URL fails the build instead of silently inventing an origin.
+
+See [Phase A verification and before/after descriptions](BRAND_UI_VERIFICATION.md) for checks and limitations. Larger workspace/dashboard redesign is Phase B.

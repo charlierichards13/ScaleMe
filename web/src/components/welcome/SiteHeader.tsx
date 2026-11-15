@@ -16,7 +16,7 @@ export function SiteHeader() {
   return (
     <header className={cx(container, "flex h-20 items-center justify-between gap-3")}>
       <Link href={routes.home} aria-label="ScaleMe home" className={cx("rounded-lg", buttonStyles.focusRing)}>
-        <Logo />
+        <Logo compactMobile />
       </Link>
 
       <nav aria-label="Primary" className="flex items-center gap-0.5 sm:gap-2">
