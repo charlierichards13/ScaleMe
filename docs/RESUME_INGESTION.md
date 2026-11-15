@@ -1,6 +1,6 @@
 # Issue #4 — PDF resume ingestion and JSON parser
 
-**Status:** parser implemented as a standalone Rust program in `services/resume-parser/`, tested with **synthetic PDFs only**. It is **not connected** to any HTTP route, upload screen or UI. `POST /api/resume/parse` is still a proposal. Nothing here has been tried on real resumes, independently reviewed, or run on Linux outside CI.
+**Status:** standalone Rust parser in `services/resume-parser/`, tested with **synthetic PDFs only**. The follow-up branch adds a private, off-by-default Resume Lab → HTTP → Rust → Fit Explorer handoff; see [RESUME_UPLOAD_INTEGRATION.md](RESUME_UPLOAD_INTEGRATION.md). Historical standalone-phase notes below describe PR #50; route deployment/security controls are documented separately. No real applicant data or independent security audit is claimed.
 
 **Owner:** @MisterProper667
 **Branch:** `feat/resume-ingestion`
@@ -428,9 +428,9 @@ services/resume-parser/tests/support/pdf_builder.rs in-memory PDF writer
 web/src/lib/resume/parser-contract.test.ts         actual Zod schema validation
 ```
 
-## Future integration (separate PR, not implemented)
+## Original integration design (implemented in the private follow-up)
 
-`POST /api/resume/parse` could wrap the program like this. Each step needs its own review.
+The following was the standalone-phase design. The follow-up implements this process boundary with private access gating; current behavior and verification are in [RESUME_UPLOAD_INTEGRATION.md](RESUME_UPLOAD_INTEGRATION.md). Deployment and real-data review remain required.
 
 1. Read the `multipart/form-data` `file` field as a **bounded stream** (stop at 5 MiB plus one byte). Do not trust `Content-Length`, the file name or the MIME type.
 2. Start `resume-parser` with a **fixed argument list** (no shell): at most `--filename <client name>`. Pipe the bytes to standard input. Never write the upload to disk and never use the client's file name as a path.

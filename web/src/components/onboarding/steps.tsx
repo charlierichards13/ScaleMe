@@ -1,25 +1,19 @@
 "use client";
 
-import { useId, useState, type ChangeEvent, type Dispatch, type ReactNode } from "react";
+import { useId, type Dispatch, type ReactNode } from "react";
 import {
   Briefcase,
   Compass,
-  FileText,
   GraduationCap,
   Info,
   Mic,
   PenLine,
-  Upload,
-  X,
   type LucideIcon,
 } from "lucide-react";
 import { buttonStyles, cx } from "@/components/ui/primitives";
-import {
-  checkResumeMetadata,
-  formatFileSize,
-  hasPdfSignature,
-  resumeCheckMessages,
-} from "@/lib/onboarding/resume-file";
+import { ResumeUploadControls } from "@/components/resume/ResumeUploadControls";
+import { useActiveResume } from "@/lib/resume/active-resume";
+import type { ResumeUploadTask } from "@/lib/resume/use-resume-upload";
 import {
   MAX_TEXT_LENGTH,
   goalOptions,
@@ -44,107 +38,18 @@ function Notice({ children }: { children: ReactNode }) {
 
 /* Step 1 — Resume ------------------------------------------------------- */
 
-/**
- * Optional PDF picker. The file is checked locally (extension, MIME, size and
- * the first five bytes) and then only its name and size are kept in memory.
- * It is never uploaded, parsed, or stored: secure parsing is Issue #4, and
- * these checks must be repeated on the server once it exists.
- */
-export function ResumeStep({ answers, dispatch }: StepProps) {
-  const inputId = useId();
-  const [error, setError] = useState<string | null>(null);
-  const [checking, setChecking] = useState(false);
-
-  async function onFile(event: ChangeEvent<HTMLInputElement>) {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    input.value = "";
-    if (!file) return;
-
-    const check = checkResumeMetadata(file);
-    if (!check.ok) {
-      setError(resumeCheckMessages[check.reason]);
-      return;
-    }
-    setChecking(true);
-    try {
-      const head = new Uint8Array(await file.slice(0, 5).arrayBuffer());
-      if (!hasPdfSignature(head)) {
-        setError(resumeCheckMessages["not-pdf"]);
-        return;
-      }
-      setError(null);
-      dispatch({ type: "selectResume", selection: { name: file.name, sizeBytes: file.size } });
-    } catch {
-      setError("That file couldn't be read. Try choosing it again.");
-    } finally {
-      setChecking(false);
-    }
-  }
-
-  const resume = answers.resume;
-
-  return (
-    <div className="space-y-5">
-      {resume ? (
-        <div className="flex items-center gap-4 rounded-2xl border border-brand/30 bg-brand-soft/50 p-4">
-          <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface text-brand shadow-card">
-            <FileText className="h-5 w-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-ink">{resume.name}</p>
-            <p className="text-xs text-muted">{formatFileSize(resume.sizeBytes)} · PDF chosen, still on your device</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => dispatch({ type: "clearResume" })}
-            className={cx(buttonStyles.icon, "h-9 w-9")}
-            aria-label={`Remove ${resume.name}`}
-          >
-            <X aria-hidden="true" className="h-4 w-4" />
-          </button>
-        </div>
-      ) : (
-        <label
-          htmlFor={inputId}
-          className={cx(
-            "flex cursor-pointer flex-col items-center rounded-2xl border border-dashed border-slate-300 bg-canvas px-6 py-10 text-center transition-colors",
-            "hover:border-brand/50 hover:bg-brand-soft/40",
-            "has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-brand has-[input:focus-visible]:ring-offset-2",
-          )}
-        >
-          <span aria-hidden="true" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface text-brand shadow-card">
-            <Upload className="h-5 w-5" />
-          </span>
-          <span className="mt-4 text-[15px] font-semibold text-ink">{checking ? "Checking file…" : "Choose a PDF resume"}</span>
-          <span className="mt-1 text-sm text-muted">PDF only, up to 5 MB</span>
-          <input
-            id={inputId}
-            type="file"
-            accept="application/pdf,.pdf"
-            onChange={onFile}
-            disabled={checking}
-            aria-describedby={error ? `${inputId}-error` : undefined}
-            className="sr-only"
-          />
-        </label>
-      )}
-
-      {error && (
-        <p id={`${inputId}-error`} role="alert" className="text-sm font-medium text-red-700">
-          {error}
-        </p>
-      )}
-
-      <Notice>
-        <strong className="font-semibold text-ink">Resume reading isn&apos;t connected yet.</strong> In this preview your PDF
-        stays on your device. It isn&apos;t uploaded or saved, and only its first few bytes are checked to confirm
-        it&apos;s a PDF. You can continue without one.
-      </Notice>
-    </div>
-  );
+/** Uses the same explicit, private upload controller as Resume Lab. */
+export function ResumeStep({ upload }: { upload: ResumeUploadTask }) {
+  const resume = useActiveResume();
+  return <div className="space-y-5">
+    {resume ? <div role="status" className="rounded-2xl border border-brand/30 bg-brand-soft/50 p-5">
+      <p className="font-semibold text-ink">Resume extracted and ready to review.</p>
+      <p className="mt-2 break-all text-sm text-muted">{resume.filename} · Available in this tab for Resume Lab and Fit Explorer.</p>
+      <button type="button" className={cx(buttonStyles.secondary, "mt-4 min-h-11")} onClick={upload.clear}>Remove parsed resume</button>
+    </div> : <ResumeUploadControls upload={upload} />}
+    <Notice>Parsing is optional. Continue without a PDF, or select one locally and extract it only when you have private preview access.</Notice>
+  </div>;
 }
-
 /* Step 2 — Goals -------------------------------------------------------- */
 
 const goalIcons: Record<GoalId, LucideIcon> = {

@@ -31,12 +31,12 @@ const features: Feature[] = [
     status: "Preview",
   },
   {
-    title: "Grill My Resume",
-    description: "Confirm sample quotes, then copy a bullet they support.",
-    href: routes.impactLab,
+    title: "Resume Lab",
+    description: "Extract a synthetic PDF with private access, review its text, and choose your next step.",
+    href: routes.resumeLab,
     icon: MessageCircleQuestion,
     tint: "bg-brand-soft text-brand",
-    status: "Sample",
+    status: "Private preview",
   },
   {
     title: "Mock Interview",

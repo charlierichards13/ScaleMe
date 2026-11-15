@@ -6,12 +6,14 @@ import { routes } from "@/lib/routes";
 import { analyzeLocally, fromCandidateTurn, fromFitAnalysis, requirementLines, type FitHandoff } from "@/lib/evidence-ledger/adapters";
 import { EvidenceLedger } from "@/lib/evidence-ledger/ledger";
 import type { ImpactProposal, Requirement } from "@/lib/evidence-ledger/types";
+import type { Resume } from "@/lib/ai/schemas";
+import { Badge, buttonStyles, cx } from "@/components/ui/primitives";
 
 const button = "inline-flex min-h-11 items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-purple-700 disabled:cursor-not-allowed disabled:opacity-50";
-const primary = `${button} bg-purple-700 text-white hover:bg-purple-800`;
-const secondary = `${button} border border-purple-200 bg-white text-purple-800 hover:bg-purple-50`;
-const input = "mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm leading-6 focus-visible:outline-2 focus-visible:outline-purple-700 disabled:bg-slate-100";
-const card = "rounded-2xl border border-purple-100 bg-white p-5 shadow-sm sm:p-6";
+const legacyPrimary = `${button} bg-purple-700 text-white hover:bg-purple-800`;
+const legacySecondary = `${button} border border-purple-200 bg-white text-purple-800 hover:bg-purple-50`;
+const legacyInput = "mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm leading-6 focus-visible:outline-2 focus-visible:outline-purple-700 disabled:bg-slate-100";
+const legacyCard = "rounded-2xl border border-purple-100 bg-white p-5 shadow-sm sm:p-6";
 const statuses = { supported: "Supported", unclear: "Unclear", not_evidenced: "Not evidenced" };
 const sample = {
   resume: "Built an internal employee portal for company resources.\nWorked on a CSV import tool with custom error reporting.",
@@ -23,8 +25,12 @@ export type Workspace = { ledger: EvidenceLedger; links: ProposalLink[] };
 
 /** Existing Impact Lab route, now processing actual inputs locally. A future
  * Fit Explorer parent can pass v0.1 data through initialFit without a new API. */
-export default function ImpactLab({ initialFit, initialWorkspace, embedded = false }: { initialFit?: FitHandoff; initialWorkspace?: Workspace; embedded?: boolean } = {}) {
-  const [resume, setResume] = useState(initialFit?.request.resume.text ?? "");
+export default function ImpactLab({ initialFit, initialWorkspace, initialResume, embedded = false, integrated = false }: { initialFit?: FitHandoff; initialWorkspace?: Workspace; initialResume?: Resume; embedded?: boolean; integrated?: boolean }) {
+  const primary = integrated ? cx(buttonStyles.primary, "min-h-11 disabled:opacity-50") : legacyPrimary;
+  const secondary = integrated ? cx(buttonStyles.secondary, "min-h-11 disabled:opacity-50") : legacySecondary;
+  const input = integrated ? "mt-2 w-full rounded-xl border border-line bg-surface p-3 text-base leading-6 text-ink focus-visible:outline-2 focus-visible:outline-brand" : legacyInput;
+  const card = integrated ? "rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-6" : legacyCard;
+  const [resume, setResume] = useState(initialResume?.text ?? initialFit?.request.resume.text ?? "");
   const [job, setJob] = useState(initialFit?.request.job.text ?? "");
   const [requirements, setRequirements] = useState<Requirement[]>(initialFit?.request.job.requirements ?? []);
   const [workspace, setWorkspace] = useState<Workspace | null>(() => {
@@ -37,8 +43,9 @@ export default function ImpactLab({ initialFit, initialWorkspace, embedded = fal
   const [target, setTarget] = useState("");
   const [originalId, setOriginalId] = useState("");
   const [answer, setAnswer] = useState("");
-  const [notice, setNotice] = useState("Paste a resume and job description to begin. Nothing is sent or saved.");
+  const [notice, setNotice] = useState(initialResume ? "Uploaded resume imported. Add a target job description to begin. Improvement runs locally; nothing is sent to AI." : "Paste a resume and job description to begin. Nothing is sent or saved.");
   const [error, setError] = useState("");
+  const [resetRequested, setResetRequested] = useState(false);
   const view = workspace?.ledger.view();
   const chosenTarget = target || view?.after.find((a) => a.status !== "supported")?.requirementId || view?.requirements[0].id || "";
   const originalEvidence = view?.evidence.filter((e) => view.sources.find((s) => s.id === e.sourceId)?.kind === "resume") ?? [];
@@ -51,9 +58,10 @@ export default function ImpactLab({ initialFit, initialWorkspace, embedded = fal
   }
 
   function reset() {
-    setWorkspace(null); setRequirements([]); setResume(""); setJob("");
+    setWorkspace(null); setRequirements([]); setResume(initialResume?.text ?? ""); setJob("");
     setAnswer(""); setTarget(""); setOriginalId(""); setIsSample(false); setError("");
-    setNotice("Workspace cleared. Paste new inputs to begin.");
+    setResetRequested(false);
+    setNotice(initialResume ? "Improvement reset. Your uploaded resume is still imported; add a new target job." : "Workspace cleared. Paste new inputs to begin.");
   }
   function prepare(event: FormEvent) {
     event.preventDefault(); setError("");
@@ -107,27 +115,33 @@ export default function ImpactLab({ initialFit, initialWorkspace, embedded = fal
     catch { setNotice("Clipboard unavailable. Select the candidate-confirmed wording and copy it manually."); }
   }
 
-  return <div className="min-h-screen bg-[#faf9fe] font-sans text-slate-900 selection:bg-purple-200">
-    <a href="#lab-main" className="sr-only z-50 rounded-lg bg-white p-4 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to Impact Lab</a>
+  return <div className={integrated ? "min-w-0 text-ink" : "min-h-screen bg-[#faf9fe] font-sans text-slate-900 selection:bg-purple-200"}>
+    {!integrated && <a href="#lab-main" className="sr-only z-50 rounded-lg bg-white p-4 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to Impact Lab</a>}
     {!embedded && <header className="border-b border-purple-100 bg-white"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
       <Link href={routes.dashboard} className="rounded text-2xl font-extrabold tracking-tight text-purple-800 focus-visible:outline-2 focus-visible:outline-purple-700">ScaleMe<span className="text-purple-400">.</span></Link>
+      <Link href={routes.resumeLab} className={secondary}>Open the canonical Resume Lab</Link>
       <span className="rounded-full border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-bold tracking-wider text-purple-800">{isSample ? "FICTIONAL SAMPLE · LOCAL PROCESSING" : "LOCAL PROCESSING · NO AI CALLS"}</span>
     </div></header>}
-    <div id="lab-main" tabIndex={-1} className="mx-auto max-w-7xl px-5 py-9 sm:px-8 sm:py-12">
+    <div id={integrated ? "resume-improvement" : "lab-main"} tabIndex={-1} className={integrated ? "space-y-5" : "mx-auto max-w-7xl px-5 py-9 sm:px-8 sm:py-12"}>
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div className="max-w-2xl">
         <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-purple-700">Your experience. Its real impact.</p>
-        <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">Resume Impact Lab</h2>
+        <h2 className={integrated ? "text-xl font-bold tracking-tight sm:text-2xl" : "text-4xl font-bold tracking-tight sm:text-5xl"}>{integrated ? "Improve your experience" : "Resume Impact Lab"}</h2>
         <p className="mt-4 leading-7 text-slate-600">Find evidence missing from your resume, inspect what changed, and review stronger wording grounded in your own statements.</p>
       </div>{!embedded && <button className={secondary} onClick={reset}>Clear workspace</button>}</div>
+      {integrated && <div className="rounded-xl border border-line bg-surface p-4">
+        {isSample && <div className="mb-3"><Badge tone="demo">Fictional sample · local improvement</Badge></div>}
+        {resetRequested ? <><p className="text-sm leading-6">Reset the job description, answers, evidence review and suggestions? Your uploaded resume stays available. This cannot be undone.</p><div className="mt-3 flex flex-wrap gap-3"><button type="button" className={secondary} onClick={reset}>Discard improvement and reset</button><button type="button" className={secondary} onClick={() => setResetRequested(false)}>Keep working</button></div></>
+          : <button type="button" className={secondary} onClick={() => setResetRequested(true)}>Reset improvement</button>}
+      </div>}
       <p className="mb-7 rounded-2xl border border-purple-200 bg-purple-50 p-5 text-sm leading-6 text-purple-950">Text stays in this page’s memory and is cleared on reload. Local rules can miss relevant wording and misunderstand context. All support is <strong>candidate-reported</strong>, never independently verified. Coverage describes documented evidence, not hiring probability.</p>
       {error && <p role="alert" className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">{error}</p>}
       {!workspace && <section className={card} aria-labelledby="input-title">
         <h2 id="input-title" className="text-xl font-bold">1. Start with your resume and target role</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">Paste text. Put one job requirement per line where possible. Review required/preferred importance before assessing.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-600">{initialResume ? "Your uploaded text is already here. Add the target job below." : "Paste resume and job text."} Put one job requirement per line where possible. Review required/preferred importance before assessing.</p>
         <form onSubmit={prepare} className="mt-5 space-y-5">
-          <div className="grid gap-5 md:grid-cols-2"><label className="text-sm font-semibold">Resume text<textarea className={input} rows={8} required maxLength={30_000} value={resume} onChange={(e) => { setResume(e.target.value); setIsSample(false); }} /></label>
+          <div className="grid gap-5 md:grid-cols-2"><label className="text-sm font-semibold">{initialResume ? "Uploaded resume text" : "Resume text"}<textarea className={input} rows={8} required readOnly={!!initialResume} maxLength={30_000} value={resume} onChange={(e) => { setResume(e.target.value); setIsSample(false); }} /></label>
             <label className="text-sm font-semibold">Job description<textarea className={input} rows={8} required maxLength={20_000} value={job} onChange={(e) => { setJob(e.target.value); setRequirements([]); setIsSample(false); }} /></label></div>
-          <div className="flex flex-wrap gap-3"><button className={primary} type="submit">Review requirements</button><button className={secondary} type="button" onClick={() => { setResume(sample.resume); setJob(sample.job); setRequirements([]); setIsSample(true); setError(""); setNotice("Fictional sample loaded into the same input workflow. Review its requirements to start."); }}>Load fictional sample</button></div>
+          <div className="flex flex-wrap gap-3"><button className={primary} type="submit">Review requirements</button>{!initialResume && <button className={secondary} type="button" onClick={() => { setResume(sample.resume); setJob(sample.job); setRequirements([]); setIsSample(true); setError(""); setNotice("Fictional sample loaded into the same input workflow. Review its requirements to start."); }}>Load fictional sample</button>}</div>
         </form>
         {!!requirements.length && <div className="mt-7 border-t border-purple-100 pt-5"><h3 className="font-bold">Freeze your requirement inventory</h3><p className="mt-2 text-sm leading-6 text-slate-600">Choose importance explicitly. Unspecified requirements do not enter the required denominator. To change this inventory later, clear the workspace and create a new baseline.</p>
           <div className="my-5 space-y-3">{requirements.map((r) => <div key={r.id} className="grid gap-2 rounded-xl border border-slate-200 p-3 sm:grid-cols-[minmax(0,1fr)_12rem]"><p className="break-words text-sm leading-6"><span className="font-bold text-purple-800">{r.id}</span> · {r.description}</p><label className="text-xs font-semibold">Importance for {r.id}<select className={input} value={r.importance} onChange={(e) => setRequirements(requirements.map((item) => item.id === r.id ? { ...item, importance: e.target.value as Requirement["importance"] } : item))}><option value="required">Required</option><option value="preferred">Preferred</option><option value="unspecified">Unspecified</option></select></label></div>)}</div>
@@ -151,7 +165,7 @@ export default function ImpactLab({ initialFit, initialWorkspace, embedded = fal
             </details>;
           })}</div>
         </section>
-        {!embedded && <section className={`${card} mb-6`} aria-labelledby="answer-title"><h2 id="answer-title" className="text-xl font-bold">3. Uncover a specific contribution</h2>
+        {(!embedded || integrated) && <section className={`${card} mb-6`} aria-labelledby="answer-title"><h2 id="answer-title" className="text-xl font-bold">3. Uncover a specific contribution</h2>
           <form onSubmit={submit} className="mt-4 space-y-5"><div className="grid gap-5 md:grid-cols-2"><label className="text-sm font-semibold">Target requirement<select className={input} value={chosenTarget} onChange={(e) => setTarget(e.target.value)}>{view.requirements.map((r) => <option key={r.id} value={r.id}>{r.id} · {r.description}</option>)}</select></label>
             <label className="text-sm font-semibold">Original experience this answer expands<select className={input} value={chosenOriginal} onChange={(e) => setOriginalId(e.target.value)}>{!originalEvidence.length && <option value="">No supported original excerpt available</option>}{originalEvidence.map((e) => <option key={e.id} value={e.id}>{e.quote}</option>)}</select></label></div>
             <p className="rounded-xl bg-purple-50 p-4 text-sm leading-6 text-purple-950">For “{view.requirements.find((r) => r.id === chosenTarget)?.description}”, what did you personally do, what did you work on, and how did you check the result? State any limits or uncertainty.</p>
@@ -169,7 +183,7 @@ export default function ImpactLab({ initialFit, initialWorkspace, embedded = fal
         <section className={card} aria-labelledby="plan-title"><h2 id="plan-title" className="text-xl font-bold">Your next steps</h2><div className="mt-4 grid gap-5 md:grid-cols-2"><div><h3 className="font-semibold text-purple-900">Documented strengths</h3><ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-6">{view.after.filter((a) => a.status === "supported").map((a) => <li key={a.requirementId}>{view.requirements.find((r) => r.id === a.requirementId)?.description} · candidate-reported</li>)}</ul></div><div><h3 className="font-semibold text-purple-900">Evidence to clarify</h3><ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-6">{view.after.filter((a) => a.status !== "supported").map((a) => <li key={a.requirementId}>If you have experience with “{view.requirements.find((r) => r.id === a.requirementId)?.description}”, provide a specific example. Otherwise, consider a practice project.</li>)}</ul></div></div><p className="mt-5 text-sm leading-6 text-slate-600">Find source records before claiming measured outcomes. Never add a percentage, technology, employer or achievement just because the job asks for it.</p></section>
       </>}
       <p role="status" aria-live="polite" aria-atomic="true" className="my-6 min-h-12 rounded-xl border border-purple-100 bg-white px-4 py-3 text-sm leading-6 text-purple-900">{notice}</p>
-      <footer className="mt-10 border-t border-purple-100 pt-5 text-xs leading-6 text-slate-500">Local evidence workflow · No uploads, storage or model calls. Candidate review never increases coverage. Reviews reset when this page is cleared or reloaded.</footer>
+      <footer className="mt-10 border-t border-purple-100 pt-5 text-xs leading-6 text-slate-500">Local evidence workflow · No {integrated ? "additional uploads" : "uploads"}, storage or model calls. Candidate review never increases coverage. Reviews reset when {integrated ? "the improvement is reset, the resume is replaced/cleared," : "this page is cleared"} or reloaded.</footer>
     </div>
   </div>;
 }

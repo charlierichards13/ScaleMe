@@ -7,6 +7,8 @@ ScaleMe is an AI-powered career preparation platform built at **SunHacks 2026**.
 
 > **Status:** Hackathon MVP in development. The architecture and features below are plans, not claims that they are already implemented.
 
+**Resume Lab private preview:** `/resume-lab` combines PDF extraction, section review and local evidence-backed improvement. Uploaded text is imported automatically; add a target job, clarify your contribution, review exact source statements and confirm them before copying. Onboarding’s access-code Enter key explicitly extracts without advancing the step. The dashboard recognizes parsed data in the same tab, separately from fictional samples; Fit Explorer retains text prefill. Uploads remain disabled by default and require an owner-provided private preview code. No permanent PDF storage or automatic AI call. `/impact-lab` remains a compatibility route using the same component/engine. [Setup, UX, tests and limitations](docs/RESUME_UPLOAD_INTEGRATION.md).
+
 **Contextual interview private preview:** `/interview/contextual` accepts pasted resume/job text and explicit requirements, calls the actual fit/interview APIs, and collects exact candidate-reported answers for future reassessment. It requires owner-authorized private access; live AI stays off by default. `/interview` remains the separate fictional scripted practice. Backend PR #49 still needs human review; no live-model verification is claimed. [Setup, ownership and integration](docs/CONTEXTUAL_INTERVIEW.md).
 
 ## The problem
@@ -155,7 +157,7 @@ npm run dev
 
 Open http://localhost:3000. On Windows PowerShell, if execution policy blocks `npm.ps1`, use `npm.cmd ci` and `npm.cmd run dev` instead.
 
-**Current state:** `/` is the public welcome page and `/onboarding` is a short guest setup that saves nothing (see [docs/WELCOME_ONBOARDING.md](docs/WELCOME_ONBOARDING.md)). The career dashboard is at `/dashboard` (see [docs/DASHBOARD.md](docs/DASHBOARD.md)). Use its *Sample data* switch for a clearly labeled fictional walkthrough. The earlier scripted chat demo lives at `/coach`. Resume analysis, live AI and job listings are still under development. A standalone Rust PDF resume parser exists in `services/resume-parser/` (tested with synthetic PDFs only, not yet connected to the app; see [docs/RESUME_INGESTION.md](docs/RESUME_INGESTION.md)). Rust/Cargo is needed to build it, and AWS credentials will be needed for live AI. An `.env.example` should contain variable names only, without credentials.
+**Current state:** `/` is the public welcome page and `/onboarding` is a short guest setup that saves nothing (see [docs/WELCOME_ONBOARDING.md](docs/WELCOME_ONBOARDING.md)). The career dashboard is at `/dashboard` (see [docs/DASHBOARD.md](docs/DASHBOARD.md)). Use its *Sample data* switch for a clearly labeled fictional walkthrough. The earlier scripted chat demo lives at `/coach`. Resume analysis, live AI and job listings are still under development. The Rust PDF resume parser now has a private, off-by-default Resume Lab upload route and tab-memory Fit Explorer handoff (synthetic data only; see [docs/RESUME_UPLOAD_INTEGRATION.md](docs/RESUME_UPLOAD_INTEGRATION.md)). The root Dockerfile packages Next.js and the Linux parser without deploying anything. Rust/Cargo is needed to build it, and AWS credentials will be needed for live AI. An `.env.example` should contain variable names only, without credentials.
 
 ### Planning and collaboration
 

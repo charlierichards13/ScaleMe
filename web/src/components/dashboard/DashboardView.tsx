@@ -13,6 +13,9 @@ import { HeroPanel } from "./HeroPanel";
 import { NextSteps } from "./NextSteps";
 import { ProfileSummary } from "./ProfileSummary";
 import { RecommendedJobs } from "./RecommendedJobs";
+import { useActiveResume } from "@/lib/resume/active-resume";
+import { dashboardWithResume } from "@/lib/dashboard/active-resume";
+import { DashboardResumeStatus } from "@/components/resume/DashboardResumeStatus";
 
 /**
  * Client container: owns the empty/demo toggle and passes a typed snapshot to
@@ -22,6 +25,8 @@ import { RecommendedJobs } from "./RecommendedJobs";
 export function DashboardView() {
   const [source, setSource] = useState<DataSource>("empty");
   const snapshot = useMemo(() => getDashboardSnapshot(source), [source]);
+  const resume = useActiveResume();
+  const personal = dashboardWithResume(snapshot, resume);
   const isDemo = snapshot.source === "demo";
 
   return (
@@ -42,6 +47,8 @@ export function DashboardView() {
           </Link>
         </div>
       </header>
+
+      {resume && <DashboardResumeStatus resume={resume} isDemo={isDemo} />}
 
       {isDemo && (
         <div
@@ -83,8 +90,8 @@ export function DashboardView() {
             <EvidenceInsights insights={snapshot.insights} isDemo={isDemo} />
           </div>
           <div className="min-w-0 space-y-6">
-            <ProfileSummary profile={snapshot.profile} isDemo={isDemo} />
-            <NextSteps steps={snapshot.nextSteps} />
+            <ProfileSummary profile={personal.profile} isDemo={isDemo} />
+            <NextSteps steps={personal.nextSteps} />
           </div>
         </div>
 

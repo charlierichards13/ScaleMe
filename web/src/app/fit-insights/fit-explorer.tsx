@@ -24,10 +24,11 @@ import {
 import { ApiResults } from "./api-results";
 import OfflineExplorer from "./offline-explorer";
 import "./fit-app.css";
+import type { Resume } from "@/lib/ai/schemas";
 
-export default function FitExplorer() {
+export default function FitExplorer({ uploadedResume }: { uploadedResume?: Resume | null }) {
   const demo = useSearchParams().get("demo") === "true";
-  const [draft, setDraft] = useState<FitDraft>(emptyDraft);
+  const [draft, setDraft] = useState<FitDraft>(() => ({ ...emptyDraft, resume: uploadedResume?.text ?? "" }));
   const [errors, setErrors] = useState<DraftErrors>({});
   const [prepared, setPrepared] = useState(false);
   const [walkthrough, setWalkthrough] = useState(false);
@@ -57,8 +58,8 @@ export default function FitExplorer() {
         </Link>
         <nav aria-label="Career preparation">
           <span aria-current="page">Fit Evidence Explorer</span>
-          <Link href="/impact-lab">
-            Resume Impact Lab <ArrowRight size={15} aria-hidden="true" />
+          <Link href={routes.resumeLab}>
+            Resume Lab <ArrowRight size={15} aria-hidden="true" />
           </Link>
         </nav>
       </header>
@@ -108,8 +109,8 @@ export default function FitExplorer() {
                 Resume text
               </label>
               <p id="fit-resume-help" className="fit-app-help">
-                Paste the experience you want to review. PDF upload is not
-                available yet.
+                Paste the experience you want to review, or use the extracted PDF
+                from Resume Lab. Imported text stays in this tab; nothing is sent automatically.
               </p>
               <textarea
                 id="fit-resume"

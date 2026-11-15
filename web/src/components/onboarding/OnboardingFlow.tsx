@@ -13,6 +13,8 @@ import {
   type StepId,
 } from "@/lib/onboarding/state";
 import { routes } from "@/lib/routes";
+import { useActiveResume } from "@/lib/resume/active-resume";
+import { useResumeUpload } from "@/lib/resume/use-resume-upload";
 import { StepProgress } from "./StepProgress";
 import { GoalsStep, PersonalizeStep, PreferencesStep, ResumeStep } from "./steps";
 
@@ -51,12 +53,15 @@ const quietButton = cx(
 /**
  * Guest-only first-time setup (Issue #43). All answers live in this
  * component's memory and are discarded on reload or navigation. There is no
- * account, storage, or network call. When auth (Issue #42) and persistence
+ * account or storage. Explicit private PDF extraction uses the shared uploader.
+ * When auth (Issue #42) and persistence
  * exist, completion should save these answers server-side and returning users
  * should skip this route.
  */
 export function OnboardingFlow() {
   const [state, dispatch] = useReducer(onboardingReducer, initialOnboardingState);
+  const upload = useResumeUpload();
+  const resume = useActiveResume();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
 
@@ -74,7 +79,7 @@ export function OnboardingFlow() {
   if (state.step === "done") {
     return (
       <Shell progress={<StepProgress current={total} total={total} label="Complete" />}>
-        <DoneScreen answers={state.answers} headingRef={headingRef} onBack={() => dispatch({ type: "back" })} />
+        <DoneScreen answers={state.answers} resumeStatus={resume ? "Extracted · available in this tab" : upload.file ? "PDF selected locally · not extracted" : "Not added yet"} hasParsedResume={!!resume} headingRef={headingRef} onBack={() => dispatch({ type: "back" })} />
       </Shell>
     );
   }
@@ -83,10 +88,11 @@ export function OnboardingFlow() {
   const isFirst = state.step === "resume";
   const isLast = state.step === "personalize";
   const continueLabel =
-    state.step === "resume" && !state.answers.resume ? "Continue without a resume" : isLast ? "Finish setup" : "Continue";
+    state.step === "resume" && !upload.file && !resume ? "Continue without a resume" : isLast ? "Finish setup" : "Continue";
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
+    if (state.step === "resume" && (upload.phase === "processing" || upload.phase === "checking")) upload.cancel();
     dispatch({ type: "next" });
   }
 
@@ -104,7 +110,7 @@ export function OnboardingFlow() {
         <p className="mt-3 text-[15px] leading-7 text-muted">{step.description}</p>
 
         <div className="mt-8">
-          {state.step === "resume" && <ResumeStep answers={state.answers} dispatch={dispatch} />}
+          {state.step === "resume" && <ResumeStep upload={upload} />}
           {state.step === "goals" && <GoalsStep answers={state.answers} dispatch={dispatch} />}
           {state.step === "preferences" && <PreferencesStep answers={state.answers} dispatch={dispatch} />}
           {state.step === "personalize" && <PersonalizeStep answers={state.answers} dispatch={dispatch} />}
@@ -118,7 +124,7 @@ export function OnboardingFlow() {
             </button>
           )}
           <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-            <button type="button" onClick={() => dispatch({ type: "skip" })} className={quietButton}>
+            <button type="button" onClick={() => { if (state.step === "resume") upload.clear(); dispatch({ type: "skip" }); }} className={quietButton}>
               Skip for now
             </button>
             <button type="submit" className={primaryButton}>
@@ -145,10 +151,14 @@ function DoneScreen({
   answers,
   headingRef,
   onBack,
+  resumeStatus,
+  hasParsedResume,
 }: {
   answers: OnboardingAnswers;
   headingRef: RefObject<HTMLHeadingElement | null>;
   onBack: () => void;
+  resumeStatus: string;
+  hasParsedResume: boolean;
 }) {
   const summary = summarizeAnswers(answers);
   const support = [
@@ -177,7 +187,7 @@ function DoneScreen({
         {summary.map((row) => (
           <div key={row.label} className="grid gap-1 px-5 py-3.5 sm:grid-cols-[10rem_1fr] sm:gap-4">
             <dt className="text-sm font-medium text-muted">{row.label}</dt>
-            <dd className="break-words text-sm text-ink">{row.value}</dd>
+            <dd className="break-words text-sm text-ink">{row.label === "Resume" ? resumeStatus : row.value}</dd>
           </div>
         ))}
         <div className="grid gap-1 px-5 py-3.5 sm:grid-cols-[10rem_1fr] sm:gap-4">
@@ -187,6 +197,8 @@ function DoneScreen({
       </dl>
 
       <div className="mt-10 flex flex-wrap items-center gap-2 border-t border-line pt-6">
+        <Link href={routes.resumeLab} className={quietButton}>Open Resume Lab</Link>
+        {hasParsedResume && <Link href={routes.fitInsights} className={quietButton}>Open Fit Explorer</Link>}
         <button type="button" onClick={onBack} className={quietButton}>
           <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           Edit answers

@@ -1,9 +1,9 @@
 /**
  * Client-side checks for the optional resume picker in onboarding.
  *
- * These checks are UX only. They are NOT a security control: the file never
- * leaves the browser, and any future upload must repeat every check on the
- * server (type, size, magic bytes, parser time/page limits). See Issue #4.
+ * These checks are UX only. Selection never sends a request; explicit private
+ * extraction repeats validation on the server. Shared upload validation lives
+ * in lib/resume/client.ts. The metadata helpers remain for existing consumers.
  */
 
 export const MAX_RESUME_BYTES = 5 * 1024 * 1024;

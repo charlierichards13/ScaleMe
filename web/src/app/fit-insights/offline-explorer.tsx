@@ -485,13 +485,13 @@ export default function OfflineExplorer() {
             </p>
             <h2>Take evidence into your next draft.</h2>
             <p>
-              Explore grounded writing in the Resume Impact Lab, a separate
-              fictional demo. Evidence and selections do not transfer between
-              pages.
+              Explore grounded writing in Resume Lab with your own synthetic
+              input or an explicitly selected fictional sample. This demo’s
+              evidence and selections do not transfer.
             </p>
           </div>
-          <Link className={css("secondary")} href="/impact-lab">
-            Explore Impact Lab <span aria-hidden="true">→</span>
+          <Link className={css("secondary")} href="/resume-lab">
+            Explore Resume Lab <span aria-hidden="true">→</span>
           </Link>
         </section>
         <footer className={css("footer")}>
