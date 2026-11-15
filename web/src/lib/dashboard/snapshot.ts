@@ -28,37 +28,38 @@ export function getDashboardSnapshot(source: DataSource): DashboardSnapshot {
   return { source, profile, jobs: [], insights: [], nextSteps: getNextSteps(profile, false) };
 }
 
-/** Suggests the next meaningful actions from what the user actually has. */
+/**
+ * Suggests pages that work in this build. The fit explorer does not read
+ * this dashboard profile, and interview answers stay on the interview page.
+ */
 export function getNextSteps(profile: CandidateProfile, hasInsights: boolean): NextStep[] {
   const steps: NextStep[] = [];
 
   if (!profile.hasResume) {
     steps.push({
-      id: "add-resume",
-      title: "Add your resume",
-      description: "Everything else builds on your real experience.",
-      href: routes.resumeLab,
-      cta: "Add resume",
+      id: "review-sample-resume",
+      title: "Review a sample resume story",
+      description: "Confirm sample quotes, then copy a supported bullet.",
+      href: routes.impactLab,
+      cta: "Open sample",
+    });
+  } else {
+    steps.push({
+      id: "explain-project",
+      title: "Review a sample resume story",
+      description: "Confirm sample quotes, then copy a supported bullet.",
+      href: routes.impactLab,
+      cta: "Open sample",
     });
   }
 
   if (!profile.targetRole) {
     steps.push({
-      id: "set-goal",
-      title: "Set a target role",
-      description: "Tell ScaleMe what kind of role and timeline you're aiming for.",
-      href: routes.settings,
-      cta: "Set goals",
-    });
-  }
-
-  if (profile.hasResume) {
-    steps.push({
-      id: "explain-project",
-      title: "Explain a project more clearly",
-      description: "Answer follow-up questions about problem, decisions and impact.",
-      href: routes.impactLab,
-      cta: "Start",
+      id: "preview-goals",
+      title: "Preview goal setup",
+      description: "Optional questions for this visit.",
+      href: routes.onboarding,
+      cta: "Open setup",
     });
   }
 
@@ -66,22 +67,22 @@ export function getNextSteps(profile: CandidateProfile, hasInsights: boolean): N
     hasInsights
       ? {
           id: "review-gaps",
-          title: "Clarify unclear evidence",
-          description: "Some requirements need more detail before they count as supported.",
-          href: routes.fit,
-          cta: "Review",
+          title: "Open the fit explorer",
+          description: "Prepare a resume and job on this device, or open a fictional sample. Live analysis is off.",
+          href: routes.fitInsights,
+          cta: "Open explorer",
         }
       : {
-          id: "analyze-role",
-          title: "Analyze a role",
-          description: "Compare your experience with a job description.",
-          href: routes.fit,
-          cta: "Analyze",
+          id: "open-sample-fit",
+          title: "Open the fit explorer",
+          description: "Prepare a resume and job on this device, or open a fictional sample. Live analysis is off.",
+          href: routes.fitInsights,
+          cta: "Open explorer",
         },
     {
       id: "mock-interview",
       title: "Practice a mock interview",
-      description: "Rehearse explaining your decisions out loud.",
+      description: "A fixed script. Reread your own words.",
       href: routes.interview,
       cta: "Practice",
     },

@@ -34,7 +34,7 @@ export function RecommendedJobs({ jobs, showAuthorization }: { jobs: JobPreview[
         }
         action={
           <Link href={routes.discover} className={buttonStyles.ghost}>
-            Discover more
+            About Discover
             <ArrowRight aria-hidden="true" className="h-4 w-4" />
           </Link>
         }
@@ -42,11 +42,11 @@ export function RecommendedJobs({ jobs, showAuthorization }: { jobs: JobPreview[
       {jobs.length === 0 ? (
         <EmptyState
           icon={<Compass className="h-5 w-5" />}
-          title="No recommendations yet"
-          description="Live job listings aren't connected yet. Add your resume and goals now so recommendations are relevant when they arrive."
+          title="No roles on this page"
+          description="Turn on sample data to see fictional roles."
           action={
-            <Link href={routes.discover} className={buttonStyles.secondary}>
-              Preview Discover
+            <Link href={routes.interview} className={buttonStyles.secondary}>
+              Practice an interview
             </Link>
           }
         />

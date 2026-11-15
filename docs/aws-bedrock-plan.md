@@ -6,6 +6,8 @@
 
 ## Keep the first deployment small
 
+**Contextual interview private preview:** both paid Next.js routes now also require an owner-configured `SCALEME_PRIVATE_AI_TOKEN` and the tester's corresponding bearer access code, enforced by `src/proxy.ts`. `FIT_LIVE_AI_ENABLED=false` is explicit in `.env.example`. Missing/invalid access settings fail closed; AWS settings alone cannot grant browser access. `/api/practice/access` is a free authorization check. See [authorized private setup and limitations](CONTEXTUAL_INTERVIEW.md). Do not enable, invoke paid models, deploy, change IAM or reuse AWS credentials as the app code without owner approval. Existing per-process budgets and AWS role requirements remain in place.
+
 For the hackathon, use **Next.js Route Handlers in `web/src/app/api/`** as the server boundary:
 
 ```text
@@ -81,6 +83,7 @@ We did **not** activate Advanced Features. Activation is irreversible and remove
 | Item | Status |
 | --- | --- |
 | `POST /api/fit/analyze` using the Bedrock Runtime **Converse** API (`@aws-sdk/client-bedrock-runtime`) | Implemented |
+| `POST /api/interview/next`: same client, live switch and shared cost budget; 400 output tokens per turn | Implemented, mock-tested only (no live call). See [INTERVIEW_API.md](INTERVIEW_API.md) |
 | Request/response validation, evidence-quote checking, advice grounding, safe errors, labeled `?demo=true` | Implemented, covered by **mocked** unit tests (95 tests in `web/`; no network, no credentials) |
 | Real Bedrock invocation through ScaleMe | **Verified once** (2026-11-15): one synthetic request, HTTP 200, `X-ScaleMe-Mode: live`, about 4.5 s end to end. See "First live test" below |
 | Real prompt-injection resistance, behavior across varied inputs, cost per call at scale | **NOT VERIFIED.** One clean synthetic request does not establish these |

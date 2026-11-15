@@ -5,16 +5,16 @@ import { getStartedHref } from "@/lib/auth-status";
 import { routes } from "@/lib/routes";
 import { container } from "./styles";
 
-const footerLink = cx("rounded text-sm text-muted transition-colors hover:text-ink", buttonStyles.focusRing);
+const footerLink = cx("rounded text-sm text-slate-300 transition-colors hover:text-white", buttonStyles.focusRing, "focus-visible:ring-brand-highlight focus-visible:ring-offset-ink");
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-line">
+    <footer className="border-t border-white/10 bg-ink">
       <div className={cx(container, "flex flex-col gap-10 py-12 md:flex-row md:items-start md:justify-between")}>
         <div className="max-w-sm">
-          <Logo />
-          <p className="mt-4 text-sm leading-6 text-muted">
-            An AI career workspace for discovering opportunities, understanding your fit, and preparing for interviews.
+          <Logo surface="dark" />
+          <p className="mt-4 text-sm leading-6 text-slate-300">
+            Interview practice and labeled sample stories, in one workspace.
           </p>
         </div>
         <nav aria-label="Footer">
@@ -42,7 +42,7 @@ export function SiteFooter() {
           </ul>
         </nav>
       </div>
-      <div className={cx(container, "border-t border-line py-6 text-xs leading-5 text-muted")}>
+      <div className={cx(container, "border-t border-white/10 py-6 text-xs leading-5 text-slate-300")}>
         <p>© 2026 ScaleMe · A SunHacks 2026 project. Sample content in the demo is fictional.</p>
       </div>
     </footer>

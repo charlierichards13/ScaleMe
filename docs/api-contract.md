@@ -4,6 +4,18 @@
 **Clients:** Next.js responsive web/PWA first; an optional Expo native client later uses the same HTTP endpoints.  
 **Design rules:** JSON over HTTPS, TypeScript-friendly types, stable error shapes, evidence-backed claims, no fabricated skills or outcomes.
 
+## Contextual client private-preview access (additive transport requirement)
+
+The contextual client consumes PR #49's `{ resume, job, history, fit? } → { turn }` contract without changing those schemas. The PR remains unreviewed; adoption is conditional on human review. See [integration and local evidence handoff](CONTEXTUAL_INTERVIEW.md).
+
+- The Next.js server proxy gates **both** `/api/fit/analyze` and `/api/interview/next` before paid handlers. Live requests require `FIT_LIVE_AI_ENABLED=true`, a valid server-only `SCALEME_PRIVATE_AI_TOKEN`, and `Authorization: Bearer <owner-provided private access code>`. The code is an application access credential, never an AWS credential. The server does not inject it into HTML or JavaScript. Client-provided code lives in component memory only.
+- Default-off or missing/invalid private access configuration: `503 AI_UNAVAILABLE`, non-retryable. Configured but missing/wrong access code: `401 PRIVATE_ACCESS_REQUIRED`, non-retryable. Wrong `Origin` or cross-site browser request: `403 PRIVATE_ACCESS_REQUIRED`, non-retryable. Responses are generic and `Cache-Control: no-store`; no submitted values are echoed. These checks precede body parsing and quota acquisition at the HTTP boundary. Direct handler unit tests do not exercise the proxy.
+- Exact `?demo=true` continues to bypass paid access for the existing fixed, labeled, body-ignoring demos. No fallback from live to demo is automatic.
+- `POST /api/practice/access` uses the same access gate, returns `{ "available": true }` on success, and never reads a body, calls AWS or acquires quota. `?demo=true` does not bypass this route. This confirms private-preview access only; AWS readiness is checked by subsequent paid handlers.
+- Client calls omit cookies, prohibit redirects, and require `X-ScaleMe-Mode: live` for analysis/interview output. Timeout is 55 seconds (default server timeout 45 seconds); responses are bounded to 200 KB. Retrying or cancelling does not refund or undo a model request already accepted by the server.
+
+This shared private-preview credential is not a user account/session system, a distributed quota, or public-launch authorization. Deploy only with server-side proxy support and HTTPS in an authorized private environment after human review. No deployment is part of this change.
+
 ## Architecture choice for the hackathon
 
 Start with **Next.js Route Handlers** in `web/src/app/api/` so the frontend can integrate quickly. The handlers may call Amazon Bedrock directly from the server. If AWS deployment calls for it, move the same handlers behind API Gateway/Lambda without changing the client contract.
@@ -78,12 +90,14 @@ export type FitAnalysis = {
 export type InterviewTurn = {
   role: "coach" | "candidate";
   content: string;
+  targetRequirementId?: string; // additive (implemented): coach turns only, echoed back from InterviewResponse
 };
 
 export type InterviewResponse = {
   coachMessage: string;
   focus: "context" | "contribution" | "tradeoffs" | "impact" | "reflection";
   canFinish: boolean;
+  targetRequirementId?: string; // additive (implemented): server-chosen; absent in general sessions
 };
 
 export type ImpactSuggestion = {
@@ -143,9 +157,8 @@ export type DiscoveryExtension = {
   after: CoverageSnapshot;
 };
 
-export type TargetedInterviewResponse = InterviewResponse & {
-  targetRequirementId?: string; // required once targeted questioning ships
-};
+// Implemented for /api/interview/next: `targetRequirementId` now lives on InterviewResponse itself.
+export type TargetedInterviewResponse = InterviewResponse;
 
 export type GuardedImpactSuggestion = Omit<ImpactSuggestion, "improved"> & {
   improved?: string; // absent when a proposed claim is blocked
@@ -274,19 +287,52 @@ Clients should wait at least `Retry-After` seconds before retrying, retry at mos
 
 ### `POST /api/interview/next`
 
-**Request:**
+**Status:** implemented (server route `web/src/app/api/interview/next/route.ts`, logic in `web/src/lib/ai/interview*.ts`). Unit tests use **mocked** Bedrock only; live behavior is not verified. Guarded by the same live switch and the **same** per-process cost budget as `/api/fit/analyze`.
+
+**Request** (v0.1 shape still valid; `fit` and the echoed `targetRequirementId` are optional additions):
 ```json
 {
   "resume": { "id": "resume-demo", "text": "Software engineer who built an internal employee portal." },
-  "job": { "id": "job-demo", "title": "Software Engineer Intern", "text": "Experience with APIs and testing" },
+  "job": {
+    "id": "job-demo",
+    "title": "Software Engineer Intern",
+    "text": "Experience with APIs and testing",
+    "requirements": [
+      { "id": "r1", "description": "Experience with APIs", "importance": "required" },
+      { "id": "r2", "description": "Experience testing web applications", "importance": "required" }
+    ]
+  },
   "history": [
-    { "role": "coach", "content": "What problem did your portal solve?" },
-    { "role": "candidate", "content": "It reduced navigation between several internal resources." }
-  ]
+    { "role": "coach", "content": "How did you check the portal before colleagues used it?", "targetRequirementId": "r2" },
+    { "role": "candidate", "content": "I checked that it worked before we launched it." }
+  ],
+  "fit": { "assessments": [ { "requirementId": "r1", "status": "supported" }, { "requirementId": "r2", "status": "not_evidenced" } ] }
 }
 ```
-**Response:** `{ "turn": InterviewResponse }`.  
-**Behavior:** Ask one focused follow-up at a time, citing the user's own previous details. The initial request may use an empty `history` array. Limit history length and input size.
+
+**Response:** `{ "turn": InterviewResponse }`, for example `{ "turn": { "coachMessage": "...", "focus": "impact", "canFinish": false, "targetRequirementId": "r2" } }`. Header `X-ScaleMe-Mode: live`.
+
+**Validation and limits** (all before any live-AI gate, budget use or AWS call):
+- `resume` and `job` use the same schemas and limits as `/api/fit/analyze`. Body max 200,000 bytes, read in a bounded stream.
+- `history`: required array (may be empty), at most **12** turns; each `content` is trimmed, 1–2,000 characters. Turns must start with `coach`, alternate, and end with a `candidate` answer. Only coach turns may carry `targetRequirementId`.
+- `job.requirements` ids must be unique.
+- `fit` (optional): `{ assessments: [{ requirementId, status }] }`, at most 30. Other `RequirementAssessment` fields (`explanation`, `evidence`) are accepted but **stripped and never used**. Every id must exist in `job.requirements`, at most once each. `fit` without `job.requirements` is rejected, because those ids cannot be checked.
+
+**Server-selected target (deterministic, model cannot override):**
+- Client fit statuses are **untrusted and unverified**. They only order the questions; they are never treated as evidence and never change a status.
+- Unresolved requirements are ordered `not_evidenced`, then `unclear`, then not assessed (no fit entry), then by importance (`required`, `preferred`, `unspecified`), then posting order. `supported` requirements are skipped.
+- Each target gets **two** questions: `contribution` (what the candidate did), then a narrower `impact` follow-up on the same requirement, based on the latest answer (missing detail if vague; how it was checked / what changed if specific, with "not measured" accepted). At most 5 targeted questions, then one untargeted `reflection` question.
+- **General session:** if the job has no structured requirements, or all are `supported`, turns have **no** `targetRequirementId` and follow `context`, `contribution`, `tradeoffs`, `impact`, `reflection`.
+- Turn *k* of a session is plan step *k*, so the server keeps no session state. An echoed `targetRequirementId` must equal what the server planned for that turn; a mismatch (different job/fit or edited history) is `INVALID_HISTORY`. v0.1 clients may omit it.
+- After the last question the server returns a **closing** turn (no question, `focus: "reflection"`, `canFinish: true`). A request answering past it is `INVALID_HISTORY`. `canFinish` is also `true` once the candidate has given 4 answers, and on the reflection turn.
+
+**Model output checks:** the model returns only `{ "coachMessage": string }` (max 1,000 characters); any other key is ignored. Focus, target and `canFinish` always come from the server. The message must contain exactly one `?` (zero for the closing turn), no number that does not appear in the resume, job, requirement descriptions or history, and no hiring-probability/score/guarantee language. A failure returns **`502 INVALID_AI_RESPONSE`** (`retryable: true`). The route never substitutes a scripted question for rejected live output.
+
+**Errors:** `INVALID_REQUEST` (400 malformed JSON / 413 too large), `INVALID_RESUME`, `INVALID_JOB`, `INVALID_HISTORY`, `INVALID_FIT_CONTEXT` (400, not retryable); `AI_UNAVAILABLE` (503 live switch off / not configured; 503/504 AWS problems); `RATE_LIMITED` (429 with `Retry-After`, shared with fit analysis); `INVALID_AI_RESPONSE` (502).
+
+**Demo mode:** `POST /api/interview/next?demo=true&step=N` (N = 0–3, default 0) returns a fixed, hand-written synthetic step for the "testing the portal" story in [DIFFERENTIATION.md](DIFFERENTIATION.md), using the fit demo ids (`r2` is the target). The body is **not read**, AWS is not called, and it needs no AWS settings and no budget. Header `X-ScaleMe-Mode: demo` and `X-ScaleMe-Demo-Label`; every `coachMessage` begins with `DEMO:`. The coach messages respond to the **sample answers** in `DEMO_INTERVIEW_STEPS` (`web/src/lib/ai/interview-demo.ts`), not to what a user types. Other `step` values return 400 `INVALID_REQUEST`. The route never falls back to demo on its own.
+
+**Not in this endpoint:** evidence records, `candidate_reported`/`candidate_confirmed` links and reassessment. An interview answer does **not** change any fit status yet; the reassessment route is still an open decision (see the v0.2 rules above).
 
 ### `POST /api/impact/rewrite`
 
@@ -364,7 +410,7 @@ These are deterministic keyword/alias signals, not final judgments of candidate 
 1. Build the full UI from **synthetic mocked responses** that conform to these contracts.
 2. Implement PDF and pasted job inputs.
 3. Wire `fit/analyze` to Bedrock and Rust; handle loading/errors.
-4. Wire `interview/next` and `impact/rewrite`.
+4. Wire `interview/next` (backend implemented; UI wiring pending) and `impact/rewrite`.
 5. Add PWA manifest and icons, test mobile layout, then consider a separate Expo client.
 
 ## Decisions to finalize before implementation
@@ -378,3 +424,35 @@ These are deterministic keyword/alias signals, not final judgments of candidate 
 - PDF size limit: the Rust parser enforces 5 MiB (Issue #4). The upload route must enforce the same limit on the request stream before public upload.
 - Optional job-URL ingestion: secure and best-effort only; text input is guaranteed.
 - Mobile: prioritize responsive PWA; Expo is a separate stretch project sharing API contracts.
+
+## Branch-local P0 contextual completion (no wire change)
+
+`/interview/contextual` now reuses `collectEvidence()` → `fromFitAnalysis()` →
+`fromCandidateTurn()` → the existing ledger → embedded Impact Lab. Resume/job IDs,
+requirement inventory, initial analysis and candidate turns stay in one in-memory
+React session. Candidate-selected `subjectId` metadata is local and is **not** added
+to the interview HTTP history. No `/api/fit/reassess` or `/api/impact/rewrite` route
+is implemented by this integration. The existing `fit` statuses still only order
+backend questions. Local report counts are recomputed, never submitted as trusted
+server state. [Behavior and limitations](CONTEXTUAL_INTERVIEW.md#p0-completion-integration-supersedes-forthcoming-engine-above).
+
+## Fit Evidence Explorer client integration (demo only)
+
+The frontend at `/fit-insights` consumes the existing v0.1 fit response through
+`web/src/lib/fit/client.ts`, reusing browser-safe schemas in `lib/ai/schemas.ts`. No wire
+types, backend limits, handlers or demo payloads change. Local draft checks mirror the
+existing field/encoded-body limits; they do not run analysis.
+
+Explicit `/fit-insights?demo=true` selection reveals a separate load action. Only that
+user action makes a bodyless `POST /api/fit/analyze?demo=true`; it never submits drafts.
+The client validates analysis, `X-ScaleMe-Mode: demo` and existing DEMO text markers and
+never synthesizes fallback results. Live invocation rejects before network access pending
+a separately authorized client change. PR #38's backend security controls are now merged;
+that does not activate the browser's live path.
+
+v0.1 returns IDs but no extracted descriptions/importance or per-assessment question links.
+The UI shows IDs, overall questions and returned-assessment status counts without inventing
+a required denominator. HTTP 429 uses Retry-After and a visible manual-retry cooldown.
+PR #38 adds per-process shared live-call limits; the fictional demo bypasses those limits.
+Grounding can leave advice lists empty, which the client accepts and displays explicitly. See
+[functional scope, tests and activation requirements](FIT_INSIGHTS_INTEGRATION.md).

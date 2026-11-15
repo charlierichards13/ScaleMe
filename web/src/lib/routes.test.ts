@@ -63,6 +63,32 @@ describe("welcome / dashboard split (Issue #43)", () => {
   });
 });
 
+describe("navigation matches what works today", () => {
+  it("sends Fit and Mock Interviews to the pages that already exist", () => {
+    expect(primaryNav.find((item) => item.label === "Fit Analysis")).toMatchObject({
+      href: routes.fitInsights,
+      status: "Preview",
+    });
+    expect(primaryNav.find((item) => item.label === "Mock Interviews")).toMatchObject({
+      href: routes.interview,
+      status: "Practice",
+    });
+    expect(primaryNav.find((item) => item.label === "Career Coach")).toMatchObject({
+      href: routes.coach,
+      status: "Practice",
+    });
+  });
+
+  it("does not describe a page as Soon or as live AI", () => {
+    const items = [...primaryNav, ...secondaryNav];
+    const text = items.map((item) => `${item.label} ${item.status ?? ""}`).join("\n");
+    expect(text).not.toMatch(/\bSoon\b/);
+    expect(text).not.toMatch(/\bAI\b/);
+    expect(secondaryNav.find((item) => item.href === routes.settings)?.status).toBe("Planned");
+    expect(primaryNav.find((item) => item.href === routes.discover)?.status).toBe("Planned");
+  });
+});
+
 describe("account entry points vs. working accounts (Issue #42 boundary)", () => {
   it("accounts are not enabled in this build", () => {
     expect(accountsEnabled).toBe(false);

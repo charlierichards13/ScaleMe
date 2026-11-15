@@ -6,6 +6,16 @@
 
 This document is a required reference for any change that introduces a service, data field, input source, privileged tool, persistence, or external call. **Statuses below mean proposed controls until verified in code and tests.**
 
+## Contextual interview private-preview update (2026-11-15)
+
+This branch supersedes the historical "unauthenticated paid route" descriptions below at the **Next.js HTTP boundary**: `src/proxy.ts` guards both paid endpoints with a high-entropy owner-provided bearer access code and the existing default-off live switch. No shared UI, existing API handler or model prompt is replaced. Exact `demo=true` remains the free body-ignoring route. `/api/practice/access` checks authorization without AWS or quota use. Configuration is server-only; the browser receives no environment access code or AWS credential. A tester's manually entered app code lives in React memory, travels only in Authorization, and is cleared on finish/reset. Wrong/missing code and wrong-origin requests fail before paid handlers; errors are generic, uncached and contain no applicant text. No cookies are added.
+
+The new `/interview/contextual` client explicitly sends resume/job/requirements, then full previous interview questions/answers and fit statuses to the existing APIs after disclosure and consent. React renders text, runtime schemas validate responses, every structured requirement must appear once, and unsupported/unknown provenance is rejected. Browser requests and responses are bounded, redirects prohibited, timeout/cancellation handled, and retries require an explicit click. Already admitted model calls may complete/be billed after cancellation. No persistence, logging of user text, telemetry, tools or external job/PDF ingestion is introduced. The local evidence handoff retains exact candidate-reported answers and question targets without asserting relevance or changing support statuses.
+
+**Verified with mocked AWS:** three distinct fictional profiles/jobs, full five-answer sessions, previous answers in prompts, target continuity, no cross-profile leakage, no raw text/code in logs, retry preservation, anonymous denial, malformed/wrong-mode outputs, free demos and off-by-default configuration. Browser/production HTTP verification is recorded in the PR. These checks do not verify live model quality, provider retention, prompt-injection resistance or public-hosting behavior.
+
+**Remaining risks:** shared private code grants access to a whole preview budget, provides no individual identity or per-user fairness, and requires secure owner distribution/rotation and HTTPS. No new account/database is added. The per-process cost budget remains restartable and is not a distributed hard cap. The access gate requires a Next.js server that executes proxy; direct route exports are internal functions, not independently authorized service entry points. Reconcile with future authentication/proxy changes and review the actual hosting boundary before any deployment. Do not deploy publicly; #49 still needs human review. Real personal data requires the existing provider retention/privacy review. [Integration and setup](../CONTEXTUAL_INTERVIEW.md).
+
 ## Security goals
 
 1. Protect private candidate data, interview history, credentials and service logs.
@@ -85,7 +95,7 @@ Status: merged to `main` in PR #33 after self-review by the implementing agent; 
 
 ## Issue #4 private upload follow-up (`feat/resume-upload-integration`)
 
-**Current flow:** browser multipart PDF → private Node route → short-lived Rust child → schema-validated Resume JSON → browser tab memory. A separate explicit consented Fit Explorer action can send Resume/job text to the existing Bedrock route. Upload/navigation alone calls no AI. No PDF, filename, token, parser output or raw exception is logged by this integration; no server or browser-storage resume persistence is added.
+**Current flow:** browser multipart PDF → private Node route → short-lived Rust child → schema-validated Resume JSON → browser tab memory. The existing Fit Explorer is seeded with extracted text; its intentional live-AI lock remains in place. No new AI invocation path is added. Upload/navigation alone calls no AI. No PDF, filename, token, parser output or raw exception is logged by this integration; no server or browser-storage resume persistence is added.
 
 **Admission:** disabled by default; server-only enable flag and required private Bearer code (timing-safe digest comparison), browser-origin/fetch-site validation before body read. One upload/child and six authenticated attempts/minute per Node process, numeric state only. This is a shared-code private prototype, not accounts, distributed abuse protection or approval for public uploads.
 
@@ -173,6 +183,25 @@ Status: AWS configuration verified by the coding agent with read-only calls and 
 - **No audit-log review.** CloudTrail was not reviewed, because the restricted role has no CloudTrail access and the test did not use the admin profile for it.
 - **One sample only.** Live behaviour was checked on a single clean synthetic request. Adversarial and benchmark runs are still to do and each needs separate approval.
 
+## Issue #7 interview coach API
+
+Status: implemented on `feat/interview-next-api` and **mock-tested only** (mocked Bedrock, synthetic data). No live call has been made for this route; it is not independently reviewed. Code: `web/src/app/api/interview/next/route.ts`, `web/src/lib/ai/interview*.ts`. Details: [INTERVIEW_API.md](../INTERVIEW_API.md).
+
+**Persistence clarification:** Today (Issue #7 API): no interview histories are persisted. The client re-sends history each turn and the server keeps none. This clarification lives here so the parser's separate hosting/open-decision additions can integrate unchanged.
+
+**Data flow introduced:** on each live turn the full resume text, job title/company/text, requirement descriptions and the **whole interview history so far** (up to 12 turns of 2,000 characters) leave the server for Bedrock, the same provider and region as fit analysis. Interview answers are new personal data sent to the model. Client-supplied fit `explanation`/`evidence` fields are stripped and **not** sent. Nothing is stored or logged; the history is re-sent by the client every turn.
+
+**Trust boundaries touched:** a second unauthenticated, cost-bearing route. It is gated by the same `FIT_LIVE_AI_ENABLED` switch and draws on the **same** in-process limiter as `/api/fit/analyze` (one budget for both, owner decision 2026-11-15), so it adds no separate inference path and does not raise the call ceiling. `?demo=true` reads no body and calls no AWS.
+
+**Controls in code (mock-tested):** bounded body read; Zod schemas for resume, job, history (at most 12 turns, 1-2,000 characters, strict role alternation) and fit context (known, unique requirement ids only); a deterministic server-side question plan the model cannot change (the model returns only `coachMessage`; any other key is discarded); an echoed `targetRequirementId` must match the server's plan; every history turn (including client-written "coach" turns) and the requirement text are wrapped in random-token tags as untrusted data; output checks for exactly one question, no number absent from the inputs, and no hiring-probability/score language, failing with a safe 502 and **no scripted substitute**; all request checks run before the live switch and budget, so invalid requests cost nothing; output-token cap of 400 per turn; logs contain only fixed reason strings and numeric usage (canary-tested).
+
+**Known residual risks:**
+- Same cost-guard limits as fit analysis (per process, no per-user fairness). One interview uses up to 7 calls of the shared budget (default 50/day), so a few sessions can exhaust it.
+- History is not bound to earlier server responses. A client can rewrite earlier coach turns or answers; only the target check, tagging and output checks limit what that achieves.
+- Client fit statuses are unverified. A false status only changes question order; it never becomes evidence.
+- Prose risks remain: a follow-up can still imply an achievement without a number, be irrelevant, or be steered by injected text. Only the checks above are enforced in code; none is tested against a live model.
+- The number check matches digits only: a number written as words ("forty percent") is not caught.
+
 ## Review triggers
 
 ### Fit Evidence Explorer prototype (Issue #40)
@@ -188,17 +217,29 @@ a live evidence ledger, or the proposed v0.2 API contract. Future integration ne
 server-side provenance/relevance validation and existing privacy/cost reviews.
 See [scope and verification](../FIT_INSIGHTS_DEMO.md).
 
-### Resume Impact Lab prototype (Issue #8)
+### Resume Impact Lab and evidence ledger (Issue #8)
 
-`/impact-lab` is an isolated browser UI using bundled **FICTIONAL DEMO** fixtures.
-It introduces no API handler, applicant input, model call, authentication, or persistence.
-Review state is component-local; the only outgoing content action is an explicit user
-copy to the browser clipboard after all linked sample statements are candidate-confirmed.
-Rejection locks copying again. React renders all quotes as text. Missing metrics are
-excluded and cannot be confirmed. Candidate confirmation is not external verification.
-The fixed-fixture guard is not suitable for arbitrary model output: live integration
-still requires server-side provenance/claim validation and the existing AI/privacy/cost
-reviews. See [demo scope and verification](../IMPACT_LAB_DEMO.md).
+`/impact-lab` now accepts resume/job text and targeted candidate answers in browser
+memory. It adds no API handler, upload, network/model call, authentication or storage.
+Strict internal schemas validate types/lengths, exact source spans, full answer turns,
+requirement IDs and fixed before/after inventories. A conservative English lexical
+reviewer gates support; it is **not** semantic entailment or independent verification.
+Known instruction/negative/hypothetical patterns block support; unknown wording can
+remain unresolved, and complex attribution or mixed polarity may be misclassified.
+There is no claim that these heuristic checks resist every prompt injection.
+
+React renders all quotes as text. Proposals join exact supported candidate sentences;
+arbitrary added metrics, employers, skills or outcomes cannot pass the extractive
+wording guard. Candidate confirmation gates explicit clipboard copying, but does not
+verify truth or increase coverage. Undo locks copying; a recorded contradiction blocks
+the former proposal. All records explicitly carry `independentlyVerified: false`.
+No raw text is logged. Immutable transitions and copied views avoid shared session
+state; reset/reload clears inputs and reviews. Unit and production-browser tests use
+synthetic data, including multiple distinct inputs, invalid provenance, changed IDs,
+malicious answers and unsupported metrics. Existing API/privacy/cost launch gates still
+apply to any future server/model integration. The implemented v0.1 fit/turn adapters
+are not adoption of v0.2 or automatic wiring to #7/#46. See
+[implementation, limits and proposed handoff](../EVIDENCE_LEDGER.md).
 
 Update this file whenever an agent changes:
 - External service/model provider, prompt contents, tool permissions, inference settings, pricing or rate limits.
@@ -228,3 +269,18 @@ Capture the change in the same PR and add corresponding tests to [Review Checkli
 - Will job URL retrieval be restricted to a documented allowlist or delegated to a trusted provider?
 
 Record answers as dated decisions in this file. No agents should silently make these policy decisions.
+
+## P0 interview completion → Impact Lab
+
+The contextual page now holds the evidence ledger/report in its existing ephemeral
+React session. No new server route, data recipient, inference call, logging, storage,
+dependency or permission is added. A candidate explicitly selects an exact resume
+span per answer; absent associations are skipped. Whole candidate quotations and
+metadata are reconstructed against the transcript. Unique normalized resume citations
+resolve to exact spans; missing/ambiguous citations lose baseline support. Internal
+ledger schemas/reviewer revalidate sources, targets, relevance and unchanged inventory.
+Counts and proposals are computed locally; this client report must never be accepted
+as an authoritative server assessment in a future API. Confirmation changes review
+state only, never coverage. Rebuilding clears confirmations; contradictions block
+copying. English lexical relevance limitations and provider/public-launch risks remain.
+See the P0 section in [contextual integration](../CONTEXTUAL_INTERVIEW.md).

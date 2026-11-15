@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
-import FitExplorer from "./fit-explorer";
+import { Suspense } from "react";
 import ResumeFitWorkspace from "./resume-fit-workspace";
 
 export const metadata: Metadata = {
   title: "Fit Evidence Explorer | ScaleMe",
-  description:
-    "Inspect a fictional candidate’s documented evidence. An offline demo, not a hiring prediction.",
+  description: "Prepare extracted resume and job drafts and inspect clearly labeled fictional evidence. Live analysis is not available here yet.",
 };
 export default function FitInsightsPage() {
-  return <ResumeFitWorkspace><FitExplorer /></ResumeFitWorkspace>;
+  return (
+    <Suspense fallback={<p role="status">Loading Fit Evidence Explorer…</p>}>
+      <ResumeFitWorkspace />
+    </Suspense>
+  );
 }

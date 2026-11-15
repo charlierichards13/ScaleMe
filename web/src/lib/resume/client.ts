@@ -1,4 +1,4 @@
-import { FitAnalysisSchema, FitRequestSchema, ResumeSchema, type Resume } from "@/lib/ai/schemas";
+import { ResumeSchema, type Resume } from "@/lib/ai/schemas";
 
 export async function uploadResume(file: File, token: string, signal: AbortSignal): Promise<Resume> {
   if (file.size === 0 || file.size > 5 * 1024 * 1024) throw new Error("Choose a nonempty PDF no larger than 5 MiB.");
@@ -25,16 +25,4 @@ export async function uploadResume(file: File, token: string, signal: AbortSigna
     throw new Error(messages[response.status] ?? "The PDF could not be processed.");
   }
   return ResumeSchema.parse((await response.json()).resume);
-}
-
-export async function analyzeUploadedResume(resume: Resume, title: string, text: string, signal: AbortSignal) {
-  const body = FitRequestSchema.parse({ resume, job: { id: "job-current", title, text } });
-  const response = await fetch("/api/fit/analyze", {
-    method: "POST", signal, cache: "no-store", credentials: "same-origin",
-    headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-  });
-  if (!response.ok) throw new Error("Fit analysis is unavailable or this request was rejected. Your resume remains in this tab; no demo was substituted.");
-  // Never accept the endpoint's fictional demo output as an assessment of the uploaded file.
-  if (response.headers.get("X-ScaleMe-Mode") !== "live") throw new Error("The server did not return live analysis. No sample result was substituted.");
-  return FitAnalysisSchema.parse((await response.json()).analysis);
 }

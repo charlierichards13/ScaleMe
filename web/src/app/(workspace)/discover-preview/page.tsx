@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Compass } from "lucide-react";
 import { FeaturePlaceholder } from "@/components/layout/FeaturePlaceholder";
+import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Discover Opportunities | ScaleMe" };
 
@@ -13,13 +14,14 @@ export default function DiscoverPreviewPage() {
     <FeaturePlaceholder
       title="Discover Opportunities"
       icon={Compass}
-      summary="Browse internships and jobs that match your goals, skills and schedule, then save the ones worth a closer look."
+      summary="Role browsing is not in this build yet. You can open the fit explorer in the meantime."
       plannedSteps={[
         "Swipe through role cards and save or pass on each one.",
         "Review your shortlist and remove anything that no longer fits.",
-        "Send a saved role to Fit Analysis or a mock interview.",
+        "Open fit or interview for a saved role only after those pages can receive it.",
       ]}
-      dependsOn="A fictional swipe-based preview is in review (PR #37) and will replace this page once merged. Real listings will come later from a server-side jobs service, never from scraping in your browser."
+      dependsOn="A fictional swipe deck is in review and is not part of this build. Live listings are not connected."
+      action={{ href: routes.fitInsights, label: "Open the fit explorer" }}
     />
   );
 }

@@ -98,11 +98,11 @@ export function JobPreviewCard({
           {saved ? "Saved" : "Save"}
         </button>
         <Link
-          href={routes.fit}
-          aria-label={`Analyze fit for ${job.title} at ${job.company}`}
+          href={routes.fitInsights}
+          aria-label={`Open the fit explorer. ${job.title} at ${job.company} is not sent there.`}
           className={cx(buttonStyles.ghost, "justify-center px-3 py-2")}
         >
-          Analyze fit
+          Fit explorer
         </Link>
       </div>
     </article>
