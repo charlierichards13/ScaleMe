@@ -154,5 +154,5 @@ try {
     const stopped = new Promise((resolve) => browser.once('exit', resolve));
     browser.kill(); await stopped;
   }
-  await rm(profile, { recursive: true, force: true });
+  await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 }
