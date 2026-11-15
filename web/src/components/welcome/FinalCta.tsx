@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cx } from "@/components/ui/primitives";
-import { routes } from "@/lib/routes";
+import { getStartedHref } from "@/lib/routes";
 import { container, cta } from "./styles";
 
 export function FinalCta() {
@@ -17,7 +17,7 @@ export function FinalCta() {
             Set up your workspace in about a minute. Skip anything you&apos;re not sure about yet.
           </p>
           <div className="relative mt-10 flex justify-center">
-            <Link href={routes.onboarding} className={cx(cta.primary, "px-8")}>
+            <Link href={getStartedHref()} className={cx(cta.primary, "px-8")}>
               Get Started
               <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>

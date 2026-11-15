@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/Logo";
 import { buttonStyles, cx } from "@/components/ui/primitives";
-import { routes } from "@/lib/routes";
+import { getStartedHref, routes } from "@/lib/routes";
 import { container } from "./styles";
 
 const footerLink = cx("rounded text-sm text-muted transition-colors hover:text-ink", buttonStyles.focusRing);
@@ -29,7 +29,7 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
-              <Link href={routes.onboarding} className={footerLink}>
+              <Link href={getStartedHref()} className={footerLink}>
                 Get started
               </Link>
             </li>

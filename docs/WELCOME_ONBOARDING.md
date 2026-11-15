@@ -7,7 +7,7 @@
 | Route | What it is | File |
 | --- | --- | --- |
 | `/` | Public welcome page: Navigation → Hero → Features → About → Final CTA → Footer | `web/src/app/page.tsx` |
-| `/onboarding` | Four-step guest setup, reached from every *Get Started* button | `web/src/app/onboarding/page.tsx` |
+| `/onboarding` | Four-step guest setup, reached from every *Get Started* button while accounts don't exist (`getStartedHref()`) | `web/src/app/onboarding/page.tsx` |
 | `/dashboard` | The existing career dashboard from PR #31, unchanged. It was previously served at `/` | `web/src/app/(workspace)/dashboard/page.tsx` |
 
 Every other route (`/coach`, `/impact-lab`, `/fit`, `/interview`, `/resume-lab`, `/saved`, `/settings`, `/discover-preview`) is unchanged.
@@ -34,7 +34,7 @@ Motion is only enabled under `prefers-reduced-motion: no-preference` (see the Is
 
 `/sign-in` and `/sign-up` belong to Issue #42 on another branch and are **not** created or modified here. Until they exist, the header's *Sign in* button opens a small note explaining that accounts aren't available yet, with links to the guest setup and the dashboard. It never fakes a login or session.
 
-To integrate once #42 merges: in `web/src/lib/routes.ts`, move `plannedAuthRoutes` into `routes` and set `authAvailable = true`. `SiteHeader` then renders a normal link to `/sign-in`. The route test then checks that those pages exist.
+To integrate once #42 merges: in `web/src/lib/routes.ts`, move `plannedAuthRoutes` into `routes` and set `authAvailable = true`. `SiteHeader` then renders a normal link to `/sign-in`, and `getStartedHref()` sends *Get Started* to `/sign-up` (sign-up then hands new users to `/onboarding`). `routes.test.ts` fails if `authAvailable` doesn't match whether `/sign-up` exists, so the flag can't be forgotten.
 
 ## Onboarding
 
@@ -77,7 +77,8 @@ Answers exist only in React state for the current page. A reload or navigation a
 ## Tests
 
 - `web/src/lib/onboarding/state.test.ts`: step order and bounds, back/skip/next transitions, skip clearing only its own step, multi-select toggling, text normalization and the 100-character cap, opt-in defaults, resume metadata only, honest summary wording, and the resume checks (extension/MIME/size and the `%PDF-` signature versus a renamed HTML file).
-- `web/src/lib/routes.test.ts`: `/` is the welcome page, the dashboard is at `/dashboard`, `/onboarding` exists, no route-group page collides with `/`, the sidebar points at `/dashboard`, and `isActive` matching.
+- `web/src/lib/routes.test.ts`: `/` is the welcome page, the dashboard is at `/dashboard`, `/onboarding` exists, no route-group page collides with `/`, the sidebar points at `/dashboard`, *Get Started* switches from onboarding to sign-up with `authAvailable`, and `isActive` matching.
+- `web/src/app/motion.test.ts`: every `animation` and smooth-scroll declaration in `globals.css` sits inside the `prefers-reduced-motion: no-preference` block, and the hero entrance starts at least 40% visible. A planted out-of-block animation was confirmed to fail it.
 
 Component interaction tests would need a DOM test environment, which isn't set up. The browser checks below cover interactions.
 
@@ -89,7 +90,7 @@ Component interaction tests would need a DOM test environment, which isn't set u
 - Onboarding at 390 px: keyboard multi-select with visible focus rings, Enter submits a step, focus moves to each new heading, Skip advances and clears, *Finish setup* shows the correct summary, and *Go to Dashboard* opens `/dashboard` with the sidebar's *Dashboard* item active.
 - A synthetic `evil.pdf` containing HTML was rejected by the signature check. A synthetic file named with `<b>` markup was rendered as plain text.
 - No `/api` requests and no console errors during the flow. All existing routes return 200. `/sign-in` returns 404 as expected (Issue #42).
-- Reduced motion was checked by code review only: every animation rule sits inside the `no-preference` media query. It wasn't emulated in a browser.
+- Reduced motion is enforced by `motion.test.ts` (all motion inside the `no-preference` media query). It wasn't emulated in a browser, because the browser tooling can't toggle `prefers-reduced-motion`.
 
 ## Screenshots (production build, synthetic content only)
 

@@ -41,4 +41,13 @@ export const plannedAuthRoutes = {
   signUp: "/sign-up",
 } as const;
 
-export const authAvailable = false;
+export const authAvailable: boolean = false;
+
+/**
+ * Where the welcome page's "Get Started" buttons go. Until accounts exist,
+ * visitors go straight to the guest onboarding. Once sign-up ships, new users
+ * sign up first, and sign-up (not this page) sends them on to onboarding.
+ */
+export function getStartedHref(accountsAvailable: boolean = authAvailable): string {
+  return accountsAvailable ? plannedAuthRoutes.signUp : routes.onboarding;
+}

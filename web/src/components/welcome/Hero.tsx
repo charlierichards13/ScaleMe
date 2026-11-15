@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cx } from "@/components/ui/primitives";
-import { routes } from "@/lib/routes";
+import { getStartedHref } from "@/lib/routes";
 import { HeroArt } from "./HeroArt";
 import { container, cta, eyebrow } from "./styles";
 
@@ -28,7 +28,7 @@ export function Hero() {
             Discover opportunities, uncover your strengths, and prepare for the career you want, all in one place.
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
-            <Link href={routes.onboarding} className={cta.primary}>
+            <Link href={getStartedHref()} className={cta.primary}>
               Get Started
               <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>

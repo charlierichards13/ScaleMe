@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { isActive, primaryNav, secondaryNav } from "@/components/layout/nav-items";
 import { getDashboardSnapshot } from "@/lib/dashboard/snapshot";
-import { routes } from "./routes";
+import { authAvailable, getStartedHref, plannedAuthRoutes, routes } from "./routes";
 
 const appDir = fileURLToPath(new URL("../app", import.meta.url));
 
@@ -55,6 +55,12 @@ describe("welcome / dashboard split (Issue #43)", () => {
     );
     const collisions = groups.filter((group) => existsSync(join(appDir, group.name, "page.tsx")));
     expect(collisions.map((group) => group.name)).toEqual([]);
+  });
+
+  it("Get Started goes to guest onboarding until accounts exist, then to sign-up", () => {
+    expect(authAvailable).toBe(pageExists(plannedAuthRoutes.signUp));
+    expect(getStartedHref(false)).toBe(routes.onboarding);
+    expect(getStartedHref(true)).toBe(plannedAuthRoutes.signUp);
   });
 
   it("the sidebar's Dashboard item points at /dashboard, not the welcome page", () => {
