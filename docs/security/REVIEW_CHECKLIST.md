@@ -40,6 +40,13 @@ Use fictional candidates, fictional jobs and **no real credentials in prompts**.
 
 Unit tests with mocked Bedrock verify **our code**, not that Bedrock resists prompt injection. Verify against a real model using synthetic adversarial data in a controlled, cost-bounded environment, and review output manually.
 
+## Guest onboarding (`/onboarding`, Issue #43)
+
+- [ ] A non-PDF renamed to `.pdf` is rejected by the `%PDF-` signature check; oversized (> 5 MB) and empty files are rejected.
+- [ ] Choosing a PDF causes no network request and nothing is written to browser storage; the UI never says the file was uploaded or parsed.
+- [ ] A file name or text answer containing markup renders as plain text.
+- [ ] If answers become persisted or auth-gated: server-side schema validation, authorization and retention are reviewed first (client checks are UX only).
+
 ## PDF / job-URL integrations (when they exist)
 
 - [ ] PDF: valid text PDF, non-PDF with `.pdf` suffix, oversized file, corrupt PDF, image-only document, unexpected metadata, parser timeout.

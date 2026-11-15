@@ -41,6 +41,93 @@ body {
   font-family: var(--font-sans);
 }
 
+/*
+ * Welcome page + onboarding motion (Issue #43). Everything here is opt-in via
+ * `prefers-reduced-motion: no-preference`, so with reduced motion (or if CSS
+ * animations never run) the page renders in its final, fully visible state.
+ * Section reveals use scroll-driven animations, so they need no JavaScript;
+ * browsers without `animation-timeline` support simply show the content.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .sm-rise {
+    animation: sm-rise 800ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  .sm-float {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: sm-float 16s ease-in-out infinite;
+  }
+
+  .sm-drift {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: sm-drift 22s ease-in-out infinite;
+  }
+
+  .sm-trace {
+    animation: sm-trace 9s linear infinite;
+  }
+
+  .sm-step-in {
+    animation: sm-rise 450ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  @supports (animation-timeline: view()) {
+    .sm-reveal {
+      animation: sm-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}
+
+/* Starts partly visible on purpose: time-based animations can stall in a
+   background tab, and the hero must stay readable if that happens. */
+@keyframes sm-rise {
+  from {
+    opacity: 0.4;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes sm-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+@keyframes sm-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(-0.6deg);
+  }
+}
+
+@keyframes sm-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(6px, -8px);
+  }
+}
+
+@keyframes sm-trace {
+  to {
+    stroke-dashoffset: -110;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -2,11 +2,11 @@
 
 **Branch:** `feat/dashboard-flow` · **Status:** frontend only. No new APIs, storage or AI calls.
 
-The dashboard at `/` is the home of the ScaleMe workspace. It introduces the four main tools, shows what the candidate has added so far, and suggests what to do next. Every value is either **intentionally empty** or **labeled DEMO / fictional**.
+The dashboard at `/dashboard` is the home of the ScaleMe workspace. It introduces the four main tools, shows what the candidate has added so far, and suggests what to do next. Every value is either **intentionally empty** or **labeled DEMO / fictional**.
 
 ## Product direction note
 
-Issue #34 described the dashboard as the opening route. The product direction has since changed to **Welcome → Sign up / Sign in → Onboarding → Dashboard → Workspaces**. The welcome page, authentication and onboarding are separate tasks and are **not** built here. The dashboard stays at `/` for now and can move behind auth later without any component changes.
+Issue #34 described the dashboard as the opening route. The product direction has since changed to **Welcome → Sign up / Sign in → Onboarding → Dashboard → Workspaces**. Issue #43 moved the dashboard from `/` to `/dashboard` (only the page file moved, to `app/(workspace)/dashboard/page.tsx`) and added the public welcome page at `/` and guest onboarding at `/onboarding`. See [WELCOME_ONBOARDING.md](WELCOME_ONBOARDING.md). Sign-in and sign-up are Issue #42. The dashboard has no auth guard yet.
 
 ## Layout
 
@@ -36,7 +36,7 @@ Demo mode is a toggle held in client state. It makes no network requests (no Bed
 
 | Route | What it is |
 | --- | --- |
-| `/` | Dashboard |
+| `/dashboard` | Dashboard (was `/` before Issue #43). `/` is now the public welcome page |
 | `/coach` | The previous chat-first demo, moved here unchanged except for a "Back to dashboard" link. It is still scripted, not live AI |
 | `/impact-lab` | Not part of this branch: the fictional Resume Impact Lab from main (PR #39). The sidebar's *Resume Lab* item, the *Grill My Resume* card and the "Explain a project" next step link to it |
 | `/resume-lab`, `/fit`, `/interview`, `/saved`, `/settings` | Clearly labeled "Not available yet" placeholders, built from `FeaturePlaceholder`, that link to the Coach demo. `/resume-lab` is where resume upload will live, and the hero's *Upload your resume* button points there |

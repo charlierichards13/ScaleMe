@@ -2,7 +2,12 @@
  * Central list of app routes so navigation, cards and next steps stay in sync.
  */
 export const routes = {
-  dashboard: "/",
+  /** Public welcome page (Issue #43). */
+  home: "/",
+  /** Guest-only first-time setup. Nothing is saved; see docs/WELCOME_ONBOARDING.md. */
+  onboarding: "/onboarding",
+  /** Career dashboard (moved from `/` in Issue #43). */
+  dashboard: "/dashboard",
   /**
    * TEMPORARY: points at a labeled placeholder because the real `/discover`
    * route lives in PR #37 (`feat/job-swipe-discovery`) and isn't merged yet.
@@ -24,3 +29,16 @@ export const routes = {
 } as const;
 
 export type AppRoute = (typeof routes)[keyof typeof routes];
+
+/**
+ * Account pages owned by Issue #42 (another branch). They are NOT in `routes`
+ * because they don't exist on this branch, and the route test rejects links
+ * that would 404. When #42 merges: move these into `routes` and set
+ * `authAvailable` to true so the welcome page links to them directly.
+ */
+export const plannedAuthRoutes = {
+  signIn: "/sign-in",
+  signUp: "/sign-up",
+} as const;
+
+export const authAvailable = false;

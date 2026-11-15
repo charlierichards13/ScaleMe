@@ -40,8 +40,36 @@ describe("internal links", () => {
   });
 });
 
+describe("welcome / dashboard split (Issue #43)", () => {
+  it("serves the welcome page at / and the dashboard at /dashboard", () => {
+    expect(routes.home).toBe("/");
+    expect(routes.dashboard).toBe("/dashboard");
+    expect(existsSync(join(appDir, "page.tsx"))).toBe(true);
+    expect(existsSync(join(appDir, "(workspace)", "dashboard", "page.tsx"))).toBe(true);
+    expect(existsSync(join(appDir, "onboarding", "page.tsx"))).toBe(true);
+  });
+
+  it("no route group also defines a page at / (that would collide with the welcome page)", () => {
+    const groups = readdirSync(appDir, { withFileTypes: true }).filter(
+      (entry) => entry.isDirectory() && entry.name.startsWith("("),
+    );
+    const collisions = groups.filter((group) => existsSync(join(appDir, group.name, "page.tsx")));
+    expect(collisions.map((group) => group.name)).toEqual([]);
+  });
+
+  it("the sidebar's Dashboard item points at /dashboard, not the welcome page", () => {
+    expect(primaryNav.find((item) => item.label === "Dashboard")?.href).toBe("/dashboard");
+  });
+});
+
 describe("isActive", () => {
-  it("matches the dashboard only at the root", () => {
+  it("matches the dashboard on its own route only", () => {
+    expect(isActive("/dashboard", routes.dashboard)).toBe(true);
+    expect(isActive("/", routes.dashboard)).toBe(false);
+    expect(isActive("/fit", routes.dashboard)).toBe(false);
+  });
+
+  it("matches the root only at the root", () => {
     expect(isActive("/", "/")).toBe(true);
     expect(isActive("/fit", "/")).toBe(false);
   });
