@@ -1,8 +1,13 @@
 import { ResumeSchema, type Resume } from "@/lib/ai/schemas";
 
-export async function uploadResume(file: File, token: string, signal: AbortSignal): Promise<Resume> {
+export async function validateResumeFile(file: File): Promise<void> {
   if (file.size === 0 || file.size > 5 * 1024 * 1024) throw new Error("Choose a nonempty PDF no larger than 5 MiB.");
   if (!/^%PDF-\d\.\d/.test(await file.slice(0, 8).text())) throw new Error("Choose a text-based PDF.");
+}
+
+export async function uploadResume(file: File, token: string, signal: AbortSignal): Promise<Resume> {
+  await validateResumeFile(file);
+  if (signal.aborted) throw new DOMException("Upload cancelled", "AbortError");
   const body = new FormData();
   body.set("file", file);
   const response = await fetch("/api/resume/parse", {

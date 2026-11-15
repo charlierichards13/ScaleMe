@@ -16,7 +16,7 @@ export const routes = {
    * pages resolving to `/discover`.
    */
   discover: "/discover-preview",
-  /** Resume upload is not built. The labeled sample review is `impactLab`. */
+  /** Canonical private PDF upload/review workspace; explicit tab-memory handoff. */
   resumeLab: "/resume-lab",
   /** Local resume/job/answer evidence workflow (Issue #8). */
   impactLab: "/impact-lab",

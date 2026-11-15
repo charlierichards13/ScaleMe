@@ -1,6 +1,6 @@
 # Welcome page and first-time onboarding (Issue #43)
 
-**Branch:** `feat/welcome-onboarding` · **Status:** frontend only. No new API routes, storage, authentication, AI calls or network requests.
+**Original work:** `feat/welcome-onboarding`. Resume upload follow-up: draft #59 on `feat/resume-upload-integration`. Answers are local; optional, explicit private PDF extraction uses the existing Rust-backed endpoint. No accounts, persistence or automatic AI calls.
 
 ## Routes
 
@@ -10,7 +10,7 @@
 | `/onboarding` | Four-step guest setup, reached from every *Get Started* button until working accounts exist (`getStartedHref()` in `web/src/lib/auth-status.ts`) | `web/src/app/onboarding/page.tsx` |
 | `/dashboard` | The existing career dashboard from PR #31, unchanged. It was previously served at `/` | `web/src/app/(workspace)/dashboard/page.tsx` |
 
-Every other route (`/coach`, `/impact-lab`, `/fit`, `/interview`, `/resume-lab`, `/saved`, `/settings`, `/discover-preview`) is unchanged.
+The original welcome/onboarding split preserved other routes. The #59 follow-up makes `/resume-lab` the canonical upload/review workspace and connects optional private extraction to onboarding; `/impact-lab` and interview functionality remain intact.
 
 Links that meant "the dashboard" now use `routes.dashboard` instead of a hard-coded `/`: the sidebar logo, the Coach's *Back to dashboard* link, the Impact Lab wordmark, the Fit Evidence Explorer logo (`/fit-insights`, merged from `main` in PR #41), and the 404 page (which also links to the welcome page). `web/src/lib/routes.test.ts` fails CI if any route group defines a page at `/` again, which would collide with the welcome page.
 
@@ -58,25 +58,18 @@ While `accountsEnabled` is `false`, which stays true even after the #42 screens 
 - **Honesty:** the completion screen says that answers aren't saved and that the dashboard doesn't use them yet. Choosing goals never limits access to any tool.
 - **International students:** the toggle only describes future general information about listing statements (CPT, OPT, STEM OPT, sponsorship, citizenship). It states that ScaleMe never decides eligibility or asks for immigration documents, and refers users to their DSO or an immigration attorney.
 
-### Resume picker (not an upload)
+### Resume selection and optional private extraction
 
-No secure PDF parser exists on `main` (Issue #4), so the picker only checks the chosen file locally:
+Onboarding and Resume Lab use `ResumeUploadControls`, `useResumeUpload`, and the generation-checked `createUploadTask`. Selection validates only the bounded PDF header locally and sends no request. The actual File stays in component memory across forward/back steps. Only **Extract resume** uses the existing `uploadResume` client and `/api/resume/parse`; it requires an owner-provided private access code. Uploads remain disabled by default and synthetic-only pending review.
 
-1. Name ends in `.pdf`, MIME type is empty or `application/pdf`, size is between 1 byte and 5 MB (`checkResumeMetadata`).
-2. The first five bytes are `%PDF-` (`hasPdfSignature`); only those bytes are read.
-3. Only the file name and size are kept in component memory. The file is never uploaded, parsed, stored or sent anywhere.
+Successful JSON is validated by the existing ResumeSchema and published to the shared in-memory Resume session. Continue/skip cancels any pending request before changing steps. Skipping the resume step clears selection and parsed data; removing or replacing a resume clears old parsed state immediately, even if replacement validation fails. Late validation, cancellation, unmount and timeout responses cannot publish success. Other steps' Back/Skip behavior is unchanged.
 
-These checks are **UX only, not a security control**. Any future upload must repeat every check on the server, plus parser time and page limits, per the threat model.
-
-### State and persistence
-
-Answers exist only in React state for the current page. A reload or navigation away discards them. Nothing is written to `localStorage`, `sessionStorage`, cookies, IndexedDB or a server.
-
+The completion screen distinguishes local selection, actual extraction and no resume. It links to Resume Lab and, after extraction, Fit Explorer. Parsed data survives client-side navigation in this tab; onboarding's other answers do not. Reloading clears both. No localStorage, sessionStorage, cookies, IndexedDB, database, logging or automatic AI request is added. See [private setup and limits](RESUME_UPLOAD_INTEGRATION.md).
 ### Future integration (not built)
 
 1. Sign-up (Issue #42) redirects new users to `/onboarding`; returning users skip it. This needs a server-side "onboarding completed" flag, not a client-side check.
 2. On *Finish setup*, POST the answers to a validated server route (runtime schema, length limits) and store them with the account under a reviewed retention policy. That requires a privacy and threat-model review **before** it ships.
-3. Resume upload connects to the Issue #4 parser behind server-side validation. The dashboard then reads the saved profile instead of its empty state.
+3. Resume upload now uses the private Issue #4 parser. A saved dashboard profile remains unimplemented and would require a separate retention/authentication review.
 4. Protect `/dashboard` and the workspace routes with real authorization once accounts exist.
 
 ## Tests

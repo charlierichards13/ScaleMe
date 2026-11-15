@@ -30,13 +30,13 @@ describe("getNextSteps", () => {
   it("points a new visitor at sample stories, guest setup, and interview practice", () => {
     const steps = getNextSteps({ hasResume: false, authorizationGuidance: null }, false);
     expect(steps.map((step) => step.id)).toEqual([
-      "review-sample-resume",
+      "open-resume-lab",
       "preview-goals",
       "open-sample-fit",
       "mock-interview",
     ]);
     expect(steps.map((step) => step.href)).toEqual([
-      routes.impactLab,
+      routes.resumeLab,
       routes.onboarding,
       routes.fitInsights,
       routes.interview,

@@ -7,11 +7,21 @@ This adds a private, synthetic-data-only upload preview. **Not approved for publ
 
 1. Visit `/resume-lab`, select a text-based PDF, enter the privately distributed upload access code, and explicitly choose **Extract resume**.
 2. The browser posts multipart `file` to `/api/resume/parse`. The Node backend validates access and bounds the body, then pipes PDF bytes to the Rust executable's stdin. Its validated response remains `{ resume: Resume }` from the existing v0.1 contract.
-3. Review extracted text/JSON. **Use this resume in Fit Explorer** navigates to `/fit-insights` with the same validated Resume in tab memory.
+3. Review expandable detected sections and readable full text; JSON is secondary technical detail. **Open Fit Explorer** navigates to `/fit-insights` with the same validated Resume in tab memory.
 4. The team's existing Fit Explorer opens with extracted text already in its editable resume draft. Enter a job title/description and use its existing input checks. Its live-AI button remains intentionally disabled; its fictional demonstrations remain separately labeled. Upload/import neither calls AI nor changes the team's live-access policy. This PR connects actual parsed input to the existing explorer rather than introducing another analysis form.
 5. Clear the resume in Resume Lab, or reload/close the tab, to remove its in-memory handoff. No localStorage, sessionStorage, cookies, database or server resume cache is used. Client-side navigation preserves the tab's module; a hard reload deliberately clears it.
 
 Future interview integration can import `useActiveResume` from `web/src/lib/resume/active-resume.ts` in a client component, then pass that object through the agreed interview contract after a separate explicit consent step. This PR does not edit interview/Bedrock implementation or introduce another resume format.
+
+### Product workspace and onboarding follow-up
+
+Resume Lab is the canonical sidebar/mobile/dashboard resume destination (`/resume-lab`). Its shared-brand cards show a file picker/drop area, filename/size, explicit extraction, indeterminate processing/cancel, fixed safe errors, successful section/full-text review, and clear/replace actions. Native details, labeled inputs, visible focus and status announcements support keyboard use; motion respects reduced-motion preferences. Private access is explained as an owner-provided preview code, not a user password. Selecting a file alone never uploads it.
+
+The four-step onboarding flow reuses the same upload controls/controller/client/session. Local selection survives forward/back navigation; explicit extraction publishes the same Resume JSON. Skip/removal/replacement clears stale parsed state; cancellation, timeout, unmount and superseded validation/transport results cannot publish a late success. The completion screen links to Resume Lab and, when parsed, Fit Explorer. Ordinary visitors may continue without uploading anything.
+
+`/impact-lab` is **retained**, without redirects or evidence-ledger edits. PR #51 is still open and owns that workflow; contextual completion also imports its component. Resume Lab links to the actual local evidence workflow and explicitly explains that users paste resume/job text there; no automatic handoff or fabricated analysis is implied. Full consolidation waits for coordinated ownership. The fixed mock interview link is labeled independent of the uploaded resume. #61 authentication/abuse controls, #62 full Resume Fit request preservation and #63 image digest pinning remain separate issues.
+
+Coordination notices were posted on #51 and #60 before this follow-up. #60 overlaps dashboard FeatureCards/Sidebar: this branch changes only resume card content/destination, the navigation item's href/status, empty-profile next-step content, and outdated guest privacy copy. Its component layouts, drawer logic and shared primitives are preserved. Resolve eventual content overlap without replacing its visual polish. Neither PR was merged here.
 
 ## Coordination
 
@@ -35,6 +45,29 @@ Run the web app from `web/`, with these **server-only** settings in your local e
 - `RESUME_PARSER_PATH`: optional absolute executable path. Default resolves `../services/resume-parser/target/release/resume-parser` relative to the web working directory (`.exe` on Windows). Docker sets `/usr/local/bin/resume-parser`.
 
 No AWS configuration is needed to extract PDFs. Live Fit analysis still requires the team's existing, separately reviewed AI settings/access. No real applicant data or live AWS calls are used by these integration tests.
+
+### Owner: create a local private test configuration
+
+From `web/`, the following Node command creates a **new** ignored `.env.local` with a cryptographically random code. It prints no secret and refuses to overwrite an existing file (including any existing developer settings). If that file already exists, the owner must privately add/update these names using their editor or secret manager; do not paste its contents into logs, chats or PRs.
+
+```bash
+node --input-type=module -e 'import {randomBytes} from "node:crypto"; import {writeFileSync} from "node:fs"; writeFileSync(".env.local", ["RESUME_UPLOAD_ENABLED=true", "RESUME_UPLOAD_TOKEN="+randomBytes(32).toString("hex"), "RESUME_UPLOAD_ORIGIN=http://localhost:3000", ""].join("\n"), {flag:"wx",mode:0o600});'
+npm run dev
+```
+
+Build Rust first using the command above. On PowerShell, use `npm.cmd` if script policy blocks `npm`. The owner reads the generated code privately in their local editor and provides it only to authorized synthetic-data testers through an agreed private channel. Never add `NEXT_PUBLIC_`, put the code in a URL, log it, commit the file, or enable public uploads. Use the exact origin/port shown in the browser; restart Next.js after editing configuration. Rotate/remove the preview code and disable uploads when testing ends. This setup belongs in developer docs, not the product interface.
+
+### Repeatable browser checks
+
+With a local production server, release Rust binary, private synthetic test code in the smoke process's `RESUME_UPLOAD_TOKEN`, and Chromium available:
+
+```bash
+SCALEME_SMOKE_URL=http://localhost:3000 CHROMIUM_PATH=/path/to/chrome node web/scripts/resume-workspace-smoke.mjs
+```
+
+PowerShell uses `$env:NAME` assignments instead. The script generates its synthetic PDF in its temporary browser profile and cleans that exact generated directory after exit. Optional `SCALEME_SCREENSHOT_DIR` selects an ignored output directory. It tests actual file input events and HTTP extraction, dashboard/client navigation, Fit prefill, review/clear/replace, onboarding select/back/continue/skip/remove/complete, processing cancellation, mobile overflow, keyboard focus and reload isolation. It asserts no AI/external requests or browser storage. Cancellation transport is deliberately stalled in the browser; actual process cancellation/timeouts remain covered by server tests. A passed API smoke alone never counts as browser verification.
+
+Alternatively, after building, run `node scripts/run-resume-workspace-smoke.mjs` from `web/` with `CHROMIUM_PATH` set. This starts a loopback-only production server on port 3191, generates an ephemeral private code in process memory without printing it or editing `.env.local`, runs the Resume Lab and existing evidence/contextual browser regressions, then stops the server. Contextual browser transport is mocked; no live AI calls are made.
 
 ## HTTP and process controls
 
@@ -89,9 +122,11 @@ The explicit integration suite requires the built binary and fails if it is abse
 
 ## Local verification record (2026-11-15)
 
-After incorporating remote main through `8a95366`, Windows GNU Rust checks passed (fmt, Clippy, **96 tests**, release build). Web npm ci/audit (10 existing moderate tooling advisories, no high/critical), lint, typegen, TypeScript, **460 tests / 29 files**, the explicit real-binary integration test, and production standalone build (**23 pages**) passed. The unchanged lockfile was installed before the frontend-base merge; that merge added no package dependency changes.
+On the product/onboarding follow-up from remote main `8a95366`, Windows GNU Rust checks passed (fmt, Clippy, **96 tests**, release build). Web npm ci/audit (10 existing moderate tooling advisories, no high/critical), lint with no warnings, typegen, TypeScript, **478 tests / 31 files**, **one explicit real-binary integration test**, and production standalone build (**23 pages**) passed. Package manifests/lockfile are unchanged. A stale generated `.next` cache initially caused a Turbopack CSS worker startup panic; removing only that verified generated directory fixed the normal production build, without source/config changes or relaxed checks.
 
-The live loopback Next HTTP smoke passed for synthetic valid/corrupt/renamed/oversized PDFs and denied access. Browser inspection confirmed the form and disclosure render; file-picker automation stalled, so a browser click-through upload/navigation test is **not claimed as verified**. The existing explorer's imported textarea, escaping and disabled live-AI state have automated render coverage. Local Docker was unavailable; the draft PR's Linux container CI is the packaging/HTTP verification gate. Actual Railway deployment, real resumes and live Bedrock were not run.
+The production Chromium suite (`node scripts/run-resume-workspace-smoke.mjs`, Node 22.23.5, Chrome on Windows) passed: actual synthetic file-input → HTTP → Rust → section/text review → client-side Fit prefill → clear; keyboard expansion/focus, drop without upload, oversize/renamed rejection, wrong/missing code, mobile sidebar destination, 320/390px reflow, four-step onboarding forward/back/local selection/parse/remove/replace/skip/completion and clearing an actually parsed resume on reload. Storage-write instrumentation spans navigation; no AI, external requests, browser storage or runtime errors were observed. Disabled-preview and stalled/cancel UI transport are simulated in this browser suite; real backend gate/timeout/cancellation checks remain in the unit/integration suite.
+
+The existing `evidence-ledger-smoke.mjs` and `contextual-impact-smoke.mjs` both passed against the same production build; the latter mocks AI transport, never live AWS. Desktop/mobile screenshots were visually inspected and remain in ignored `services/resume-parser/target/resume-workspace-screenshots/`. Safari/Firefox, real devices, actual browser zoom, manual screen-reader review, Railway deployment, real resumes and live Bedrock remain unverified. Local Docker is unavailable; the existing Linux container CI is the packaging/HTTP gate and must pass again for the final PR head.
 
 ## Remaining security and product limits
 

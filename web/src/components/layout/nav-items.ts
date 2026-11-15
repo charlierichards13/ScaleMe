@@ -27,7 +27,7 @@ export type NavItem = {
 export const primaryNav: NavItem[] = [
   { label: "Dashboard", href: routes.dashboard, icon: LayoutDashboard },
   { label: "Discover Opportunities", href: routes.discover, icon: Compass, status: "Planned" },
-  { label: "Resume Lab", href: routes.impactLab, icon: FileText, status: "Sample" },
+  { label: "Resume Lab", href: routes.resumeLab, icon: FileText, status: "Preview" },
   { label: "Fit Analysis", href: routes.fitInsights, icon: Scale, status: "Preview" },
   { label: "Mock Interviews", href: routes.interview, icon: Mic, status: "Practice" },
   { label: "Career Coach", href: routes.coach, icon: MessagesSquare, status: "Practice" },

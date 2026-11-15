@@ -72,7 +72,7 @@ The fit-analysis cases above also apply (injection, oversized input, model unava
 ## Guest onboarding (`/onboarding`, Issue #43)
 
 - [ ] A non-PDF renamed to `.pdf` is rejected by the `%PDF-` signature check; oversized (> 5 MB) and empty files are rejected.
-- [ ] Choosing a PDF causes no network request and nothing is written to browser storage; the UI never says the file was uploaded or parsed.
+- [ ] Choosing a PDF causes no network request or storage write. Only explicit extraction with private access submits it; UI distinguishes selected, processing, extracted, cancelled and failed states.
 - [ ] A file name or text answer containing markup renders as plain text.
 - [ ] If answers become persisted or auth-gated: server-side schema validation, authorization and retention are reviewed first (client checks are UX only).
 
@@ -114,6 +114,8 @@ Run with `cargo test --manifest-path services/resume-parser/Cargo.toml --locked`
 - [ ] Before private data: disable Linux core dumps / Windows Error Reporting memory dumps, enforce host memory limits, and ensure the parent kill timer also covers blocked input/output.
 
 ## Private PDF upload integration
+
+- Product follow-up: `upload-task.test.ts` covers explicit submission, invalid replacements clearing stale state, missing/private errors, cancellation/disposal/timeout and late validation/results. `workspace.test.ts` covers canonical navigation, escaped sections/fallback, truthful private and onboarding UI. `resume-workspace-smoke.mjs` covers actual Chromium file input → HTTP Rust extraction → Fit prefill, clear/replace, four-step onboarding and keyboard/mobile/no-AI/no-storage checks. Record its actual outcome in the PR; it is separate from API-only smoke.
 
 - `server/upload.test.ts`: disabled/misconfigured gates, invalid private access/origin, multipart/file limits, missing/duplicate fields, renamed content, stalled streams even with non-resolving cancellation, per-process concurrency/rate, safe errors/filenames.
 - `server/process.test.ts`: fixed command/no inherited AWS secrets, schema failures, sanitized parser errors, hard timeout, caller abort, stdout cap, startup/crash, failed kill retaining capacity, relative path rejection.

@@ -61,7 +61,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           Guest session
         </div>
         <p className="mt-1 text-xs leading-5 text-muted">
-          No account yet. What you enter stays on that page until you leave or refresh, and it is not uploaded.
+          No saved account. Resume extraction requires an explicit private upload. Parsed data stays in this tab until cleared or reloaded.
         </p>
       </div>
     </div>
