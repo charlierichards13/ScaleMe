@@ -155,14 +155,13 @@ pub fn parse_resume(bytes: &[u8], options: &ParseOptions) -> Result<ResumeEnvelo
 
 /// [`parse_resume`] with a wall-clock budget. On timeout the caller gets
 /// [`ParseError::Timeout`], but the abandoned work is only really stopped when the process
-/// exits (see [`deadline`]).
+/// exits (see [`deadline`]). Worker startup failures and panics return [`ParseError::Internal`].
 pub fn parse_resume_with_deadline(
     bytes: Vec<u8>,
     options: ParseOptions,
     timeout: Duration,
 ) -> Result<ResumeEnvelope, ParseError> {
-    deadline::run_with_deadline(timeout, move || parse_resume(&bytes, &options))
-        .unwrap_or(Err(ParseError::Timeout))
+    deadline::run_with_deadline(timeout, move || parse_resume(&bytes, &options))?
 }
 
 /// `resume-` followed by 128 random bits in hex. Not derived from the file name or content.
@@ -243,5 +242,13 @@ mod tests {
         let opts = ParseOptions::default();
         assert_eq!(parse_resume(b"", &opts), Err(ParseError::EmptyFile));
         assert_eq!(parse_resume(b"not a pdf", &opts), Err(ParseError::NotPdf));
+    }
+
+    #[test]
+    fn deadline_wrapper_preserves_parser_errors() {
+        assert_eq!(
+            parse_resume_with_deadline(Vec::new(), ParseOptions::default(), Duration::from_secs(5),),
+            Err(ParseError::EmptyFile)
+        );
     }
 }

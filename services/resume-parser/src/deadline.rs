@@ -6,7 +6,8 @@
 //! that process exit is what actually guarantees the work stops. A server that links this
 //! library directly, instead of spawning the program, does NOT get that guarantee.
 
-use std::sync::mpsc;
+use crate::ParseError;
+use std::sync::mpsc::{self, RecvTimeoutError};
 use std::thread;
 use std::time::Duration;
 
@@ -17,23 +18,42 @@ const WORKER_STACK_BYTES: usize = 16 * 1024 * 1024;
 
 /// Run `work` on a separate thread and wait at most `timeout` for its result.
 ///
-/// Returns `None` when the deadline passes first, when the worker panics, or when the thread
-/// cannot be started.
-pub fn run_with_deadline<T, F>(timeout: Duration, work: F) -> Option<T>
+/// Returns `Timeout` only when the deadline expires. A disconnected worker (including a
+/// panic) or failure to start the thread returns the content-free `Internal` error.
+pub fn run_with_deadline<T, F>(timeout: Duration, work: F) -> Result<T, ParseError>
+where
+    T: Send + 'static,
+    F: FnOnce() -> T + Send + 'static,
+{
+    run_with_deadline_using(timeout, work, |worker| {
+        thread::Builder::new()
+            .name("resume-parser-worker".into())
+            .stack_size(WORKER_STACK_BYTES)
+            .spawn(worker)
+            .map(|_| ())
+    })
+}
+
+// Inject the spawner privately to test failure without exhausting OS resources.
+fn run_with_deadline_using<T, F>(
+    timeout: Duration,
+    work: F,
+    spawn: impl FnOnce(Box<dyn FnOnce() + Send>) -> std::io::Result<()>,
+) -> Result<T, ParseError>
 where
     T: Send + 'static,
     F: FnOnce() -> T + Send + 'static,
 {
     let (sender, receiver) = mpsc::channel();
-    thread::Builder::new()
-        .name("resume-parser-worker".into())
-        .stack_size(WORKER_STACK_BYTES)
-        .spawn(move || {
-            // The receiver may be gone after a timeout; that is fine.
-            let _ = sender.send(work());
-        })
-        .ok()?;
-    receiver.recv_timeout(timeout).ok()
+    spawn(Box::new(move || {
+        // The receiver may be gone after a timeout; that is fine.
+        let _ = sender.send(work());
+    }))
+    .map_err(|_| ParseError::Internal)?;
+    receiver.recv_timeout(timeout).map_err(|error| match error {
+        RecvTimeoutError::Timeout => ParseError::Timeout,
+        RecvTimeoutError::Disconnected => ParseError::Internal,
+    })
 }
 
 #[cfg(test)]
@@ -43,10 +63,7 @@ mod tests {
 
     #[test]
     fn returns_the_result_when_work_finishes_in_time() {
-        assert_eq!(
-            run_with_deadline(Duration::from_secs(5), || 21 * 2),
-            Some(42)
-        );
+        assert_eq!(run_with_deadline(Duration::from_secs(5), || 21 * 2), Ok(42));
     }
 
     #[test]
@@ -56,7 +73,7 @@ mod tests {
             thread::sleep(Duration::from_secs(3));
             1
         });
-        assert_eq!(result, None);
+        assert_eq!(result, Err(ParseError::Timeout));
         assert!(
             started.elapsed() < Duration::from_secs(2),
             "did not wait for the worker"
@@ -64,8 +81,25 @@ mod tests {
     }
 
     #[test]
-    fn a_panicking_worker_is_reported_as_no_result() {
-        let result: Option<u8> = run_with_deadline(Duration::from_secs(5), || panic!("synthetic"));
-        assert_eq!(result, None);
+    fn a_panicking_worker_is_an_internal_error_without_its_payload() {
+        let result: Result<u8, _> =
+            run_with_deadline(Duration::from_secs(5), || panic!("PRIVATE-PANIC-CANARY"));
+        assert_eq!(result, Err(ParseError::Internal));
+        assert!(!serde_json::to_string(&result.unwrap_err().to_api_error())
+            .unwrap()
+            .contains("PRIVATE-PANIC-CANARY"));
+    }
+
+    #[test]
+    fn a_spawn_failure_is_an_internal_error_without_os_details() {
+        let result: Result<u8, _> = run_with_deadline_using(
+            Duration::from_secs(5),
+            || panic!("work must not run after spawn failure"),
+            |_worker| Err(std::io::Error::other("PRIVATE-SPAWN-CANARY")),
+        );
+        assert_eq!(result, Err(ParseError::Internal));
+        assert!(!serde_json::to_string(&result.unwrap_err().to_api_error())
+            .unwrap()
+            .contains("PRIVATE-SPAWN-CANARY"));
     }
 }

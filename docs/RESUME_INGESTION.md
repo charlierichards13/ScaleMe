@@ -270,9 +270,14 @@ Only the four codes already in the API contract are used. No new code was introd
 | Damaged or unreadable structure | `corrupted_pdf` | `PARSING_FAILED` | 1 |
 | Valid PDF, no text layer | `no_extractable_text` | `NO_EXTRACTABLE_TEXT` | 1 |
 | Time budget exceeded | `timeout` | `PARSING_FAILED` | 3 |
-| PDF library panicked, or output failed the self-check | `internal_error` | `PARSING_FAILED` | 1 |
+| Worker failed to start or panicked, PDF library panicked, or output failed the self-check | `internal_error` | `PARSING_FAILED` | 1 |
 
-All are `retryable: false`: the same bytes give the same result. Messages are fixed strings. Library error text is discarded because it can quote bytes from the document.
+All responses retain `retryable: false`; no automatic retry policy is introduced. Messages are fixed strings. Library error text is discarded because it can quote bytes from the document.
+
+The deadline helper returns a typed result: only an expired channel wait produces `timeout`.
+Failure to spawn the worker or a disconnected result channel (including an uncaught worker
+panic) produces `internal_error`. Neither OS error details nor panic payloads enter the error
+response. Regression tests cover completion, expiration, worker panic and injected spawn failure.
 
 **Open question for the team:** `FILE_TOO_LARGE` for "too many pages" and "text too long", and `PARSING_FAILED` for "password-protected", are the closest existing codes, not exact ones. If the frontend needs to tell them apart, dedicated codes should be added to `docs/api-contract.md` first.
 

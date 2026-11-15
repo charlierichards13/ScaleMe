@@ -28,7 +28,7 @@ pub enum ParseError {
     NoExtractableText,
     /// The time budget ran out.
     Timeout,
-    /// The PDF library panicked or the output failed the contract self-check.
+    /// A worker failed to start or panicked, the PDF library panicked, or output failed its self-check.
     Internal,
 }
 
@@ -82,7 +82,7 @@ impl ParseError {
         }
     }
 
-    /// Retrying the same bytes gives the same result, so nothing here is retryable.
+    /// Parser errors do not request automatic retries.
     pub fn retryable(self) -> bool {
         false
     }
