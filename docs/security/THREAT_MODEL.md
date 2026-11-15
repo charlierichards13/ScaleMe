@@ -84,6 +84,19 @@ Status: source exists in the author's worktree and was self-reviewed by the impl
 
 ## Review triggers
 
+### Account UI preview (Issue #42)
+
+`/sign-in` and `/sign-up` are UI-only previews. All name/email/password
+inputs and authentication/reset/provider actions are disabled. No form,
+credential handler, session, authorization gate, persistence, telemetry, or
+external authentication service is introduced. A local boolean toggles sample
+errors; the demo link opens existing fictional fixtures at `/fit-insights`.
+No user accounts, login, or privacy guarantees exist yet. Browser checks use
+fresh contexts and verify no requests during preview interactions and no
+local/session storage or cookies. These checks do not certify the wider app.
+Real authentication remains a separate product/security review.
+See [scope and verification](../AUTH_PREVIEW.md).
+
 ### Fit Evidence Explorer prototype (Issue #40)
 
 `/fit-insights` uses bundled **FICTIONAL DEMO** resume/job/interview fixtures and local
