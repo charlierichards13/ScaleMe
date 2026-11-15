@@ -28,7 +28,7 @@ Fixed error messages replace raw server/provider prose. Cancel/unmount abort the
 ignore stale completions. A 15-second timeout bounds waiting. HTTP 429 gets manual-retry
 cooldown, which is not server abuse/cost protection and can reset on mode exit/reentry.
 
-## Checks executed
+## Original integration checks executed
 
 - Mocked client tests: live blocked; exact demo URL; no draft body/cookies; no redirects,
   retries or fallback; malformed/schema/mode/source/duplicate-ID responses rejected;
@@ -53,7 +53,33 @@ advisories remain. No live model call was made.
 ## Unverified and future activation
 
 The client lock is not server authorization. Direct-backend exposure and SECURITY.md
-launch gates remain unchanged. Merge backend security work and obtain separate explicit
-authorization before adding live fetch. Re-review provider disclosure/consent/retention,
+launch gates remain in effect. PR #38's reviewed backend security work is now merged;
+obtain separate explicit authorization before adding live fetch. Re-review provider disclosure/consent/retention,
 shared abuse limits, cost controls, server provenance and actual model adversarial behavior
-(#23 / #24). Independent security review and manual screen-reader audit remain unverified.
+(#23 / #24). Manual screen-reader verification and an independent review of this frontend
+remain pending; backend independent review does not establish frontend review.
+
+## PR #38 synchronization addendum (2026-11-15)
+
+Merged main `ffc072be` without changing the incoming backend/security implementation.
+No browser request path, gate, labeling, storage or data flow changed. The contract keeps
+its v0.1 request/analysis/error shapes. Four added tests check actual handler/client demo
+compatibility, prepared-draft compatibility with the default-off 503, empty grounded advice
+and structured 429 handling. The provider boundary is mocked, including for the in-process
+handler checks, so these tests cannot invoke AWS.
+
+Lint, route typegen, TypeScript, **212 tests / 16 files**, production build and the
+high/critical audit threshold passed. Nine existing moderate dev-tool advisories remain.
+Production-browser checks at 320/390/768/1440 px confirmed explicit bodyless demo loading,
+no draft submission, disabled live UI, validation/focus, filters, offline comparison and
+no storage/cookies/overflow/page exceptions. Mocked 503/502/429/network/wrong-mode/hostile
+prose/empty-advice and cancellation/stale-result checks passed. The actual loopback server,
+started with live explicitly off, returned 503 for valid synthetic input without AWS and
+400 for malformed JSON. Accessibility was not re-audited in this synchronization.
+
+The owner's single prior synthetic Nova Lite success is documented in main's backend
+notes, not re-executed here. Per-process budgets do not establish distributed protection,
+authorization, provider-retention policy or semantic truth. No live call, IAM/credential
+change, deployment or public access was made. See the
+[future live-analysis PR plan](../FIT_INSIGHTS_LIVE_PLAN.md) for required implementation
+and privacy/access decisions before enabling real input submission.

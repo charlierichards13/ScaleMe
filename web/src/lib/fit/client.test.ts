@@ -120,9 +120,31 @@ describe("fit client safety and wire contract", () => {
     };
     await expect(call(ok(analysis))).resolves.toMatchObject({ analysis });
   });
+  it("accepts empty advice lists after backend grounding removes every item", async () => {
+    const analysis = {
+      ...demoAnalysis,
+      strengths: [],
+      clarificationQuestions: [],
+      growthSuggestions: [],
+    };
+    await expect(call(ok(analysis))).resolves.toMatchObject({ analysis });
+  });
 });
 
 describe("safe network failures", () => {
+  it("maps the backend RATE_LIMITED envelope and seconds header without exposing prose", async () => {
+    const network = vi.fn().mockResolvedValue(Response.json(
+      { error: { code: "RATE_LIMITED", message: "synthetic-private-canary", retryable: true } },
+      { status: 429, headers: { "Retry-After": "60" } },
+    ));
+    await expect(analyzeFit({ mode: "demo" }, { fetch: network })).rejects.toMatchObject({
+      code: "RATE_LIMITED",
+      retryable: true,
+      retryAfterSeconds: 60,
+      message: "Too many requests. Please wait before trying the fictional demo again.",
+    });
+    expect(network).toHaveBeenCalledOnce();
+  });
   it.each([
     [400, "INVALID_REQUEST", false],
     [413, "INVALID_REQUEST", false],

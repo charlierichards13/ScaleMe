@@ -186,8 +186,8 @@ export type GuardedImpactSuggestion = Omit<ImpactSuggestion, "improved"> & {
 
 **Request:** `{ "resume": Resume, "job": JobPosting }`.  
 **Response:** `{ "analysis": FitAnalysis }`.  
-**Failures:** `INVALID_REQUEST`, `INVALID_RESUME`, `INVALID_JOB`, `AI_UNAVAILABLE`, `INVALID_AI_RESPONSE`.
-**Implementation:** use the Rust matcher for explainable requirement signals and Bedrock for qualitative reasoning, constrained by evidence. *Current state (branch `feat/bedrock-fit`, Issue #6): Bedrock only; the Rust matcher is not integrated.*
+**Failures:** `INVALID_REQUEST`, `INVALID_RESUME`, `INVALID_JOB`, `AI_UNAVAILABLE`, `INVALID_AI_RESPONSE`, `RATE_LIMITED`.
+**Implementation:** use the Rust matcher for explainable requirement signals and Bedrock for qualitative reasoning, constrained by evidence. *Current state (Issue #6, merged in PR #33): Bedrock only; the Rust matcher is not integrated. Verified once against live Amazon Nova Lite (`amazon.nova-lite-v1:0`, `us-east-2`) on 2026-11-15 with synthetic data. See `docs/aws-bedrock-plan.md`.*
 
 **Request limits (server-enforced; the request is rejected before any AWS call):**
 
@@ -209,9 +209,40 @@ Unknown extra fields are ignored. `filename`, `sourceUrl` and `sections` are acc
 | 413 | `INVALID_REQUEST` | no | Body exceeds 200,000 bytes |
 | 400 | `INVALID_RESUME` | no | `resume` missing, empty, wrong type or too long |
 | 400 | `INVALID_JOB` | no | `job` missing, empty, wrong type or too long (checked after the resume) |
-| 503 / 504 | `AI_UNAVAILABLE` | usually | Not configured (`retryable: false`), access denied or bad model ID (`false`), throttled (`true`), timeout 504 (`true`), other AWS failure (`true`) |
+| 503 | `AI_UNAVAILABLE` | no | Live AI cannot run on this server: switched off (the default), missing or invalid server settings (fails closed), AWS access denied, or the configured model is unusable. The client always gets the same generic message (below); the specific cause is only in the server log |
+| 429 | `RATE_LIMITED` | yes | The shared live-call budget is used up: more than the per-minute limit, the daily cap, or the concurrent-call cap. Has a `Retry-After` header (seconds). Bedrock was **not** called |
+| 503 / 504 | `AI_UNAVAILABLE` | yes | Throttled by AWS (503), timeout (504), or other transient AWS failure (503) |
 | 502 | `INVALID_AI_RESPONSE` | yes | Model reply was empty, not JSON, failed schema validation, or used a requirement id that was not supplied |
 | 500 | `AI_UNAVAILABLE` | yes | Unexpected server error (generic message) |
+
+**Client-facing messages are generic.** Every non-retryable `AI_UNAVAILABLE` returns `"Live AI analysis is not available on this server right now. You can try the labeled demo instead."`, with no environment-variable names, AWS account details, model IDs or limit values. Operators troubleshoot from the server log, which records one fixed hint per cause (never a value, credential, header or user text):
+
+| Server log line (prefix `[fit/analyze] AI_UNAVAILABLE:`) | Fix |
+| --- | --- |
+| `live AI disabled: FIT_LIVE_AI_ENABLED is not true` | Set `FIT_LIVE_AI_ENABLED=true` on a private, deliberately live server |
+| `not configured: AWS_REGION and BEDROCK_MODEL_ID are required` | Set both variables |
+| `invalid setting: <NAME> must be an integer from <min> to <max>` | Correct or unset the named variable |
+| `not authorized: check the server's AWS credentials and Bedrock model access` | Check the server's AWS profile/role and model access (the AWS error type is logged on the line before) |
+| `model unusable: check BEDROCK_MODEL_ID and AWS_REGION` | Use a model or inference-profile ID enabled in that region |
+
+**Order of checks for a live request** (each rejects before any AWS call): (1) bounded body read and schema validation; (2) `FIT_LIVE_AI_ENABLED`; (3) cost-guard and AWS settings; (4) cost guard: daily cap, then per-minute limit, then concurrency; (5) one Bedrock call. Malformed or invalid requests and server misconfiguration never use up the call budget. An admitted call counts against the budget even if Bedrock then fails or times out, because it may still be billed.
+
+**Cost guard (Issue #23):**
+
+| Limit | Default | Variable (allowed range) |
+| --- | --- | --- |
+| Live calls in any sliding 60 s window | 10 | `FIT_RATE_LIMIT_GLOBAL_PER_MIN` (1 to 600) |
+| Live calls in any sliding 24 h window | 50 | `FIT_DAILY_CALL_LIMIT` (1 to 10,000) |
+| Model calls running at the same time | 2 | `FIT_MAX_CONCURRENT` (1 to 20); extra requests get 429 immediately, they are not queued |
+| AWS SDK attempts per request | 1 (no automatic retry) | `BEDROCK_MAX_ATTEMPTS` (1 to 2) |
+
+These limits are **one shared anonymous budget** for all callers. The server does **not** read `X-Forwarded-For`, `X-Real-IP`, `Forwarded` or any other client-supplied header to identify callers, so there is no per-user limit or fairness: one caller can use up the budget for everyone. Counters live in the memory of each server process, so they are **not** shared between instances and reset on restart (see `docs/security/THREAT_MODEL.md`). The 429 message is the same for every limit and does not reveal the limit values:
+
+```json
+{ "error": { "code": "RATE_LIMITED", "message": "Too many analysis requests right now. Please wait and retry, or use the labeled demo.", "retryable": true } }
+```
+
+Clients should wait at least `Retry-After` seconds before retrying, retry at most once automatically, and offer the labeled demo. Do not retry in a loop.
 
 `INVALID_REQUEST` is **not** a resume/job content error: it means the HTTP body itself could not be used. `INVALID_RESUME` and `INVALID_JOB` messages never echo the submitted text.
 
@@ -220,9 +251,25 @@ Unknown extra fields are ignored. `filename`, `sourceUrl` and `sections` are acc
 - A `supported` assessment with no verified resume quote is downgraded to `unclear` and its explanation says so.
 - `disclaimer` is always replaced with a fixed server-side string; the model's version is ignored.
 - Quote matching is a substring check: it shows the quote exists in the input, not that it proves the requirement. A very short quote can match by chance, so reviewers should read the evidence.
-- `explanation`, `strengths`, `clarificationQuestions` and `growthSuggestions` are model-written text. They are schema- and length-checked but **not** fact-checked. Prompt rules forbid invented facts and hiring probabilities, but the code does not detect them.
+- **Advice grounding.** Items in `strengths`, `clarificationQuestions` and `growthSuggestions` are **dropped**, never rewritten, when:
+  - they contain a number that does not appear in the inputs. For `strengths` the number must appear in the resume. For questions and suggestions it may come from the resume, the job text or the supplied requirements. Requirement IDs such as `r1` don't count as numbers.
+  - a growth suggestion tells the candidate to add, list, include, mention, highlight, claim or showcase experience, skills, achievements, metrics or results, with no condition such as "if" or "whether". "If you have X, add an example" is kept; "Add X experience to your resume" is dropped.
+- These lists can therefore be shorter than the model produced, or empty. Their types and limits are unchanged, so this is not a contract change.
+- `explanation`, `summary` and the remaining advice are still model-written text. They are schema- and length-checked but **not** fact-checked. The grounding rule is a keyword heuristic, so it can miss invented claims written without numbers or those verbs. It can also drop an honest item. The prompt additionally asks for one clarification question per `not_evidenced` or `unclear` requirement and for conditional or future-learning suggestions only; the code does not enforce that.
 
-**Demo mode:** `POST /api/fit/analyze?demo=true` returns a fixed, hand-written synthetic `FitAnalysis`. The request body is ignored (it is not even parsed), and AWS is not called. The response has header `X-ScaleMe-Mode: demo` and `X-ScaleMe-Demo-Label`, and the `summary` begins with `DEMO:` and the `disclaimer` with `DEMO (synthetic sample, not a live AWS Bedrock result)`. A normal response has `X-ScaleMe-Mode: live`. The route never switches to demo on its own when AWS fails; the client must ask for it. There is no `mode` field in the JSON body (open decision: see Decisions below).
+**Usage metrics (server log only, never in the response):** each completed Bedrock call logs one line of numbers:
+
+```text
+[fit/analyze] Bedrock usage: inputTokens=812 outputTokens=256 totalTokens=1068 modelLatencyMs=2346 wallMs=2410 truncated=0
+```
+
+- `modelLatencyMs` is Bedrock's own reported latency. `wallMs` is the time measured by the server.
+- `truncated=1` means the model stopped at `BEDROCK_MAX_OUTPUT_TOKENS`.
+- A value that is missing or not a number is logged as `n/a`.
+- A failed call logs the AWS error type and `wallMs` only.
+- The line never contains prompts, resume or job text, model output, model or account IDs, credentials or caller details. To estimate cost, multiply the token counts by the model's current on-demand prices.
+
+**Demo mode:** `POST /api/fit/analyze?demo=true` returns a fixed, hand-written synthetic `FitAnalysis`. The request body is ignored (it is not even parsed), and AWS is not called. Demo mode works with live AI switched off and no AWS settings, and it is exempt from the cost guard (it never returns 429 and does not use up the live budget). The response has header `X-ScaleMe-Mode: demo` and `X-ScaleMe-Demo-Label`, and the `summary` begins with `DEMO:` and the `disclaimer` with `DEMO (synthetic sample, not a live AWS Bedrock result)`. A normal response has `X-ScaleMe-Mode: live`. The route never switches to demo on its own when AWS fails; the client must ask for it. There is no `mode` field in the JSON body (open decision: see Decisions below).
 
 ### `POST /api/interview/next`
 
@@ -342,10 +389,12 @@ Explicit `/fit-insights?demo=true` selection reveals a separate load action. Onl
 user action makes a bodyless `POST /api/fit/analyze?demo=true`; it never submits drafts.
 The client validates analysis, `X-ScaleMe-Mode: demo` and existing DEMO text markers and
 never synthesizes fallback results. Live invocation rejects before network access pending
-backend security merge and separate authorization.
+a separately authorized client change. PR #38's backend security controls are now merged;
+that does not activate the browser's live path.
 
 v0.1 returns IDs but no extracted descriptions/importance or per-assessment question links.
 The UI shows IDs, overall questions and returned-assessment status counts without inventing
-a required denominator. HTTP 429 is handled defensively using Retry-After and a visible
-manual-retry cooldown; this does not assert backend rate limiting has shipped. See
+a required denominator. HTTP 429 uses Retry-After and a visible manual-retry cooldown.
+PR #38 adds per-process shared live-call limits; the fictional demo bypasses those limits.
+Grounding can leave advice lists empty, which the client accepts and displays explicitly. See
 [functional scope, tests and activation requirements](FIT_INSIGHTS_INTEGRATION.md).

@@ -79,8 +79,8 @@ Live analysis, PDF parsing, job ingestion, extracted descriptions/importance, in
 submission/reassessment, the v0.2 evidence ledger, live before/after coverage, persistent
 profiles and cross-page handoff remain unimplemented here.
 
-Before enabling live calls: merge/review the backend security work, then obtain separate
-explicit authorization for a client change. Revisit disclosure/consent, provider processing
+PR #38's reviewed backend security work is now merged. Before enabling live calls, obtain
+separate explicit authorization for a client change. Revisit disclosure/consent, provider processing
 and retention, abuse/cost controls, server-side quote/requirement provenance and live failure
 behavior (#23 / #24). No configuration is needed for this fictional demo. The browser lock
 does not secure direct backend requests. Backend handlers, AI code, AWS settings and
@@ -90,6 +90,58 @@ PR #45's merged shared navigation, homepage/dashboard/onboarding, README and cen
 security docs are preserved exactly from main. The focused
 [security addendum](security/FIT_INSIGHTS_CLIENT_REVIEW.md) records the original client
 integration's threat/checklist delta.
+
+## Backend synchronization verification (2026-11-15, PR #38 into PR #46)
+
+Merged latest `origin/main` at `ffc072be` into the existing feature branch from `1931808`
+without rebase, history replacement or force-push. The merge had no conflicts;
+`docs/api-contract.md` automatically retained both backend security documentation and
+frontend consumer notes. Updated those notes to acknowledge the merged backend controls.
+The original frontend implementation, fixtures and screenshots are unchanged. Incoming
+backend/API/AI, AWS example configuration, dependency manifests, central security documents,
+onboarding and interview files match main exactly; no parser implementation was changed.
+
+The browser still blocks live requests before fetch. `FitAnalysis`, `ApiError`, request
+limits and demo response markers retain the same wire shapes. The added `FitApiError`
+internal troubleshooting hint is not serialized to clients. Empty grounded advice lists,
+non-retryable disabled-service 503 and structured 429/Retry-After are compatible with the
+existing client. New regression tests exercise the actual demo handler through the browser
+adapter, prepare a request accepted by the real handler with live off (503), accept empty
+advice arrays and map the new structured rate-limit response. The provider is mocked in
+all tests; no AWS credentials or network are used by unit tests.
+
+Node 24.22.1 / npm 11.9.0; from `web/`:
+
+- `npm ci --cache /workspace/work/npm-cache --ignore-scripts` — passed; existing ESLint peer warnings.
+- `npm run lint` — passed.
+- `npm exec -- next typegen` and `npm exec -- tsc --noEmit` — passed.
+- `npm test` — **212 tests across 16 files passed**.
+- `FIT_LIVE_AI_ENABLED=false npm run build` — passed.
+- `npm audit --audit-level=high --cache /workspace/work/npm-cache` — passed;
+  nine existing moderate development-tool advisories remain. No dependency changes.
+- Feature diff against `origin/main`: whitespace check passed, no unmerged entries.
+  Main's existing Markdown hard break in `docs/aws-bedrock-plan.md` is preserved.
+- Rust checks do not apply: no crate exists.
+
+Production Chromium/Playwright checks used `next start -H 127.0.0.1 -p 3001` with
+`FIT_LIVE_AI_ENABLED=false`. At 320/390/768/1440 px: `/fit` entry, local validation and
+focus, ready drafts, disabled live control, explicit selection without automatic request,
+actual no-AWS demo loading, status-filter recovery, offline answer reveal and 2/4 → 3/4
+comparison, and clearing drafts passed. Each viewport sent exactly one bodyless demo POST
+after the load click, with no cookies or draft text. No horizontal overflow, page exceptions,
+external requests or browser storage were observed.
+
+Mocked browser checks passed for non-retryable 503, retryable 502, 429/Retry-After cooldown
+without automatic retry, network failure, wrong response mode, escaped hostile prose,
+empty advice, cancellation and stale completion after mode exit. Free direct local-server
+checks returned 503 for valid synthetic input with live off and 400 for malformed JSON.
+These are not live-model or renewed accessibility-audit claims; the original accessibility
+results and shared-style limitations below still apply.
+
+The separate [future live-analysis plan](FIT_INSIGHTS_LIVE_PLAN.md) identifies concrete
+client/result/UI changes, privacy and access gates, timeout coordination and contract limits.
+Backend controls do not activate the browser. No live model call, AWS/IAM/credential change,
+public exposure, deployment or PR merge was performed for this synchronization.
 
 ## Main synchronization verification (2026-11-15, PR #46)
 

@@ -21,8 +21,21 @@ HONESTY RULES:
 - Use "unclear" when the resume hints at it but does not clearly show it.
 - Evidence quotes must be copied EXACTLY (verbatim, short, under 300 characters) from the resume or the job posting. Use source "resume" or "job" only. If there is no exact quote, use an empty evidence array.
 - Do not infer protected characteristics (age, gender, nationality, health, etc.) or visa/work-authorization status.
-- Clarification questions ask for missing facts; they must not assume the answer.
-- Growth suggestions must be things the candidate could truthfully do or add if it is true for them, for example "If you tested this feature, add how." Do not write replacement resume claims.
+
+STRENGTHS:
+- Only list things the resume directly shows. Never add numbers, percentages, team sizes, results or achievements that are not written in the resume.
+
+CLARIFICATION QUESTIONS:
+- Ask only about requirements you marked "not_evidenced" or "unclear". Each question covers ONE such requirement and names it, for example "The posting asks for automated testing. Have you written automated tests? If so, for which project?"
+- Do not ask generic questions about other skills, tools or projects that are not tied to a listed requirement.
+- Never assume the answer, and never suggest a number, metric or result for the candidate to confirm.
+
+GROWTH SUGGESTIONS (each one must be exactly one of these kinds):
+1. Conditional resume improvement: "If you have <the missing or unclear requirement>, add a specific example of it." Only facts the candidate confirms are true may be added.
+2. Genuine future learning: a concrete way to build the missing skill (a course, a small project, practice), clearly framed as future work, not as something to claim now.
+3. Clearer wording of something ALREADY in the resume, without adding any new fact, number or result.
+- Never tell the candidate to add, list, highlight or claim experience, skills, achievements, metrics, numbers, titles or employers that the resume does not show.
+- Never invent numbers, percentages or results, not even as examples.
 
 OUTPUT:
 Respond with ONE JSON object and nothing else (no markdown, no commentary), shaped exactly like:
@@ -37,8 +50,8 @@ Respond with ONE JSON object and nothing else (no markdown, no commentary), shap
     }
   ],
   "strengths": string[],                   // grounded in the resume, max 5
-  "clarificationQuestions": string[],      // useful questions for the candidate, max 6
-  "growthSuggestions": string[],           // honest ways to strengthen the application, max 6
+  "clarificationQuestions": string[],      // one per not_evidenced/unclear requirement, max 6
+  "growthSuggestions": string[],           // conditional, future-learning or rewording only, max 6
   "disclaimer": string
 }`;
 
