@@ -1,101 +1,46 @@
-# Fit Evidence Explorer — Issue #40
+# Fit Evidence Explorer: offline interview walkthrough (Issue #40)
 
-`/fit-insights` is a standalone **FICTIONAL DEMO**, complementing `/impact-lab`.
-Everything about the candidate, employer, job, resume, and interview is a hand-written
-sample. Candidate-reported is not independently verified. Coverage measures documented
-evidence, not ability or hiring probability.
+Open `/fit-insights`, then **Open offline walkthrough**. This original fictional scenario
+is now embedded below local input/API results panels. Its candidate, employer, role, resume
+and answers are hand-written. Candidate-reported is not independently verified; coverage
+is not ability or hiring probability. For the new inputs/API demonstration and current
+verification, see [client integration notes](FIT_INSIGHTS_INTEGRATION.md).
 
-## Three-minute walkthrough
+## Walkthrough
 
-1. Open `/fit-insights`. The target role lists four required requirements and one
-   preferred requirement. Baseline coverage is **2 of 4 required requirements supported**.
-2. Inspect the web application and collaboration cards: read the exact resume quotes.
-   Inspect feedback: related context exists, but the resulting change is unknown.
-   Inspect testing: there is no supporting quote. Job text is displayed separately.
-3. At **One question. More documented evidence.**, reveal the specific fictional answer.
-   Read the candidate's words. The active before snapshot stays at 2 of 4.
-4. Select **Compare after this answer**. Only testing changes from not evidenced to
-   supported; coverage becomes **3 of 4**. Inspect its exact interview-turn quote.
-   Before/after buttons let judges revisit either snapshot. The answer stays visible.
-5. Choose the vague or unrelated answer and reveal/compare it. Both remain **2 of 4**,
-   with a narrower clarification prompt. Automation remains not evidenced even with
-   the specific answer; no tool, outcome, or numerical achievement is inferred.
-6. Expand the full fictional resume source. Use the status filter or reset the demo.
-   Follow the Impact Lab link to explore writing separately: state does not transfer.
+1. Inspect four required requirements and one preferred requirement. Baseline coverage is
+   2 of 4 required requirements supported.
+2. Inspect web application/collaboration for exact resume quotes. Feedback is incomplete;
+   testing has no supporting quote. Job context is separate from candidate evidence.
+3. Reveal the specific fictional answer under **One question. More documented evidence.**
+   Coverage stays at 2 of 4 until **Compare after this answer** is pressed.
+4. Compare: only testing changes to supported, with an exact interview quote; coverage
+   becomes 3 of 4. Switch between before/after to inspect the transition.
+5. Vague/unrelated answers remain 2 of 4. Automation stays not evidenced. No tool, numerical
+   achievement or outcome is inferred.
+6. Filter, inspect full fictional resume excerpts or reset. Impact Lab opens a separate
+   demo without transferring evidence or selections. Closing the walkthrough resets its state.
 
-## Implemented versus simulated
+## Scope and integrity
 
-Implemented: responsive requirement inventory, status filters, keyboard-operated native
-controls, focus transfer to the evidence inspector, exact quote display, source labels,
-unknown/missing-evidence states, sample-answer reveal gate, deterministic before/after
-counting, reset, clarification questions, reduced-motion styles, and a separate Impact
-Lab link. All state is component-local; refreshing resets it.
+`offline-explorer.tsx` renders the original scenario; `demo.ts` contains local fixture types,
+not wire types. `demo.test.ts` preserves stable inventory, exact source/quote links,
+reveal-before-compare and deterministic counting. Required IDs are `web`, `collaboration`,
+`testing`, `feedback`; preferred skills are excluded. Missing, extra, duplicate, substituted
+or unknown IDs cannot inflate coverage. Quotes need the complete manually approved
+requirement/source/quote tuple. Mutated quotes, job-only context, missing answers and
+vague/irrelevant answers cannot add support.
 
-Simulated: role extraction, candidate evidence, coaching questions, requirement relevance,
-and reassessment. Only predefined fixture links are accepted. There is no semantic AI
-classifier and no arbitrary resume, job, answer, or API response input. Exact substring
-matching alone cannot establish relevance; this demo also requires the complete manually
-approved requirement/source/quote tuple. No rewrite changes coverage.
+This is not a semantic classifier or live evidence ledger. General integration still needs
+server provenance/relevance checks and an agreed v0.2 contract. Drafts/API responses never
+enter this fixture allowlist. Walkthrough interactions make no network calls. No accounts,
+uploads, storage, telemetry or model calls are added by the walkthrough. Original scoped
+`fit-explorer-` styles remain inside the new workspace; shared layout/styles are unchanged.
 
-`demo.ts` defines **local fixture types**, not a wire contract. The v0.1 API and existing
-backend remain unchanged. The proposed v0.2 evidence ledger is **not implemented**.
-Future live integration must adapt validated v0.1 assessments, coordinate any agreed
-v0.2 migration, and validate provenance and relevance server-side. Never reuse the
-fixed-fixture allowlist as a general-purpose evidence validator.
+## Historical standalone screenshots
 
-The denominator is the fixed required IDs `web`, `collaboration`, `testing`, `feedback`.
-Counting rejects missing, extra, duplicate, preferred, or substituted IDs. Unknown
-selection resolves to an explicit unavailable inspector state. The inventory also has
-an empty-filter recovery state. No network/service failure UI is needed because there
-is no network-based analysis. No accounts, uploads, persistence, telemetry, AWS calls,
-backend changes, new dependencies, or paid services were added.
+These predate the new workspace. Current captures are linked in the integration notes.
 
-Styles live in a route-owned stylesheet with `fit-explorer-` class prefixes. This avoids
-the existing Turbopack `*.css` rule's CSS-module mapping behavior without touching shared
-configuration, layout, or global styles.
-
-## Verification
-
-From `web/`:
-
-```bash
-npm ci
-npm run lint
-npm exec -- next typegen
-npm exec -- tsc --noEmit
-npm test
-npm run build
-npm audit --audit-level=high
-```
-
-Unit suite: 45 tests across 5 files pass (10 new explorer cases, including parameterized
-missing/vague/irrelevant answers). Covers stable IDs, precise source/quote links, hidden
-answers, unknown IDs, fabricated/partial quotes, job-only evidence, unrelated evidence,
-rewriting alone, selection lookup, and only-testing status transitions.
-
-Production Chromium checks: desktop/mobile widths 320, 390, 768, and 1440; no horizontal
-overflow; exact resume/interview quotes; reveal-before-compare gating; both snapshots;
-vague/unrelated answers; reset; status filter; native source disclosure; keyboard skip
-link and Enter activation; inspector focus transfer; reduced-motion transitions disabled;
-offline interactions after load; no API requests or browser exceptions. Visual inspection
-uses the desktop/mobile screenshots below. This is browser automation and visual review,
-not a screen-reader audit or exhaustive WCAG certification. A fresh offline load is not
-promised: no service worker or offline installation was added.
-
-Audit exits 0 at the high/critical threshold. Nine existing moderate advisories remain
-in the ESLint/minimatch development dependency tree; dependencies and lockfile unchanged.
-`npm ci` emits existing ESLint peer-range warnings. No Rust crate exists on this base.
-No live AWS/model behavior was tested or changed.
-
-## Screenshots (fictional data only)
-
-- [Desktop before interview](screenshots/fit-insights/desktop-before.png)
-- [Desktop after interview](screenshots/fit-insights/desktop-after.png)
+- [Before interview](screenshots/fit-insights/desktop-before.png)
+- [After interview](screenshots/fit-insights/desktop-after.png)
 - [Mobile after interview](screenshots/fit-insights/mobile-after.png)
-
-## Remaining limitations
-
-No live analysis, arbitrary input, independent verification, resume rewriting on this
-page, cross-page handoff state, or end-to-end API integration. Questions and next steps
-are authored fixtures. Human review is still needed before merging; do not deploy this
-as a real candidate assessment service.

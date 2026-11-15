@@ -7,6 +7,8 @@ ScaleMe is an AI-powered career preparation platform built at **SunHacks 2026**.
 
 > **Status:** Hackathon MVP in development. The architecture and features below are plans, not claims that they are already implemented.
 
+**Contextual interview private preview:** `/interview/contextual` accepts pasted resume/job text and explicit requirements, calls the actual fit/interview APIs, and collects exact candidate-reported answers for future reassessment. It requires owner-authorized private access; live AI stays off by default. `/interview` remains the separate fictional scripted practice. Backend PR #49 still needs human review; no live-model verification is claimed. [Setup, ownership and integration](docs/CONTEXTUAL_INTERVIEW.md).
+
 ## The problem
 
 Job seekers often have useful experiences that their resumes fail to communicate. Generic keyword checkers may point out missing terms, but they rarely ask *what actually changed because of your work* or help you practice defending your claims in an interview.
@@ -131,13 +133,14 @@ leave coverage unchanged. No AWS, uploads, persistence, or API wiring. Candidate
 are not independently verified, and coverage is not hiring probability.
 See [demo instructions, screenshots, and limitations](docs/FIT_INSIGHTS_DEMO.md).
 
-### Resume Impact Lab prototype
+### Resume Impact Lab and evidence ledger
 
-Visit `/impact-lab` for a standalone **FICTIONAL DEMO** of two before/after resume
-suggestions, exact evidence inspection, candidate confirmation/rejection, guarded
-copying, and targeted grilling questions. It uses deterministic hand-written fixtures,
-no paid APIs, and no persistence. The live AI discovery workflow remains future work.
-See [demo instructions and limitations](docs/IMPACT_LAB_DEMO.md).
+Visit `/impact-lab` to paste resume/job text, freeze a requirement inventory, answer
+targeted questions, and inspect computed before/after evidence coverage. Exact candidate
+sources ground proposed wording; candidate confirmation unlocks copying. Processing is
+local and conservative, with no model calls or persistence. An optional fictional sample
+uses the same workflow. Fit Explorer/interview API wiring remains a coordinated follow-up.
+See [workflow, tests, limitations and integration adapters](docs/EVIDENCE_LEDGER.md).
 
 The **Next.js scaffold is now available** in `web/`. With Node.js 22 installed:
 
@@ -178,3 +181,11 @@ GitHub Actions runs automatically after its workflow is merged; enforcing passin
 - **Repository:** [charlierichards13/ScaleMe](https://github.com/charlierichards13/ScaleMe)
 
 Built to help people tell the truth about their experience—and tell it better.
+
+P0 integration: open `/interview` → **Open contextual interview**. In an authorized
+private environment, use your resume/job, run fit analysis and answer the contextual
+AI interview. Finish, explicitly associate answers with original resume excerpts,
+and inspect the embedded existing Impact Lab's evidence changes and reviewed copy.
+Reassessment is conservative local processing, with no additional paid call. Live AI
+stays off by default; the separately labeled fictional practice remains available.
+[Integration and limits](docs/CONTEXTUAL_INTERVIEW.md#p0-completion-integration-supersedes-forthcoming-engine-above).

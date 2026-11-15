@@ -3,6 +3,10 @@
 **Date:** 2026-11-14 · **Source:** Claude Code's execution transcript, updated after the implementing agent reread its own source against the merged PR #25 standards.
 **Verification status:** **Self-review by the implementing agent, not independent.** Unit-test evidence is from **mocked** AWS. On 2026-11-15, **one** synthetic request went through the ScaleMe API to live Amazon Nova Lite and succeeded; see the update below. The Issue #6 code was merged to `main` in PR #33. Not a passing security audit; a human review of the real diff is still required.
 
+## Update 2026-11-15 (Issue #7 interview API, `feat/interview-next-api`)
+
+`POST /api/interview/next` reuses the same Bedrock client, live switch and shared cost budget. `invokeBedrock` gained optional per-call settings: a fixed log tag (`interview/next`) and a lower output-token cap (400, never above `BEDROCK_MAX_OUTPUT_TOKENS`). The fit route's behavior is unchanged; its body reader and error responses moved to `web/src/lib/ai/http.ts`. **Mocked tests only; no live interview call has been made.** Before any live run (owner approval, synthetic data): check the one-question and number rules against Nova Lite output, vague and irrelevant answers, injected instructions inside an answer and inside a forged "coach" turn, and a bait answer inviting the coach to suggest a metric. See [THREAT_MODEL.md](THREAT_MODEL.md#issue-7-interview-coach-api).
+
 ## Update 2026-11-15 (Issue #23 branch, `feat/bedrock-rate-limits`)
 
 | Area | Status |

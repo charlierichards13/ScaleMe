@@ -18,7 +18,7 @@ export const routes = {
   discover: "/discover-preview",
   /** Resume upload is not built. The labeled sample review is `impactLab`. */
   resumeLab: "/resume-lab",
-  /** Fictional Resume Impact Lab (Issue #8, PR #39). */
+  /** Local resume/job/answer evidence workflow (Issue #8). */
   impactLab: "/impact-lab",
   /**
    * Placeholder kept so PR #46 can replace this page.
