@@ -18,18 +18,18 @@ export function EvidenceInsights({ insights, isDemo }: { insights: EvidenceInsig
       <SectionHeading
         id="evidence-heading"
         title="Evidence insights"
-        description="How well your resume shows each requirement. This is coaching, not a hiring prediction."
+        description={isDemo ? "Quoted requirements from the sample profile." : "Prepare a local draft or open the labeled fictional sample."}
         action={isDemo ? <Badge tone="demo">Sample analysis</Badge> : undefined}
       />
 
       {insights.length === 0 ? (
         <EmptyState
           icon={<ListChecks className="h-5 w-5" />}
-          title="No analysis yet"
-          description="Analyze a role to see which requirements your resume supports, and which need more detail."
+          title="No analysis on this page"
+          description="Prepare a resume and job on this device, or open a labeled fictional sample. Live analysis is off."
           action={
-            <Link href={routes.fit} className={buttonStyles.secondary}>
-              Analyze a role
+            <Link href={routes.fitInsights} className={buttonStyles.secondary}>
+              Open fit explorer
             </Link>
           }
         />

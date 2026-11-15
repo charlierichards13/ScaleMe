@@ -45,7 +45,7 @@ When a live interviewer is added, keep this scripted path visibly separate from 
 | `web/src/app/(workspace)/interview/session.test.ts` | Progression, validation, restart, and isolation tests |
 | `web/src/app/(workspace)/interview/MockInterviewWorkspace.tsx` | Client workspace UI |
 
-Shared navigation still describes this route as not ready yet (`nav-items.ts` status "Soon", dashboard card "Coming soon"). Those files were left unchanged.
+Shared navigation labels this route *Practice* (`nav-items.ts` and the dashboard Mock Interview card). The page badge remains **Scripted Demo — Not Live AI**. One note under that badge states that the script does not adapt, that answers stay in memory on this page and are not uploaded, and that they are discarded when you leave or refresh.
 
 ## Tests
 

@@ -16,12 +16,20 @@ export const routes = {
    * pages resolving to `/discover`.
    */
   discover: "/discover-preview",
-  /** Resume upload placeholder (PDF parsing not built yet). */
+  /** Resume upload is not built. The labeled sample review is `impactLab`. */
   resumeLab: "/resume-lab",
-  /** Fictional Resume Impact Lab prototype from main (Issue #8, PR #39). */
+  /** Fictional Resume Impact Lab (Issue #8, PR #39). */
   impactLab: "/impact-lab",
-  /** Placeholder; connect to `/fit-insights` once PR #41 merges. */
+  /**
+   * Placeholder kept so PR #46 can replace this page.
+   * Sidebar and dashboard links use `fitInsights`.
+   */
   fit: "/fit",
+  /**
+   * Fit Evidence Explorer. Local resume and job drafts, plus an explicitly
+   * selected fictional sample. Live analysis is off.
+   */
+  fitInsights: "/fit-insights",
   interview: "/interview",
   coach: "/coach",
   saved: "/saved",

@@ -134,13 +134,9 @@ export function MockInterviewWorkspace() {
         </div>
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-4">
         <DemoBadge label={SCRIPTED_LABEL} />
-        <p className="max-w-3xl text-sm leading-6 text-muted">{SCRIPTED_NOTE}</p>
-        <p className="rounded-xl bg-surface px-4 py-3 text-sm leading-6 text-slate-600 shadow-card ring-1 ring-line">
-          <span className="font-semibold text-ink">Not saved.</span> Answers exist only while you stay on this page. Restart, exit,
-          refresh, and opening another page — including the sidebar — discard them. Nothing is uploaded or sent to a model.
-        </p>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{SCRIPTED_NOTE}</p>
       </div>
 
       <div className="mt-6" inert={pending ? true : undefined}>
@@ -462,14 +458,11 @@ function Recap({
               Practice complete
             </h2>
             <p className="mt-1 text-sm leading-6 text-muted">
-              {MODE_DETAILS[mode].title} script, {answers.length} answers. This recap repeats your words. It does not score you, measure
-              improvement, or add achievements.
+              {MODE_DETAILS[mode].title} script, {answers.length} answers. This recap repeats your words. The practice prompts under
+              each answer are prewritten and are not feedback on what you typed.
             </p>
           </div>
         </div>
-        <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950 ring-1 ring-amber-200">
-          Practice prompts below are prewritten and identical for every session. They are not feedback on what you typed.
-        </p>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
           <button type="button" className={cx(buttonStyles.primary, "w-full sm:w-auto")} onClick={(event) => onRestart(event.currentTarget)}>
             <RotateCcw aria-hidden="true" className="h-4 w-4" />

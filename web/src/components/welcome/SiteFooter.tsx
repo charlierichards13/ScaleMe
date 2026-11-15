@@ -14,7 +14,7 @@ export function SiteFooter() {
         <div className="max-w-sm">
           <Logo />
           <p className="mt-4 text-sm leading-6 text-muted">
-            An AI career workspace for discovering opportunities, understanding your fit, and preparing for interviews.
+            Interview practice and labeled sample stories, in one workspace.
           </p>
         </div>
         <nav aria-label="Footer">

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "AI Career Coach (demo) | ScaleMe",
+  title: "Career Coach | ScaleMe",
 };
 
 export default function CoachLayout({ children }: { children: ReactNode }) {

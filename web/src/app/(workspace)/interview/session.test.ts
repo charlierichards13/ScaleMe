@@ -41,6 +41,9 @@ describe("scripted interview banks", () => {
     expect(SCRIPTED_LABEL).toBe("Scripted Demo — Not Live AI");
     expect(SCRIPTED_NOTE).toMatch(/do not change based on your answers/i);
     expect(SCRIPTED_NOTE).toMatch(/no live model/i);
+    expect(SCRIPTED_NOTE).toMatch(/stay in memory/i);
+    expect(SCRIPTED_NOTE).toMatch(/not uploaded/i);
+    expect(SCRIPTED_NOTE).toMatch(/discarded when you leave or refresh/i);
 
     for (const mode of INTERVIEW_MODES) {
       const questions = questionsFor(mode);
