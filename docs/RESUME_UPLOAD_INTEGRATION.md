@@ -87,6 +87,12 @@ npm run build
 
 The explicit integration suite requires the built binary and fails if it is absent; it is never silently skipped. Unit tests exercise auth/gates, malformed/oversized/stalled input, rate/concurrency, child timeout/abort/crash/output limits, privacy, session isolation and client Fit payloads. Linux Docker CI is the actual packaging/HTTP test. Local Docker execution requires a Docker daemon; results and any unavailable checks must be reported accurately in the draft PR.
 
+## Local verification record (2026-11-15)
+
+After incorporating remote main through `8a95366`, Windows GNU Rust checks passed (fmt, Clippy, **96 tests**, release build). Web npm ci/audit (10 existing moderate tooling advisories, no high/critical), lint, typegen, TypeScript, **460 tests / 29 files**, the explicit real-binary integration test, and production standalone build (**23 pages**) passed. The unchanged lockfile was installed before the frontend-base merge; that merge added no package dependency changes.
+
+The live loopback Next HTTP smoke passed for synthetic valid/corrupt/renamed/oversized PDFs and denied access. Browser inspection confirmed the form and disclosure render; file-picker automation stalled, so a browser click-through upload/navigation test is **not claimed as verified**. The existing explorer's imported textarea, escaping and disabled live-AI state have automated render coverage. Local Docker was unavailable; the draft PR's Linux container CI is the packaging/HTTP verification gate. Actual Railway deployment, real resumes and live Bedrock were not run.
+
 ## Remaining security and product limits
 
 This is not a security audit or OS sandbox. Native multipart decoding happens in memory after a bounded read; external ingress limits, concurrency and host memory limits remain necessary. Parent timers cannot run if Node's event loop is starved. Rust's counted allocator excludes thread stacks/OS mappings; Docker limits bound the whole container, not only one parser. Windows kill/RSS/crash-reporting behavior differs; configure WER and host policies before private data.
