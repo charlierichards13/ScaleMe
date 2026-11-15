@@ -63,14 +63,16 @@ body {
     animation: sm-float 16s ease-in-out infinite;
   }
 
-  .sm-drift {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: sm-drift 22s ease-in-out infinite;
+  /* Hero sculpture: a faint highlight drifting across the satin, and a
+     contact shadow that tightens as the sculpture rises (same 16 s period). */
+  .sm-sheen {
+    animation: sm-sheen 14s ease-in-out infinite alternate;
   }
 
-  .sm-trace {
-    animation: sm-trace 9s linear infinite;
+  .sm-shadow {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: sm-shadow 16s ease-in-out infinite;
   }
 
   .sm-step-in {
@@ -108,23 +110,28 @@ body {
     transform: translateY(0) rotate(0deg);
   }
   50% {
-    transform: translateY(-10px) rotate(-0.6deg);
+    transform: translateY(-9px) rotate(-0.5deg);
   }
 }
 
-@keyframes sm-drift {
+@keyframes sm-sheen {
+  from {
+    transform: translateX(-120px);
+  }
+  to {
+    transform: translateX(320px);
+  }
+}
+
+@keyframes sm-shadow {
   0%,
   100% {
-    transform: translate(0, 0);
+    transform: scale(1);
+    opacity: 1;
   }
   50% {
-    transform: translate(6px, -8px);
-  }
-}
-
-@keyframes sm-trace {
-  to {
-    stroke-dashoffset: -110;
+    transform: scale(0.92);
+    opacity: 0.75;
   }
 }
 

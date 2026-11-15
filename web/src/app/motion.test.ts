@@ -35,7 +35,7 @@ describe("reduced motion", () => {
 
   it("has a no-preference block that holds the welcome/onboarding motion", () => {
     expect(allowed).toHaveLength(1);
-    for (const name of ["sm-rise", "sm-float", "sm-drift", "sm-trace", "sm-step-in", "sm-reveal", "scroll-behavior"]) {
+    for (const name of ["sm-rise", "sm-float", "sm-sheen", "sm-shadow", "sm-step-in", "sm-reveal", "scroll-behavior"]) {
       expect(allowed[0], name).toContain(name);
     }
   });

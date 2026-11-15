@@ -1,100 +1,85 @@
-import { branchRibbon, lowRibbon, mainCenterline, mainRibbon, type RibbonFace } from "./hero-art-paths";
+import { ribbonPieces, ribbonShadow } from "./hero-ribbon";
 
 /**
- * Original abstract hero artwork: three translucent, gently twisting ribbons
- * that branch from one point and rise toward the upper right (one person's
- * experience opening into several paths). Pure SVG with static path data, so
- * no images or libraries are needed. It's decorative only, and the CSS
- * animation classes from globals.css switch off under `prefers-reduced-motion`.
+ * Original hero sculpture: one continuous satin ribbon that sweeps in from
+ * the lower left, curls once around itself, and rises to the upper right,
+ * i.e. experience folding back on itself and opening into growth.
+ *
+ * The 3D form (centerline, twist, thickness, lighting, perspective) is baked
+ * into static SVG pieces by `web/scripts/generate-hero-art.mjs`. Each piece is
+ * one path with its own shading gradient, drawn back-to-front so the folds
+ * overlap correctly. There's no canvas, WebGL or runtime geometry, so server
+ * and client render identical markup.
+ *
+ * Decorative only. Motion (a slow float plus a faint travelling highlight)
+ * comes from globals.css and is off under `prefers-reduced-motion`.
  */
 export function HeroArt() {
+  const surfaces = ribbonPieces.flatMap((piece, index) => (piece.kind === "surface" ? [index] : []));
+
   return (
     <svg viewBox="0 0 560 500" aria-hidden="true" focusable="false" className="h-auto w-full overflow-visible">
       <defs>
-        <radialGradient id="sm-hero-glow" cx="0.56" cy="0.46" r="0.5">
-          <stop offset="0" stopColor="#e2e3ff" stopOpacity="0.9" />
-          <stop offset="0.6" stopColor="#eef0ff" stopOpacity="0.45" />
+        <radialGradient id="smr-ambient" cx="0.55" cy="0.45" r="0.55">
+          <stop offset="0" stopColor="#e6e4ff" stopOpacity="0.85" />
+          <stop offset="0.6" stopColor="#eef0ff" stopOpacity="0.35" />
           <stop offset="1" stopColor="#f8f9fc" stopOpacity="0" />
         </radialGradient>
-        <linearGradient id="sm-front" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0" stopColor="#dcdcff" stopOpacity="0.75" />
-          <stop offset="0.55" stopColor="#a9a6f7" stopOpacity="0.85" />
-          <stop offset="1" stopColor="#7b77ec" stopOpacity="0.95" />
+        <radialGradient id="smr-shadow">
+          <stop offset="0" stopColor="#3f3a8f" stopOpacity="0.2" />
+          <stop offset="0.55" stopColor="#5856d6" stopOpacity="0.07" />
+          <stop offset="1" stopColor="#5856d6" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="smr-sheen" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0.38" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.42" />
+          <stop offset="0.62" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
-        <linearGradient id="sm-back" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0" stopColor="#8e8bf0" stopOpacity="0.8" />
-          <stop offset="1" stopColor="#4f4cc8" stopOpacity="0.95" />
-        </linearGradient>
-        <linearGradient id="sm-front-violet" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0" stopColor="#e6dcff" stopOpacity="0.55" />
-          <stop offset="1" stopColor="#b79cf5" stopOpacity="0.9" />
-        </linearGradient>
-        <linearGradient id="sm-back-violet" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0" stopColor="#a58cf0" stopOpacity="0.7" />
-          <stop offset="1" stopColor="#7d5ce0" stopOpacity="0.9" />
-        </linearGradient>
-        <linearGradient id="sm-front-low" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#c9ccff" stopOpacity="0.9" />
-          <stop offset="0.75" stopColor="#b3baf3" stopOpacity="0.7" />
-          <stop offset="1" stopColor="#c4c9f7" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="sm-back-low" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#9fa6ef" stopOpacity="0.7" />
-          <stop offset="1" stopColor="#9fa6ef" stopOpacity="0" />
-        </linearGradient>
+
+        {ribbonPieces.map((piece, index) => (
+          <linearGradient
+            key={index}
+            id={`smr-g${index}`}
+            gradientUnits="userSpaceOnUse"
+            x1={piece.line[0]}
+            y1={piece.line[1]}
+            x2={piece.line[2]}
+            y2={piece.line[3]}
+          >
+            {piece.stops.map(([offset, color], stop) => (
+              <stop key={stop} offset={offset} stopColor={color} />
+            ))}
+          </linearGradient>
+        ))}
+        {surfaces.map((index) => (
+          <path key={index} id={`smr-p${index}`} d={ribbonPieces[index].d} />
+        ))}
+        <clipPath id="smr-faces">
+          {surfaces.map((index) => (
+            <use key={index} href={`#smr-p${index}`} />
+          ))}
+        </clipPath>
       </defs>
 
-      {/* Ambient light and quiet orbit lines */}
-      <circle cx="320" cy="240" r="250" fill="url(#sm-hero-glow)" />
-      <g fill="none" stroke="#d9dce8" strokeWidth="1" strokeDasharray="2 8">
-        <circle cx="320" cy="240" r="130" />
-        <circle cx="320" cy="240" r="205" opacity="0.7" />
-      </g>
+      <circle cx="300" cy="235" r="245" fill="url(#smr-ambient)" />
+      <ellipse className="sm-shadow" {...ribbonShadow} fill="url(#smr-shadow)" />
 
       <g className="sm-float">
-        <g className="sm-drift">
-          <Ribbon faces={lowRibbon} front="sm-front-low" back="sm-back-low" />
+        {ribbonPieces.map((piece, index) =>
+          piece.kind === "surface" ? (
+            <use key={index} href={`#smr-p${index}`} fill={`url(#smr-g${index})`} />
+          ) : (
+            <path key={index} d={piece.d} fill={`url(#smr-g${index})`} />
+          ),
+        )}
+
+        {/* Faint satin highlight that drifts slowly across the faces */}
+        <g clipPath="url(#smr-faces)">
+          <g transform="rotate(-24 280 250)">
+            <rect className="sm-sheen" x="-260" y="-60" width="560" height="620" fill="url(#smr-sheen)" />
+          </g>
         </g>
-        <Ribbon faces={branchRibbon} front="sm-front-violet" back="sm-back-violet" />
-        <Ribbon faces={mainRibbon} front="sm-front" back="sm-back" />
-
-        {/* A faint dotted trail of progress along the main ribbon */}
-        <path
-          className="sm-trace"
-          d={mainCenterline}
-          fill="none"
-          stroke="#ffffff"
-          strokeOpacity="0.7"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeDasharray="0.1 11"
-        />
-
-        {/* Milestones: start, the branching point, and two destinations */}
-        <circle cx="40" cy="430" r="7" fill="#ffffff" stroke="#8f8cf2" strokeWidth="2.5" />
-        <circle cx="282" cy="302" r="6.5" fill="#ffffff" stroke="#6f6ce0" strokeWidth="2.5" />
-        <circle cx="500" cy="58" r="5" fill="#ffffff" stroke="#9b7ef0" strokeWidth="2" />
-        <circle cx="522" cy="100" r="18" fill="#5856d6" fillOpacity="0.12" />
-        <circle cx="522" cy="100" r="8.5" fill="#5856d6" stroke="#ffffff" strokeWidth="3" />
-      </g>
-
-      {/* Scattered possibilities */}
-      <g className="sm-drift" fill="#b4b2ff">
-        <circle cx="430" cy="30" r="3" opacity="0.7" />
-        <circle cx="160" cy="210" r="2.5" opacity="0.55" />
-        <circle cx="530" cy="380" r="3" opacity="0.5" />
-        <circle cx="90" cy="320" r="2" opacity="0.55" />
       </g>
     </svg>
-  );
-}
-
-function Ribbon({ faces, front, back }: { faces: RibbonFace[]; front: string; back: string }) {
-  return (
-    <g stroke="#ffffff" strokeOpacity="0.55" strokeWidth="0.75" strokeLinejoin="round">
-      {faces.map((piece, index) => (
-        <path key={index} d={piece.d} fill={`url(#${piece.face === "front" ? front : back})`} />
-      ))}
-    </g>
   );
 }
