@@ -121,6 +121,15 @@ ScaleMe/
 
 ## Getting started
 
+### Fit Evidence Explorer prototype
+
+Visit `/fit-insights` for a standalone **FICTIONAL DEMO** of requirement-level evidence
+inspection and before/after interview coverage. Reveal a sample candidate answer, then
+compare **2 of 4 → 3 of 4 required requirements supported**; vague or unrelated answers
+leave coverage unchanged. No AWS, uploads, persistence, or API wiring. Candidate reports
+are not independently verified, and coverage is not hiring probability.
+See [demo instructions, screenshots, and limitations](docs/FIT_INSIGHTS_DEMO.md).
+
 ### Resume Impact Lab prototype
 
 Visit `/impact-lab` for a standalone **FICTIONAL DEMO** of two before/after resume
