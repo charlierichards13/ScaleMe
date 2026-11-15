@@ -435,3 +435,24 @@ to the interview HTTP history. No `/api/fit/reassess` or `/api/impact/rewrite` r
 is implemented by this integration. The existing `fit` statuses still only order
 backend questions. Local report counts are recomputed, never submitted as trusted
 server state. [Behavior and limitations](CONTEXTUAL_INTERVIEW.md#p0-completion-integration-supersedes-forthcoming-engine-above).
+
+## Fit Evidence Explorer client integration (demo only)
+
+The frontend at `/fit-insights` consumes the existing v0.1 fit response through
+`web/src/lib/fit/client.ts`, reusing browser-safe schemas in `lib/ai/schemas.ts`. No wire
+types, backend limits, handlers or demo payloads change. Local draft checks mirror the
+existing field/encoded-body limits; they do not run analysis.
+
+Explicit `/fit-insights?demo=true` selection reveals a separate load action. Only that
+user action makes a bodyless `POST /api/fit/analyze?demo=true`; it never submits drafts.
+The client validates analysis, `X-ScaleMe-Mode: demo` and existing DEMO text markers and
+never synthesizes fallback results. Live invocation rejects before network access pending
+a separately authorized client change. PR #38's backend security controls are now merged;
+that does not activate the browser's live path.
+
+v0.1 returns IDs but no extracted descriptions/importance or per-assessment question links.
+The UI shows IDs, overall questions and returned-assessment status counts without inventing
+a required denominator. HTTP 429 uses Retry-After and a visible manual-retry cooldown.
+PR #38 adds per-process shared live-call limits; the fictional demo bypasses those limits.
+Grounding can leave advice lists empty, which the client accepts and displays explicitly. See
+[functional scope, tests and activation requirements](FIT_INSIGHTS_INTEGRATION.md).
