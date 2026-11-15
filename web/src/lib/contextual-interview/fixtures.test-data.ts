@@ -17,3 +17,9 @@ export const profiles: Array<{ name: string; draft: ContextDraft; answers: strin
     requirements: "Maintain inventory\nResolve scheduling conflicts\nDocument operating procedures",
   }, answers: ["I helped arrange the pantry rota.", "I asked volunteers about a shift overlap and moved a delivery; no time saving was measured.", "I wrote stock-count instructions in the spreadsheet.", "A volunteer followed those instructions; error counts were not collected.", "I would explain how I handled the overlap in more detail."] },
 ];
+
+export const impactProfiles = [
+  { name: "portal", draft: { resume: "Built web applications for a campus library booking desk.", title: "Web developer", job: "Build web applications. Test web applications. Automate reports.", requirements: "Build web applications\nTest web applications\nAutomate reports" }, answer: "I tested web applications with invalid bookings and mobile navigation before rollout." },
+  { name: "design research", draft: { resume: "Designed prototypes for a fictional museum ticket kiosk.", title: "Designer", job: "Design prototypes. Test prototypes. Automate reports.", requirements: "Design prototypes\nTest prototypes\nAutomate reports" }, answer: "I tested prototypes with museum volunteers using printed tickets and checkout tasks." },
+  { name: "inventory operations", draft: { resume: "Managed inventory for a fictional community pantry delivery team.", title: "Operations analyst", job: "Manage inventory. Validate inventory. Automate reports.", requirements: "Manage inventory\nValidate inventory\nAutomate reports" }, answer: "I validated inventory against delivery records by checking missing items and duplicate entries." },
+];

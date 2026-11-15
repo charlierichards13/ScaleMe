@@ -1,5 +1,7 @@
 # Resume Impact Lab
 
+> P0 integration update: `/interview/contextual` now hands completion into the existing Impact Lab in the same page. Historical standalone/unconnected notes below describe the dependency PR; see [current behavior and limits](CONTEXTUAL_INTERVIEW.md#p0-completion-integration-supersedes-forthcoming-engine-above).
+
 `/impact-lab` now accepts user-provided resume/job text and candidate answers. It runs
 local assessment, immutable requirement-level reassessment and evidence-grounded review/
 copying in page memory. It replaces PR #39's fixed-only fictional prototype.

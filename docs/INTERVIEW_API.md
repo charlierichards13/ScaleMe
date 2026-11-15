@@ -1,5 +1,7 @@
 # Interview coach API (backend, Issue #7)
 
+> P0 integration update: `/interview/contextual` now hands completion into the existing Impact Lab in the same page. Historical standalone/unconnected notes below describe the dependency PR; see [current behavior and limits](CONTEXTUAL_INTERVIEW.md#p0-completion-integration-supersedes-forthcoming-engine-above).
+
 **Route:** `POST /api/interview/next` · **Branch:** `feat/interview-next-api`
 **Status:** backend implemented and **mock-tested only**. No live Bedrock call has been made for this route. The `/interview` UI (owned separately, see [INTERVIEW.md](INTERVIEW.md)) is still the scripted demo and does not call this API yet.
 

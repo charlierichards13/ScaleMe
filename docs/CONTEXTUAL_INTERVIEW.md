@@ -37,3 +37,56 @@ The committed tests exercise browser adapter → access proxy → actual fit/int
 Standard checks: `npm ci --ignore-scripts`, `npm run lint`, `npm exec -- next typegen`, `npm exec -- tsc --noEmit`, `npm test`, `FIT_LIVE_AI_ENABLED=false npm run build`, `npm audit --audit-level=high`. Browser and production-boundary results are recorded in the draft PR. No Bedrock invocation, AWS change, merge or deployment is authorized by these tests.
 
 Implementation verification: all standard checks passed; **291 tests / 18 files** (39 new), no high/critical audit findings (nine existing moderate development-tool advisories). Production Chromium exercised all three profiles with five answers at **320/390/768/1440 px**, one manual 429 retry, plus escaped text, cancellation, early finish, stale responses, and navigation/back/refresh clearing. Zero cookies, browser storage, external requests, page exceptions or horizontal overflow in these flows. Production HTTP probes verified default-off 503, live-enabled anonymous/wrong-code 401, cross-origin 403, middleware-header spoof denial and free demos. Authorized probes stopped at missing AWS configuration; no model was invoked. Browser happy-path responses were intercepted; actual server handlers/SDK are exercised by the mocked integration tests. No manual screen-reader or live-model evaluation is claimed.
+
+## P0 completion integration (supersedes “forthcoming engine” above)
+
+`/interview` now links to the contextual workspace while retaining the separately
+labeled scripted practice. Finishing `/interview/contextual` opens experience
+association and the existing Impact Lab **in the same React tree**. There is no
+navigation handoff, global singleton, browser storage or new endpoint. Leaving or
+refreshing still clears the entire session; entering the report does not.
+
+`collectEvidence()` retains the original request, initial analysis and full transcript.
+The completion adapter reconstructs candidate answer IDs/quotations/targets from that
+transcript, resolves uniquely matching normalized fit quotations to exact resume
+spans, drops missing/ambiguous citations, then uses `fromFitAnalysis()` and the
+ledger's relevance/provenance validation. The original AI response stays inspectable;
+the revalidated baseline can be stricter. It cannot become more supported from
+normalization alone. Every answer requires an explicit selection of an exact original
+resume excerpt (`subjectId`); no experience is preselected. Resume lines and original
+citations are selectable with exact offsets. Unlinked answers stay in the transcript
+and cannot affect coverage. General/reflection answers additionally require the
+candidate to select a requirement; targeted answers retain the server target.
+
+`fromCandidateTurn()` supplies only exact candidate content. The ledger registers
+selected resume spans without increasing baseline support, reassesses whole answers,
+and computes counts against the unchanged requirement inventory. Job/coach prose,
+client counts and serialized ledger state cannot become supporting evidence. This is
+a local coaching report, **not a server-authoritative or externally verified record**.
+No new HTTP contract is adopted. Existing paid routes, access proxy and budgets remain
+unchanged; reassessment makes zero additional model calls.
+
+The embedded existing Impact Lab displays gained/lost/retained/unresolved requirements,
+exact source IDs and UTF-16 offsets, full source text, grounded extractive proposals,
+and candidate-confirmation/copy controls. Returning to associations rebuilds from the
+original baseline and resets confirmations. A relevant contradiction revokes support
+and blocks prior proposals. Only supported original citations and supported answers
+on the same explicitly selected subject can produce a proposal. An uncited resume
+experience can receive answer evidence, but cannot produce a fabricated original
+citation or a proposal. No metric, tool or result is added by the extractive writer.
+
+Known limits: the reused reviewer is English lexical matching, not semantic entailment.
+Synonyms/compound requirements and mixed-polarity answers can remain unresolved; a
+concrete action qualified with “not measured” may conservatively remain unresolved.
+Unknown metrics alone never establish support. The backend still assigns two questions
+per requirement; the model words follow-ups using history but cannot change that plan.
+Real-model quality, injection resistance, retention and private hosting need owner
+review/authorized live validation. This integration does not activate #46's live UI,
+connect the standalone PDF parser, or solve public launch gates.
+
+Repeatable mocked browser validation: with `FIT_LIVE_AI_ENABLED=false`, build and run
+`npm run start -- --hostname 127.0.0.1`, then
+`node scripts/contextual-impact-smoke.mjs`. It intercepts browser API responses;
+actual access proxy → route → mocked AWS SDK → ledger integration is separately
+covered by Vitest for three fictional jobs/conversations. No live-model result is
+claimed by either test.

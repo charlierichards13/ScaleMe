@@ -181,3 +181,11 @@ GitHub Actions runs automatically after its workflow is merged; enforcing passin
 - **Repository:** [charlierichards13/ScaleMe](https://github.com/charlierichards13/ScaleMe)
 
 Built to help people tell the truth about their experience—and tell it better.
+
+P0 integration: open `/interview` → **Open contextual interview**. In an authorized
+private environment, use your resume/job, run fit analysis and answer the contextual
+AI interview. Finish, explicitly associate answers with original resume excerpts,
+and inspect the embedded existing Impact Lab's evidence changes and reviewed copy.
+Reassessment is conservative local processing, with no additional paid call. Live AI
+stays off by default; the separately labeled fictional practice remains available.
+[Integration and limits](docs/CONTEXTUAL_INTERVIEW.md#p0-completion-integration-supersedes-forthcoming-engine-above).

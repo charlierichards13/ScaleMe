@@ -126,6 +126,19 @@ export class EvidenceLedger {
     });
   }
 
+  /** Register an explicitly selected exact resume span, without adding support. */
+  withResumeSubject(start: number, end: number): EvidenceLedger {
+    const data = structuredClone(this.data);
+    const resume = data.sources.find((s) => s.kind === "resume")!;
+    ensure(Number.isInteger(start) && Number.isInteger(end) && start >= 0 && end > start && end <= resume.text.length);
+    const id = `resume-span-${start}-${end}`;
+    if (!data.sources.some((s) => s.id === id))
+      data.sources.push({ id, subjectId: id, kind: "resume", text: resume.text });
+    const bounded = parse(BaselineSchema, data);
+    validate(bounded, this.reviewer);
+    return new EvidenceLedger(bounded, structuredClone(this.before), this.reviewer);
+  }
+
   reassess(input: unknown): EvidenceLedger {
     const answer = parse(AnswerSchema, input);
     const data = structuredClone(this.data);

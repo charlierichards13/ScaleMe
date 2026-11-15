@@ -5,6 +5,7 @@ import type { EvidenceReviewer } from "./types";
 const stop = new Set(("a an and are as at be before by can candidate demonstrated experience experienced familiarity for from have in is it knowledge of on or our preferred proficiency required requirements role skills strong that the their this to using with you your web years year " +
   "i my we us me coworkers well very really successfully must has bonus plus nice").split(/\s+/));
 const aliases: Record<string, string> = {
+  designed: "design", designing: "design", managed: "manage", managing: "manage",
   testing: "test", tested: "test", tests: "test",
   built: "build", building: "build", developed: "build", development: "build",
   developing: "build", develop: "build", wrote: "build", writing: "build",

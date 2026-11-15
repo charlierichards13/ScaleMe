@@ -255,3 +255,18 @@ Capture the change in the same PR and add corresponding tests to [Review Checkli
 - Will job URL retrieval be restricted to a documented allowlist or delegated to a trusted provider?
 
 Record answers as dated decisions in this file. No agents should silently make these policy decisions.
+
+## P0 interview completion → Impact Lab
+
+The contextual page now holds the evidence ledger/report in its existing ephemeral
+React session. No new server route, data recipient, inference call, logging, storage,
+dependency or permission is added. A candidate explicitly selects an exact resume
+span per answer; absent associations are skipped. Whole candidate quotations and
+metadata are reconstructed against the transcript. Unique normalized resume citations
+resolve to exact spans; missing/ambiguous citations lose baseline support. Internal
+ledger schemas/reviewer revalidate sources, targets, relevance and unchanged inventory.
+Counts and proposals are computed locally; this client report must never be accepted
+as an authoritative server assessment in a future API. Confirmation changes review
+state only, never coverage. Rebuilding clears confirmations; contradictions block
+copying. English lexical relevance limitations and provider/public-launch risks remain.
+See the P0 section in [contextual integration](../CONTEXTUAL_INTERVIEW.md).

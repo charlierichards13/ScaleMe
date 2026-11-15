@@ -9,7 +9,8 @@ import { POST as interviewPost } from "@/app/api/interview/next/route";
 import { POST as accessPost } from "@/app/api/practice/access/route";
 import { analyzeContext, nextQuestion, privateRequest } from "./client";
 import { answerHistory, coachHistory, collectEvidence, prepareContext } from "./session";
-import { profiles } from "./fixtures.test-data";
+import { interviewImpact, resumeExperiences } from "./impact";
+import { impactProfiles, profiles } from "./fixtures.test-data";
 
 const send = vi.fn();
 vi.mock("@aws-sdk/client-bedrock-runtime", () => ({
@@ -85,6 +86,45 @@ describe("browser adapter → private gate → actual routes → mocked AWS SDK"
     expect(logs.join(" ")).not.toContain(context.resume.text);
     expect(logs.join(" ")).not.toContain(TOKEN);
     for (const a of profile.answers) expect(logs.join(" ")).not.toContain(a);
+  });
+
+  it.each(impactProfiles)("reassesses $name from routes with mocked Bedrock and exact sources", async profile => {
+    const context = prepareContext(profile.draft);
+    send.mockResolvedValueOnce(reply(modelAnalysis(context)));
+    const analysis = await analyzeContext(context, TOKEN, signal(), dispatcher);
+    const answers = ["I helped and it went well.", profile.answer, "I organized a picnic for friends.",
+      "I do not know whether reports improved; no metrics were measured.",
+      `I did not ${context.job.requirements![1].description.toLowerCase()} before rollout.`];
+    let history: InterviewTurn[] = [];
+    let gained: ReturnType<typeof interviewImpact> | undefined;
+    for (let step = 0; step < answers.length; step++) {
+      send.mockResolvedValueOnce(reply({ coachMessage: step ? `You said: ${answers[step - 1]} What specific contribution can you document?` : "What did you personally test or validate?" }));
+      const turn = await nextQuestion(context, analysis, history, TOKEN, signal(), dispatcher);
+      history = answerHistory([...history, coachHistory(turn)], answers[step]);
+      const handoff = collectEvidence(context, analysis, history);
+      const subjectId = resumeExperiences(handoff)[0].subjectId;
+      const links = Object.fromEntries(handoff.answers.map(a => [a.id, { subjectId, requirementId: a.targetRequirementId ?? "req-2" }]));
+      const result = interviewImpact(handoff, links);
+      expect(result.ledger.view().coverage.before.supported).toBe(1);
+      expect(result.ledger.view().coverage.before.total).toBe(3);
+      expect(result.ledger.view().coverage.after.supported).toBe(step === 0 || step === 4 ? 1 : 2);
+      expect(result.ledger.view().requirements).toEqual(context.job.requirements);
+      if (step === 1) gained = result;
+      if (step === 4) expect(result.ledger.view().after[1].status).toBe("unclear");
+    }
+    expect(gained!.links).toHaveLength(1);
+    const link = gained!.links[0];
+    let ledger = gained!.ledger;
+    expect(ledger.copyableImpact(link.originalId, link.answerId)).toBeNull();
+    const evidence = ledger.view().evidence.find(e => e.id === link.answerId)!;
+    expect(evidence.sourceId).toBe("interview-answer-3");
+    expect(evidence.quote).toBe(profile.answer);
+    expect(evidence.start).toBe(0); expect(evidence.end).toBe(profile.answer.length);
+    expect(ledger.isGroundedWording(link.originalId, link.answerId, "Improved performance by 40%.")).toBe(false);
+    ledger = ledger.reviewEvidence(link.originalId, true).reviewEvidence(link.answerId, true);
+    expect(ledger.copyableImpact(link.originalId, link.answerId)).toBe(`${context.resume.text} ${profile.answer}`);
+    expect(analysis.assessments[1].status).toBe("not_evidenced");
+    expect(logs.join(" ")).not.toContain(profile.answer);
   });
 
   it("retains the same submitted history on manual retry after AWS failure", async () => {

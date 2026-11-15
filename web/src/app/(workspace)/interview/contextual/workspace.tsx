@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowRight, CheckCircle2, LoaderCircle, LockKeyhole, MessageSquare, Send, ShieldCheck } from "lucide-react";
+import { ArrowRight, LoaderCircle, LockKeyhole, MessageSquare, Send, ShieldCheck } from "lucide-react";
 import { Badge, Card, DemoBadge, buttonStyles } from "@/components/ui/primitives";
 import type { FitAnalysis, FitRequest } from "@/lib/ai/schemas";
 import type { InterviewResponse, InterviewTurn } from "@/lib/ai/interview-schemas";
 import { ConversationError, analyzeContext, nextQuestion, privateRequest } from "@/lib/contextual-interview/client";
 import { answerHistory, coachHistory, collectEvidence, emptyDraft, prepareContext, type ContextDraft, type EvidenceHandoff } from "@/lib/contextual-interview/session";
+
+import { InterviewCompletion } from "./completion";
 
 const fieldStyle = `${buttonStyles.focusRing} mt-2 block w-full min-w-0 rounded-xl border border-line bg-surface p-3 text-sm text-ink`;
 const primary = `${buttonStyles.primary} disabled:cursor-not-allowed disabled:opacity-50`;
@@ -261,18 +263,7 @@ export function ContextualInterview({ onComplete }: { onComplete?: (evidence: Ev
         </div>
       )}
 
-      {handoff && <Card aria-labelledby="evidence-title">
-        <CheckCircle2 className="h-7 w-7 text-brand" aria-hidden="true" />
-        <h2 id="evidence-title" className="mt-3 text-xl font-semibold">Your evidence, collected</h2>
-        <p className="mt-2 text-sm leading-6 text-muted">{handoff.answers.length} submitted answers are ready for the forthcoming reassessment engine. They are candidate-reported, not independently verified. No requirement status has changed.</p>
-        <div className="mt-5 space-y-4">{handoff.answers.map(item => <article key={item.id} className="rounded-xl border border-line p-4">
-          <Badge tone="info">Candidate-reported</Badge>
-          {item.targetRequirementId && <p className="mt-2 text-sm font-semibold">{handoff.context.job.requirements?.find(r => r.id === item.targetRequirementId)?.description}</p>}
-          <p className="mt-2 text-xs leading-6 text-muted">Coach: {item.question}</p>
-          <blockquote className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 [overflow-wrap:anywhere]">{item.quote}</blockquote>
-        </article>)}</div>
-        <p className="mt-4 text-sm leading-6 text-muted">Reassessment is pending integration. This evidence remains only in this page; refreshing or leaving clears it.</p>
-      </Card>}
+      {handoff && <InterviewCompletion handoff={handoff} />}
 
       {busy && <Card aria-live="polite" aria-busy="true"><div className="flex flex-wrap items-center gap-3">
         <LoaderCircle className="h-5 w-5 animate-spin text-brand motion-reduce:animate-none" aria-hidden="true" />

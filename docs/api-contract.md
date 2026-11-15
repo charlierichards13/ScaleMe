@@ -424,3 +424,14 @@ These are deterministic keyword/alias signals, not final judgments of candidate 
 - PDF size limit: the Rust parser enforces 5 MiB (Issue #4). The upload route must enforce the same limit on the request stream before public upload.
 - Optional job-URL ingestion: secure and best-effort only; text input is guaranteed.
 - Mobile: prioritize responsive PWA; Expo is a separate stretch project sharing API contracts.
+
+## Branch-local P0 contextual completion (no wire change)
+
+`/interview/contextual` now reuses `collectEvidence()` → `fromFitAnalysis()` →
+`fromCandidateTurn()` → the existing ledger → embedded Impact Lab. Resume/job IDs,
+requirement inventory, initial analysis and candidate turns stay in one in-memory
+React session. Candidate-selected `subjectId` metadata is local and is **not** added
+to the interview HTTP history. No `/api/fit/reassess` or `/api/impact/rewrite` route
+is implemented by this integration. The existing `fit` statuses still only order
+backend questions. Local report counts are recomputed, never submitted as trusted
+server state. [Behavior and limitations](CONTEXTUAL_INTERVIEW.md#p0-completion-integration-supersedes-forthcoming-engine-above).

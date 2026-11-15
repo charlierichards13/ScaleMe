@@ -1,5 +1,7 @@
 # Evidence ledger, reassessment and Impact Lab (Issue #8)
 
+> P0 integration update: `/interview/contextual` now hands completion into the existing Impact Lab in the same page. Historical standalone/unconnected notes below describe the dependency PR; see [current behavior and limits](CONTEXTUAL_INTERVIEW.md#p0-completion-integration-supersedes-forthcoming-engine-above).
+
 Implemented on `feat/evidence-reassessment`, based on `main` at
 `ffc072be0943525727a40fdc667ee1a151498c57`. This replaces the fixed-only Impact Lab
 with an actual local input → assessment → answer → reassessment → review/copy flow.
