@@ -1,5 +1,5 @@
 /** Production Resume Lab/onboarding smoke using Chromium CDP and Node 22 built-ins.
- * Run a private production server first; then node scripts/resume-workspace-smoke.mjs.
+ * Run an expiring public-demo production server first; then node scripts/resume-final-smoke.mjs.
  * Optional: SCALEME_SMOKE_URL, CHROMIUM_PATH, SCALEME_SCREENSHOT_DIR.
  * Only fictional inputs. No cloud/model calls or additional dependencies. */
 import assert from 'node:assert/strict';
@@ -87,7 +87,6 @@ try {
   await command('Runtime.enable'); await command('Network.enable'); await command('Page.enable');
   await command('Browser.grantPermissions', { origin, permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'] });
   await command('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
-  assert.ok(process.env.RESUME_UPLOAD_TOKEN, 'provide a private synthetic testing code through the environment');
   const fixture = join(profile, 'synthetic-resume.pdf');
   await writeFile(fixture, syntheticPdf('SYNTHETIC RESUME\nEXPERIENCE\nBuilt an internal employee portal for company resources.'));
   const navigate = async (path) => {
@@ -104,10 +103,7 @@ try {
     await command('DOM.setFileInputFiles', { nodeId, files: [fixture] });
     await wait(`document.body.innerText.includes('PDF selected. Nothing has been uploaded.')`);
   };
-  const parse = async () => {
-    await type('input[type=password]', process.env.RESUME_UPLOAD_TOKEN);
-    await click('Extract resume');
-  };
+  const parse = async () => { await click('Extract resume'); };
   const noOverflow = async () => assert.ok(await evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'horizontal overflow');
   await command('Runtime.addBinding', { name: '__resumeStorageWrite' });
   await command('Page.addScriptToEvaluateOnNewDocument', { source: `window.__resumeQuery = (selector) => [...document.querySelectorAll(selector)].find(el => el.checkVisibility()); const setItem = Storage.prototype.setItem; Storage.prototype.setItem = function(...args) { window.__resumeStorageWrite('write'); return setItem.apply(this,args); };` });
@@ -187,15 +183,11 @@ try {
 
   await navigate('/onboarding'); await choose();
   const beforeEnter = onlyUploads().length;
-  await evaluate(`window.__resumeQuery('input[type=password]').focus()`); await enter();
-  await wait(`window.__resumeQuery('[role=alert]')?.textContent.includes('project owner')`);
-  assert.equal(onlyUploads().length, beforeEnter, 'missing code Enter does not send a request');
-  assert.ok(await evaluate(`!!window.__resumeQuery('input[type=file]')`), 'missing code Enter does not advance onboarding');
-  await type('input[type=password]', process.env.RESUME_UPLOAD_TOKEN);
+  await evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Extract resume').focus()`);
   await enter();
   await wait(`document.body.innerText.includes('Resume extracted and ready to review.')`);
-  assert.equal(onlyUploads().length, beforeEnter + 1, 'Enter performs exactly one explicit extraction');
-  assert.ok(await evaluate(`!document.body.innerText.includes('What would you like to accomplish?')`), 'valid code Enter does not Continue');
+  assert.equal(onlyUploads().length, beforeEnter + 1, 'Enter on Extract resume uploads exactly once');
+  assert.ok(await evaluate(`!document.body.innerText.includes('What would you like to accomplish?')`), 'extraction does not advance onboarding');
   await click('Continue'); await wait(`document.body.innerText.includes('What would you like to accomplish?')`);
   await click('Skip for now'); await wait(`!!window.__resumeQuery('input[type=text]')`);
   await type('input[type=text]', 'Synthetic engineering'); await enter();
