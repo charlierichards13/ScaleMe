@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
+/*
+ * ScaleMe design tokens. Light mode is the primary (and currently only)
+ * theme; every surface sets explicit colors so OS dark mode never produces a
+ * half-dark page. Contrast was checked against WCAG AA for body text.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #f8f9fc;
+  --surface: #ffffff;
+  --ink: #202638;
+  --muted: #64748b;
+  --line: #e6e9f0;
+  --brand: #5856d6;
+  --brand-strong: #4644b8;
+  --brand-soft: #eef0ff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --shadow-card: 0 1px 2px rgb(32 38 56 / 0.04), 0 1px 3px rgb(32 38 56 / 0.04);
+  --shadow-card-hover: 0 4px 16px rgb(32 38 56 / 0.08);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
