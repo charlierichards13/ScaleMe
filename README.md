@@ -1,195 +1,132 @@
 # ScaleMe
 
-**Your AI career growth engine.**  
-*From overlooked applicant to interview-ready candidate.*
+**Invest in your own potential.**  
+An evidence-first career-preparation prototype built by an Arizona State University student team for **SunHacks 2026** (November 14–15).
 
-ScaleMe is an AI-powered career preparation platform built at **SunHacks 2026**. Instead of only checking whether a resume matches a job description, ScaleMe helps candidates **understand their strengths, uncover the real impact of their experience, and practice explaining that impact under interview pressure**.
+ScaleMe explores how candidates can explain their experience better *without inventing qualifications*. It brings resume extraction, role-requirement exploration, interview practice, and source-grounded resume improvement into one web experience.
 
-> **Status:** Hackathon MVP in development. The architecture and features below are plans, not claims that they are already implemented.
+![ScaleMe landing page](docs/branding/images/after-welcome-1440.jpg)
 
-**Resume Lab time-limited demo:** `/resume-lab` combines explicit PDF extraction, section review and the existing local evidence-backed improvement workflow. During the owner-enabled demo window, text-based PDFs can be uploaded **without an access code**. The Rust parser retains strict size/time limits; extracted text stays in the current browser tab, and no automatic AWS call occurs. This is not a production upload service. Separately protected AI routes are unchanged. [Configuration, risks and rollback](docs/PUBLIC_PDF_DEMO.md).
+> **Status (November 2026):** Hackathon prototype, not a production career service. Some workflows use explicitly fictional data or local processing. Paid AI endpoints require private authorization and are off by default. Please use **synthetic resumes** for evaluation.
 
-**Contextual interview private preview:** `/interview/contextual` accepts pasted resume/job text and explicit requirements, calls the actual fit/interview APIs, and collects exact candidate-reported answers for future reassessment. It requires owner-authorized private access; live AI stays off by default. `/interview` remains the separate fictional scripted practice. Backend PR #49 still needs human review; no live-model verification is claimed. [Setup, ownership and integration](docs/CONTEXTUAL_INTERVIEW.md).
+## What works
 
-## The problem
-
-Job seekers often have useful experiences that their resumes fail to communicate. Generic keyword checkers may point out missing terms, but they rarely ask *what actually changed because of your work* or help you practice defending your claims in an interview.
-
-## The ScaleMe experience
-
-1. **Upload your resume** (PDF) or use a demo sample.
-2. **Add a target job** by pasting the description or a job-posting URL (with a text fallback if the page cannot be fetched).
-3. **Understand your fit** through a transparent, evidence-based breakdown of matched experience, potential gaps, and areas worth clarifying—not a fabricated hiring probability.
-4. **Get interviewed** by an AI coach that asks increasingly specific follow-up questions based on your own resume and the target role.
-5. **Translate your answers into impact**: stronger, factual resume bullets, relevant interview talking points, and concrete next steps.
-
-### What makes it different?
-
-**Our intended differentiator is an auditable evidence-discovery loop, not just AI resume rewriting.** Similar AI career tools already exist; we aim to make the *reasons* behind each improvement visible and testable.
-
-1. **Find what is not demonstrated.** Evaluate target-job requirements against resume excerpts without implying that missing evidence means missing ability.
-2. **Investigate with targeted questions.** Ask about one unresolved requirement and use the candidate's response to uncover relevant, previously undocumented work.
-3. **Track source evidence.** Tie the assessment to a specific resume excerpt or interview answer, with stable IDs and clear candidate-reported/confirmed labels.
-4. **Reassess documented coverage.** Compare required requirements supported by candidate evidence before and after the interview—not a hiring probability or a change in actual qualifications.
-5. **Propose only traceable improvements.** Show original versus revised bullets and block or question unsupported metrics, tools, dates and achievements.
-
-**Integrity note:** Candidate-reported or candidate-confirmed achievements are **not independently verified**. Planned features are not claims that the prototype already implements them. See the [differentiation plan, competitor context and judge demo](docs/DIFFERENTIATION.md).
-
-## Hackathon MVP
-
-- [ ] Responsive dashboard with a complete, judge-friendly happy path
-- [ ] PDF resume upload, text extraction, and useful error handling
-- [ ] Job description input; URL ingestion when practical
-- [ ] Requirement-level analysis with inspectable evidence and explicit **not evidenced vs missing skill** distinction
-- [ ] Interactive **text-based** interview that targets unresolved requirements and uses answer-aware follow-ups
-- [ ] Source-linked candidate evidence records and before/after **documented coverage** comparison
-- [ ] Evidence-backed impact suggestions with candidate review and blocked unsupported additions
-- [ ] Working AWS-backed AI pathway
-- [ ] A meaningful, testable Rust matching component
-- [ ] Short demo, sample inputs, and submission documentation
-
-**Stretch goals:** voice interviewing; authenticated profiles and history; automated employer research (potentially TinyFish); richer progress tracking and visualizations. We will not block the MVP on stretch goals.
-
-## Proposed technical architecture
-
-| Layer | Proposed technology | Responsibility |
+| Area | Implementation | Boundary |
 | --- | --- | --- |
-| Web | Next.js (App Router), TypeScript, Tailwind CSS | Uploads, role analysis, interview chat, results |
-| AI | Amazon Bedrock | Structured analysis, interview coaching, writing suggestions |
-| Cloud | Amazon S3, AWS Lambda, API Gateway | Temporary resume storage and backend endpoints |
-| Matching | Rust | Deterministic requirement/skill matching and explainable signals |
-| Development | Cursor, Claude, Grok, ChatGPT | Parallel coding, review, and hackathon workflow |
+| Web experience | Responsive Next.js/TypeScript landing page, guest dashboard, onboarding, and workspaces | Dashboard sample data is fictional |
+| **Rust PDF parser** | Text-based PDF extraction, basic section detection, typed JSON contract, CLI/library, and automated tests; wired to a Next.js upload endpoint | Upload is **disabled by default**, owner-enabled, and time-limited; no OCR |
+| Resume Lab | Explicit upload/extraction, text review, and local evidence-backed improvement flow | Upload does not automatically call AWS; no persistent resume storage |
+| Fit Evidence Explorer | Requirements, supporting quotes, and labeled sample walkthroughs | The public explorer is **not live job-fit analysis** |
+| Impact Lab | Local evidence ledger, before/after supported-requirement coverage, guarded improvement suggestions | Candidate claims are not independently verified |
+| Interview | Scripted fictional practice; separate contextual interview and API integration | Bedrock-backed contextual interview is a **private preview**, not publicly enabled live AI |
+| Job discovery | UI/workspace preview | Not connected to a production job-feed API |
 
-These choices are **proposed**. The team may simplify deployment to make the complete journey reliable within the hackathon.
+![ScaleMe dashboard](docs/branding/images/after-dashboard-1440.jpg)
 
-```mermaid
-flowchart TD
-    A[Next.js UI] --> B[Backend API]
-    B --> C[Resume and role ingestion]
-    B --> D[Matching module in Rust]
-    B --> E[Amazon Bedrock]
-    C --> F[(Optional temporary S3 storage)]
-    D --> G[Evidence-backed fit results]
-    E --> G
-    E --> H[Mock interview and impact coach]
-    G --> A
-    H --> A
-```
+## The differentiator: an inspectable evidence trail
 
-**Fallbacks matter:** if job pages prohibit automated retrieval, ask the user to paste the description. If a cloud service is not configured locally, show a clearly labeled demo state instead of pretending an AI result is live.
+Generic resume tools can produce polished language without showing where it came from. ScaleMe emphasizes the *source* behind a claim:
 
-## Security and contributing
+1. Compare a target requirement with the candidate's actual supplied material.
+2. Mark whether there is supporting evidence, without treating an undocumented skill as a missing ability.
+3. Ask the candidate for an example of relevant work.
+4. Link proposed wording to an exact resume passage or candidate-reported answer.
+5. Require candidate review and exclude unsupported achievements or invented metrics.
 
-ScaleMe is a **hackathon prototype**, not a production-audited application. For now, use **synthetic resumes** in demos and tests; do not expose paid model endpoints publicly before abuse controls and privacy reviews are complete.
+The **local Impact Lab** implements the conservative evidence-and-review workflow. The contextual interview is a separate, privately authorized pathway; fictional demos are always labeled. See [evidence design](docs/EVIDENCE_LEDGER.md), [differentiation](docs/DIFFERENTIATION.md), and [contextual interview limits](docs/CONTEXTUAL_INTERVIEW.md).
 
-- [Security policy and disclosure](SECURITY.md)
-- [Contributor handbook — documentation is part of done](CONTRIBUTING.md)
-- [Living threat model](docs/security/THREAT_MODEL.md)
-- [Security review and adversarial testing checklist](docs/security/REVIEW_CHECKLIST.md)
-- [Unverified Bedrock implementation review notes](docs/security/BEDROCK_REVIEW_NOTES.md)
-- [Root agent instructions](AGENTS.md) and [Claude Code instructions](CLAUDE.md)
+## Engineering spotlight: Rust PDF parsing
 
-All coding agents must update affected documentation **in the same PR** and report actual test results, not assumptions. CI includes a high/critical npm advisory gate; it does not replace a human security review.
+The real Rust component lives in [services/resume-parser](services/resume-parser/). It is a **PDF text extraction service**, not a Rust job-matching engine. It:
 
-## Workstreams and collaboration
+- Parses text-based PDF resume bytes and extracts text and section structure.
+- Normalizes extracted text without manufacturing or rewriting candidate experience.
+- Emits a shared JSON resume contract, validated again by the TypeScript server.
+- Rejects unsupported, oversized, unreadable, or image-only documents.
+- Performs no OCR, network requests, AI calls, or document storage.
+- Includes CLI, contract, invalid-input, robustness, and synthetic-resume tests.
 
-GitHub Issues are our source of truth. Each issue contains a scope, acceptance criteria, and dependencies; claim an issue before implementing it. Suggested parallel lanes:
+The [Next.js upload route](web/src/app/api/resume/parse/route.ts) invokes the Rust executable as a bounded, shell-free subprocess. PDF bytes are sent through standard input and structured JSON is received through standard output. The integration enforces request, size, timeout, and concurrency limits and requires explicit owner activation. These are **prototype safeguards**, not production security certification.
 
-- **Web/UI:** layout, flows, upload controls, interview experience
-- **AI/backend:** schemas, AWS integration, prompt design, API handlers
-- **Rust/matching:** explainable role matching and tests
-- **Integration/demo:** end-to-end QA, security, deployment, demo script
+[Explore the Rust source](services/resume-parser/src/) · [Parser guide](services/resume-parser/README.md) · [Upload safeguards](docs/PUBLIC_PDF_DEMO.md)
 
-Use feature branches (`feat/<short-name>`, `fix/<short-name>`), small pull requests, and clear issue references. **Do not have multiple AI agents editing the same files or branch at once.** Keep API response shapes agreed on before parallelizing. No secrets, personal resumes, or real applicant data in the repository.
+## Technology and architecture
 
-### Suggested project layout (not created yet)
+| Layer | Stack | Purpose |
+| --- | --- | --- |
+| User interface | Next.js 16, React, TypeScript, Tailwind CSS | Workspaces and responsive UI |
+| Parsing | Rust, pdf-inspector, Serde | PDF text extraction and typed JSON |
+| App backend | Next.js route handlers, Zod, Node.js subprocesses | Validation and parser orchestration |
+| Optional AI | AWS Bedrock through AWS SDK Converse | Protected fit and interview endpoints |
+| Testing / delivery | Cargo, Vitest, GitHub Actions, Docker, Railway configuration | Automated checks and packaging |
 
-```text
-ScaleMe/
-├── web/                  # Next.js user experience
-├── services/
-│   ├── api/              # Backend endpoints and AI orchestration
-│   ├── resume-parser/    # Rust PDF resume parser (exists; not yet wired to the app)
-│   └── matching-rust/    # Rust matching module
-├── docs/                 # Contracts, architecture, demo material
-└── README.md
-```
+**Implemented PDF path:** Resume Lab → Next.js upload API → Rust parser executable → validated Resume JSON → browser review / local Impact Lab.
 
-## Responsible AI and privacy
+**Separate optional AI path:** Privately authorized contextual interview → protected fit/interview API → AWS Bedrock, only if explicitly enabled by the owner. PDF upload itself does not call Bedrock.
 
-- Cite *resume or interview evidence* for claimed skills and accomplishments.
-- Ask clarifying questions for missing impact metrics; never make them up.
-- Explain that fit analysis is coaching guidance, **not a prediction of hiring success**.
-- Minimize retention of resumes and personal data; avoid logging resume text or API keys.
-- Validate file type/size and treat resumes and job descriptions as **untrusted input**, not instructions to the AI.
-- Keep AWS/API secrets in local environment files or managed secret stores, never Git.
+The repository does **not** implement the earlier proposed Rust requirement matcher or AWS Lambda/S3 upload architecture. It does not claim a production applicant database or publicly verified live-model deployment.
 
-## Getting started
+## Run locally
 
-**Hosting:** Railway settings, variable names and verified fail-closed behavior are in [docs/DEPLOY_RAILWAY.md](docs/DEPLOY_RAILWAY.md). Deploy with live AI off unless the owner explicitly approves a private preview.
+Prerequisites: Node.js 22+, npm, and Rust/Cargo for the PDF parser.
 
-### Fit Evidence Explorer prototype
+**Web app**
 
-Visit `/fit-insights` for a standalone **FICTIONAL DEMO** of requirement-level evidence
-inspection and before/after interview coverage. Reveal a sample candidate answer, then
-compare **2 of 4 → 3 of 4 required requirements supported**; vague or unrelated answers
-leave coverage unchanged. No AWS, uploads, persistence, or API wiring. Candidate reports
-are not independently verified, and coverage is not hiring probability.
-See [demo instructions, screenshots, and limitations](docs/FIT_INSIGHTS_DEMO.md).
-
-### Resume Impact Lab and evidence ledger
-
-Visit `/impact-lab` to paste resume/job text, freeze a requirement inventory, answer
-targeted questions, and inspect computed before/after evidence coverage. Exact candidate
-sources ground proposed wording; candidate confirmation unlocks copying. Processing is
-local and conservative, with no model calls or persistence. An optional fictional sample
-uses the same workflow. Fit Explorer/interview API wiring remains a coordinated follow-up.
-See [workflow, tests, limitations and integration adapters](docs/EVIDENCE_LEDGER.md).
-
-The **Next.js scaffold is now available** in `web/`. With Node.js 22 installed:
-
-```bash
+~~~bash
 git clone https://github.com/charlierichards13/ScaleMe.git
 cd ScaleMe/web
 npm ci
 npm run dev
-```
+~~~
 
-Open http://localhost:3000. On Windows PowerShell, if execution policy blocks `npm.ps1`, use `npm.cmd ci` and `npm.cmd run dev` instead.
+Open http://localhost:3000. The welcome page, dashboard, fictional samples, and local evidence workflows can be explored without AWS. In PowerShell, use npm.cmd when execution policy blocks npm.ps1.
 
-**Current state:** `/` is the public welcome page and `/onboarding` is a short guest setup that saves nothing (see [docs/WELCOME_ONBOARDING.md](docs/WELCOME_ONBOARDING.md)). The career dashboard is at `/dashboard` (see [docs/DASHBOARD.md](docs/DASHBOARD.md)). Use its *Sample data* switch for a clearly labeled fictional walkthrough. The earlier scripted chat demo lives at `/coach`. Resume analysis, live AI and job listings are still under development. The Rust PDF resume parser now has a private, off-by-default Resume Lab upload route and tab-memory Fit Explorer handoff (synthetic data only; see [docs/RESUME_UPLOAD_INTEGRATION.md](docs/RESUME_UPLOAD_INTEGRATION.md)). The root Dockerfile packages Next.js and the Linux parser without deploying anything. Rust/Cargo is needed to build it, and AWS credentials will be needed for live AI. An `.env.example` should contain variable names only, without credentials.
+**Rust parser** — run from repository root:
 
-### Planning and collaboration
+~~~bash
+cargo test --manifest-path services/resume-parser/Cargo.toml --locked
+cargo build --manifest-path services/resume-parser/Cargo.toml --locked --release
+~~~
 
-- [Hackathon roadmap](docs/ROADMAP.md): priorities, milestones, owners and integration checkpoints
-- [API contracts](docs/api-contract.md): shared data shapes for web, AI and Rust
-- [Issues and tasks](../../issues): live source of truth for work
-- [Pull requests](../../pulls): review changes before merging
-- [Automated CI](.github/workflows/ci.yml): lint, type checks, build, and Rust checks for the resume parser
+**Web checks** — run from web/:
 
-GitHub Actions runs automatically after its workflow is merged; enforcing passing checks before merges requires a separate repository ruleset/branch protection setting.
+~~~bash
+npm run lint
+npm exec -- next typegen
+npm exec -- tsc --noEmit
+npm test
+npm run build
+~~~
 
-## Demo story
+The web development server does **not** automatically enable PDF uploading: the Rust executable and an explicit time-limited upload configuration are required. See [demo configuration and rollback](docs/PUBLIC_PDF_DEMO.md), [integration notes](docs/RESUME_UPLOAD_INTEGRATION.md), and [deployment](docs/DEPLOY_RAILWAY.md). Do not submit real applicant documents to this prototype.
 
-**Before:** a synthetic resume leaves one target-job requirement without supporting evidence.  
-**During:** ScaleMe asks a requirement-targeted question; a candidate answer becomes a traceable evidence record and triggers reassessment.  
-**After:** the candidate sees the updated evidence coverage and a source-grounded revised bullet, while unsupported claims stay excluded.
+GitHub Actions also checks the Rust crate and the Linux container upload path. Passing CI is not a deployment or a security audit.
 
-**Expo format (from event briefing):** 3-minute project demo + 2-minute judge Q&A. Prioritize a live, end-to-end workflow over slides.
+## Explore the workspaces
 
-## Hackathon details
+| Route | Scope |
+| --- | --- |
+| / and /dashboard | Welcome and guest dashboard |
+| /resume-lab | Rust-backed PDF workflow when owner-enabled; local/pasted-resume options |
+| /fit-insights | Clearly labeled fictional evidence explorer |
+| /impact-lab | Local requirement evidence and candidate-reviewed suggestions |
+| /interview | Scripted mock interview |
+| /interview/contextual | Privately authorized contextual interview preview |
 
-- **Event:** SunHacks, November 14–15, 2026
-- **Potential award tracks:** Future of Work (JFF Ventures), Best Use of AWS (Amazon), and possibly TinyFish (if we ship a genuine integration)
-- **Development assistance:** Cursor and Grok are part of the planned workflow; document their actual use and verify current raffle requirements before submitting
-- **Repository:** [charlierichards13/ScaleMe](https://github.com/charlierichards13/ScaleMe)
+## Trust boundaries and limitations
 
-Built to help people tell the truth about their experience—and tell it better.
+- **Synthetic inputs only for evaluation.** PDF safeguards are not a full third-party security/privacy review.
+- **No fabricated experience.** Supported coverage measures documented evidence, not hiring probability; candidate-reported claims are not independently verified.
+- **No surprise inference.** Local parsing and evidence review do not automatically invoke paid AWS services; the Bedrock integration is protected and off by default.
+- **No production job retrieval, Rust requirement matcher, or public applicant service.** These remain possible follow-up work.
+- **Some detailed design docs are historical.** The [original roadmap](docs/ROADMAP.md) includes proposed and superseded items; use this README for the present project scope.
 
-P0 integration: open `/interview` → **Open contextual interview**. In an authorized
-private environment, use your resume/job, run fit analysis and answer the contextual
-AI interview. Finish, explicitly associate answers with original resume excerpts,
-and inspect the embedded existing Impact Lab's evidence changes and reviewed copy.
-Reassessment is conservative local processing, with no additional paid call. Live AI
-stays off by default; the separately labeled fictional practice remains available.
-[Integration and limits](docs/CONTEXTUAL_INTERVIEW.md#p0-completion-integration-supersedes-forthcoming-engine-above).
+Read [SECURITY.md](SECURITY.md), the [threat model](docs/security/THREAT_MODEL.md), and the [private AI readiness review](docs/RAILWAY_PRIVATE_DEMO.md) for details.
+
+## Project background
+
+Built collaboratively at **ASU SunHacks 2026** through frontend, AI/backend, Rust, and integration workstreams. The project reflects the team's interest in evidence grounding, defensive file processing, explicit trust boundaries, and honest demonstration of AI capabilities.
+
+[Source repository](https://github.com/charlierichards13/ScaleMe) · [Contributor guide](CONTRIBUTING.md)
+
+*Help people tell the truth about their experience—and tell it better.*
