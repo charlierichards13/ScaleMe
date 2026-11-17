@@ -21,8 +21,6 @@ ScaleMe explores how candidates can explain their experience better *without inv
 | Interview | Scripted fictional practice; separate contextual interview and API integration | Bedrock-backed contextual interview is a **private preview**, not publicly enabled live AI |
 | Job discovery | UI/workspace preview | Not connected to a production job-feed API |
 
-![ScaleMe dashboard](docs/branding/images/after-dashboard-1440.jpg)
-
 ## The differentiator: an inspectable evidence trail
 
 Generic resume tools can produce polished language without showing where it came from. ScaleMe emphasizes the *source* behind a claim:
@@ -54,17 +52,90 @@ The [Next.js upload route](web/src/app/api/resume/parse/route.ts) invokes the Ru
 
 | Layer | Stack | Purpose |
 | --- | --- | --- |
-| User interface | Next.js 16, React, TypeScript, Tailwind CSS | Workspaces and responsive UI |
+| User interface | Next.js 16, React, TypeScript, Tailwind CSS | Responsive workspaces, sample walkthroughs, local review |
 | Parsing | Rust, pdf-inspector, Serde | PDF text extraction and typed JSON |
-| App backend | Next.js route handlers, Zod, Node.js subprocesses | Validation and parser orchestration |
-| Optional AI | AWS Bedrock through AWS SDK Converse | Protected fit and interview endpoints |
-| Testing / delivery | Cargo, Vitest, GitHub Actions, Docker, Railway configuration | Automated checks and packaging |
+| App backend | Next.js route handlers, Zod, Node.js subprocesses | Validation, bounded parser orchestration, guarded API contracts |
+| Optional AI | AWS Bedrock through AWS SDK Converse | Protected fit and contextual-interview endpoints |
+| Testing / delivery | Cargo, Vitest, GitHub Actions, Docker, Railway configuration | Automated checks and service packaging |
 
-**Implemented PDF path:** Resume Lab → Next.js upload API → Rust parser executable → validated Resume JSON → browser review / local Impact Lab.
+### System architecture — implemented components
 
-**Separate optional AI path:** Privately authorized contextual interview → protected fit/interview API → AWS Bedrock, only if explicitly enabled by the owner. PDF upload itself does not call Bedrock.
+```mermaid
+flowchart TD
+    B["Browser / Next.js frontend"]
+    UI["Dashboard, Resume Lab, Fit Explorer, Impact Lab, Interviews"]
+    API["Next.js route handlers (Node.js)"]
+    U["PDF upload validation & demo gate"]
+    R["Rust PDF parser (subprocess)"]
+    J["Validated Resume JSON (Zod contract)"]
+    L["In-tab review & local evidence workflow"]
+    G{"Private access + live AI enabled?"}
+    F["Protected fit/interview API"]
+    A["Amazon Bedrock (Converse)"]
+    D["Labeled fictional samples / scripted practice"]
 
-The repository does **not** implement the earlier proposed Rust requirement matcher or AWS Lambda/S3 upload architecture. It does not claim a production applicant database or publicly verified live-model deployment.
+    B --> UI
+    UI -->|"Explicit file upload"| API
+    API --> U
+    U -->|"PDF bytes via stdin"| R
+    R -->|"Extracted text / JSON via stdout"| J
+    J --> L
+    UI -->|"Local work"| L
+    UI -->|"Demo choice"| D
+    UI -->|"Explicit paid request"| G
+    G -->|"Authorized only"| F
+    F --> A
+    G -->|"Otherwise"| D
+```
+
+**Trust boundary:** Resume extraction and local evidence review do not trigger paid AWS calls. The contextual Bedrock flow requires an explicit user action, a valid private access mechanism, and an owner-enabled live configuration. A publicly accessible page does **not** mean the model endpoints are public.
+
+### Rust PDF ingestion — request lifecycle
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as Resume Lab (browser)
+    participant API as Next.js upload API
+    participant Rust as Rust parser process
+    participant Review as In-tab review / Impact Lab
+
+    User->>UI: Choose synthetic text-based PDF
+    User->>UI: Click Extract resume
+    UI->>API: POST multipart PDF
+    API->>API: Check enabled/expiry, origin, size, file signature
+    API->>Rust: Spawn without shell; pipe bytes to stdin
+    Rust->>Rust: Validate PDF, extract text, detect sections
+    Rust-->>API: Structured JSON on stdout
+    API->>API: Validate Resume schema and return safe response
+    API-->>UI: Extracted resume or bounded error
+    UI->>Review: Review text / improve locally
+    Note over UI,Review: No automatic Bedrock call or persistent resume storage
+```
+
+**Why Rust?** It provides a standalone, testable parser with a typed contract and explicit error handling, while the Next.js application controls user interactions, authorization, process isolation, and the handoff to local resume review. The parser is independently buildable and testable with Cargo.
+
+**Why keep AI separate?** PDF extraction is deterministic and does not need a model. Source-grounded resume proposals can be explored locally; only separately approved fit/interview requests use Bedrock. That separation limits unnecessary model calls and makes testing and privacy boundaries easier to reason about.
+
+### Source layout
+
+```text
+ScaleMe/
+├── web/                         Next.js frontend and server routes
+│   └── src/
+│       ├── app/                 Workspaces and API endpoints
+│       └── lib/                 Contracts, AI, and resume integration
+├── services/
+│   └── resume-parser/           Real Rust library / CLI / tests
+│       ├── src/                 PDF extraction, limits, layout, sections
+│       └── tests/               Synthetic PDF test cases
+├── docs/                        Architecture, security, and design notes
+├── .github/workflows/ci.yml     Web, Rust, and upload-container checks
+└── Dockerfile                   Application + Linux parser image
+```
+
+**Not implemented:** the earlier proposed Rust job matcher or AWS Lambda/S3 upload architecture. No production applicant database or publicly verified live-model service is claimed.
 
 ## Run locally
 
@@ -103,6 +174,8 @@ The web development server does **not** automatically enable PDF uploading: the 
 GitHub Actions also checks the Rust crate and the Linux container upload path. Passing CI is not a deployment or a security audit.
 
 ## Explore the workspaces
+
+![ScaleMe dashboard](docs/branding/images/after-dashboard-1440.jpg)
 
 | Route | Scope |
 | --- | --- |
